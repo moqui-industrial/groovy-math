@@ -62,6 +62,12 @@ final class MathGraph implements Iterable<ModelValue> {
         this
     }
 
+    MathGraph freeze() {
+        validate()
+        containers.values().each { NamedModelContainer container -> container.disallowChanges() }
+        this
+    }
+
     int size() {
         int count = 0
         containers.values().each { NamedModelContainer container -> count += container.size() }

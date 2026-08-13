@@ -26,6 +26,7 @@ implementation. The reference baseline is Gradle commit
 | `names` | Returns registered names without realizing objects. |
 | `configureEach(action)` | Attaches a lazy ordered action to present and future objects. |
 | `all(action)` | Realizes present objects and eagerly observes future additions. |
+| `configure(closure)` | Configures the container; a named closure creates an absent object eagerly. |
 | `matching(predicate)` | Returns a live filtered view evaluated as values are observed. |
 | `named(namePredicate)` | Returns a live name-filtered view without realizing values. |
 | `disallowChanges()` | Freezes structure without realizing pending objects. |

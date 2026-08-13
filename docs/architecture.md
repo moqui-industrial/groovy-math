@@ -21,6 +21,10 @@ The model core has no dependency on Moqui, Gradle, PyTorch, JNI, Panama, Arrow,
 Spark, Flink or an in-memory data grid. Integrations depend on the core, never
 the reverse.
 
+The provider contract is generic in its plan and result types. There is no
+provider-neutral JSON plan after `MathGraph`: the graph is the declarative
+specification, and the next representation belongs to the selected provider.
+
 ## Object lifecycle
 
 1. A named object is registered without being created.
@@ -29,6 +33,8 @@ the reverse.
 4. The schema validates field writes and required fields.
 5. The primary identity becomes immutable after realization.
 6. Filtered views can configure matching existing and future objects.
+7. `MathGraph.freeze()` realizes, validates and locks all containers before a
+   provider retains or compiles the graph.
 
 ## Seed-style nesting
 
@@ -56,14 +62,14 @@ the Gradle runtime or its build-engine concerns.
 fields, relationships, primary keys and enumerations. The runtime representation
 is Groovy-native and independent of Moqui Entity Engine persistence.
 
-The initial baseline was inspected at Moqui Math commit
+The compatibility baseline is inspected at Moqui Math commit
 `f5873dd892a8ccae9410161dedbf7ec8317e163f`:
 
 - 72 entity definitions;
 - 4 entity extensions;
 - simple and composite primary keys;
 - one-to-one and one-to-many relationships;
-- 885 enumeration seed records.
+- 886 enumeration seed records.
 
 Persistence is a future adapter and is not part of object identity or DSL
 execution.

@@ -151,6 +151,21 @@ class NamedModelContainerTest {
         assert removed == ['Realized']
     }
 
+    @Test
+    void configuresContainerAndCreatesMissingNamedObjectsLikeGradle() {
+        NamedModelContainer models = new NamedModelContainer(modelDefinition())
+
+        models.configure {
+            Classifier {
+                mathModelDefId 'DenseDef'
+                description 'Created by container configuration'
+            }
+        }
+
+        assert models.Classifier.mathModelDefId == 'DenseDef'
+        assert models.Classifier.description == 'Created by container configuration'
+    }
+
     private static EntityDefinition modelDefinition() {
         EntityDefinition definition = new EntityDefinition('moqui.math', 'MathModel')
         definition.addField(new FieldDefinition('mathModelId', 'id', true, true, null))

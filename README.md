@@ -24,45 +24,54 @@ MathProvider SPI
 ```
 
 The executor never parses arbitrary Groovy source. Groovy evaluates the DSL in
-a controlled JVM environment and produces a validated model graph. Providers
-consume that graph through the SPI introduced in a later milestone.
+a controlled JVM environment and produces a validated model graph. A
+`MathProvider<P, R>` compiles that graph directly into its own plan type `P` and
+returns its own execution result type `R`.
 
-## Current milestone
+## Modules and API
 
-The project currently supplies the generic model foundation and the first
-executable DSL layer:
+The library contains four boundaries:
 
-- schema definitions for fields, relationships and composite identifiers;
-- map-backed `ModelValue` objects with schema validation;
-- named containers and lazy providers inspired by Gradle DSL semantics;
-- live filtered collections and ordered configuration actions;
-- a structural reader used to verify compatibility with `MathEntities.xml`.
-- closure-based declarations and evaluation of trusted `.groovy` DSL files.
+- `model`: schema definitions, map-backed values, named containers and lazy
+  providers;
+- `dsl`: seed-style Groovy evaluation and the normalized in-memory graph;
+- `moqui`: structural loading of `MathEntities.xml`, without a Moqui runtime;
+- `spi`: the provider compilation and execution boundary.
+
+The collection contracts follow Gradle's domain-object model: `register` and
+`named` are lazy, `create` and `getByName` are eager, filtered collections are
+live, and `configureEach` applies to existing and future matching objects.
 
 ## DSL
 
 The DSL mirrors Moqui seed-data records, including relationship-driven nested
-records, while adding a Gradle-style named object lifecycle:
+records, while adding a Gradle-style named object lifecycle. The complete
+native-execution example begins with a model definition and nests the model,
+its data, tensors, transformations and operands:
 
 ```groovy
-MathModelDef('NeuralNetwork') {
-    description 'Neural network model definition'
-}
-
-MathModel('Classifier') {
-    mathModelDefId 'NeuralNetwork'
-    statusId 'MathModelDraft'
-}
-
-Transformation('DenseProduct') {
-    transformationTypeEnumId 'TtMatrixProduct'
-}
-
-MathModelData('Classifier.DenseProduct') {
-    mathModelId 'Classifier'
-    transformationId 'DenseProduct'
+MathModelDef('LibTorchMlp', modelTypeEnumId: 'MmtDlFeedforward') {
+    MathModel('IrisClassifier', statusId: 'MathModelDraft') {
+        data('InputData', dataTypeEnumId: 'MmdtTensor', tensorId: 'Input') {
+            Tensor('Input', tensorTypeEnumId: 'TtDense', rank: 2, shape: '[-1,4]')
+        }
+        data('ReluStep', dataTypeEnumId: 'MmdtTransformation',
+            transformationId: 'HiddenRelu', sequenceNum: 11) {
+            Transformation('HiddenRelu', transformationTypeEnumId: 'TtTensorReLu',
+                resultTensorId: 'HiddenActivation') {
+                operands(operandIndex: 0, operandTypeEnumId: 'TotSingle',
+                    operandTensorId: 'HiddenPreActivation')
+            }
+        }
+    }
 }
 ```
+
+See [`examples/libtorch-mlp.groovy`](examples/libtorch-mlp.groovy) for the full
+two-layer network and [`docs/libtorch-provider.md`](docs/libtorch-provider.md)
+for its intended lowering to PyTorch C++. The corresponding provider output is
+illustrated by
+[`examples/libtorch-mlp-plan.cpp`](examples/libtorch-mlp-plan.cpp).
 
 The nested form follows the same convention as Moqui data files: a relationship
 short alias names a child record and the schema supplies foreign-key values.
@@ -107,8 +116,7 @@ is validated, required values are checked on realization, and composite primary
 keys are preserved.
 
 Default expressions originating in Moqui, such as `ec.user.nowTimestamp`, are
-preserved as schema metadata and resolved later by a provider; they are not
-executed by the standalone DSL.
+preserved as schema metadata. They are not executed by the standalone DSL.
 
 The resulting graph exposes containers such as:
 
@@ -118,6 +126,7 @@ graph.MathModel.matching { it.mathModelDefId == 'NeuralNetwork' }
     .configureEach { description 'Selected model' }
 graph.MathModel.remove('ObsoleteModel')
 graph.validate()
+graph.freeze() // validate, realize and prohibit structural mutation
 ```
 
 The container lifecycle follows Gradle's domain-object collection contract:
@@ -133,6 +142,7 @@ models.names                             // does not realize values
 models.configureEach { /* lazy action */ }
 models.all { /* eager action */ }
 models.disallowChanges()                 // freeze graph structure
+models.configure { NamedModel { /* create if missing, like Gradle */ } }
 ```
 
 The precise mapping and realization rules are documented in
@@ -143,8 +153,21 @@ Use `MathDsl.evaluate(schemaDefinition, dslFile)` or
 trusted executable Groovy configuration, like `build.gradle`; this API is not a
 sandbox for untrusted input.
 
-Typed mathematical conveniences, generated enumeration types and the PyTorch
-provider are subsequent milestones built on this layer.
+## Provider SPI
+
+The SPI does not add another public IR:
+
+```groovy
+interface MathProvider<P, R> {
+    String getProviderId()
+    P compile(MathGraph graph)
+    R execute(P plan, Map<String, ?> inputs)
+}
+```
+
+A LibTorch implementation owns `LibTorchPlan` and the Java/native bridge. Other
+providers may compile the same graph to Spark, Flink, a remote service or a
+distributed runtime without changing the DSL.
 
 ## Build
 

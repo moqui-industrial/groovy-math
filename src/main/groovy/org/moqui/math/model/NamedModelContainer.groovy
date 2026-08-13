@@ -32,6 +32,16 @@ final class NamedModelContainer extends AbstractSet<ModelValue>
     }
 
     @Override
+    NamedModelContainer configure(final Closure<?> action) {
+        if (action == null) throw new IllegalArgumentException('Configuration action is required')
+        Closure<?> configured = (Closure<?>) action.rehydrate(this, action.owner, action.thisObject)
+        configured.resolveStrategy = Closure.DELEGATE_FIRST
+        if (configured.maximumNumberOfParameters == 0) configured.call()
+        else configured.call(this)
+        this
+    }
+
+    @Override
     synchronized ModelProvider register(final String name) {
         register(name, null)
     }
@@ -246,7 +256,9 @@ final class NamedModelContainer extends AbstractSet<ModelValue>
     Object methodMissing(final String name, final Object rawArguments) {
         Object[] arguments = rawArguments instanceof Object[] ? (Object[]) rawArguments : [rawArguments] as Object[]
         if (arguments.length == 1 && arguments[0] instanceof Closure) {
-            return getByName(name).configure((Closure<?>) arguments[0])
+            ModelProvider provider = entries.get(name)
+            return provider != null ? provider.get().configure((Closure<?>) arguments[0]) :
+                create(name, (Closure<?>) arguments[0])
         }
         throw new MissingMethodException(name, getClass(), arguments)
     }

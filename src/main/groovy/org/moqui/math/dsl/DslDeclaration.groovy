@@ -15,20 +15,22 @@
 package org.moqui.math.dsl
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import org.moqui.math.model.EntityDefinition
 import org.moqui.math.model.ModelProvider
 
 @CompileStatic
-final class SeedRecord {
+@PackageScope
+final class DslDeclaration {
     final EntityDefinition definition
     final String modelKey
     final LinkedHashMap<String, Object> values
     final ModelProvider provider
-    final SeedRecord parent
+    final DslDeclaration parent
 
-    SeedRecord(final EntityDefinition definition, final String modelKey,
-               final LinkedHashMap<String, Object> values, final ModelProvider provider,
-               final SeedRecord parent = null) {
+    DslDeclaration(final EntityDefinition definition, final String modelKey,
+                   final LinkedHashMap<String, Object> values, final ModelProvider provider,
+                   final DslDeclaration parent) {
         this.definition = definition
         this.modelKey = modelKey
         this.values = values

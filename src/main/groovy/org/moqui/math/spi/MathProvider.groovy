@@ -12,22 +12,16 @@
  * <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
-MathModelDef('NeuralNetwork') {
-    description 'Neural network model definition'
-}
+package org.moqui.math.spi
 
-MathModel('Classifier') {
-    mathModelDefId 'NeuralNetwork'
-    description 'Example classifier'
-    statusId 'MathModelDraft'
-}
+import org.moqui.math.dsl.MathGraph
 
-Transformation('DenseProduct') {
-    transformationTypeEnumId 'TtMatrixProduct'
-    name 'Dense matrix product'
-}
-
-MathModelData('Classifier.DenseProduct') {
-    mathModelId 'Classifier'
-    transformationId 'DenseProduct'
+/**
+ * Compiles the declarative graph into a provider-owned plan and executes it.
+ * The plan type is deliberately not defined by Groovy Math.
+ */
+interface MathProvider<P, R> {
+    String getProviderId()
+    P compile(MathGraph graph)
+    R execute(P plan, Map<String, ?> inputs)
 }

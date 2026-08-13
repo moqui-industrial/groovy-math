@@ -15,6 +15,7 @@
 package org.moqui.math.model
 
 interface NamedModelObjectContainer<T extends ModelValue> extends NamedModelObjectCollection<T> {
+    NamedModelObjectContainer<T> configure(Closure<?> action)
     T create(String name)
     T create(String name, Closure<?> action)
     T maybeCreate(String name)

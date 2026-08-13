@@ -118,18 +118,20 @@ MathModel('Simulator') {
     }
 
     @Test
-    void evaluatesExampleAgainstCurrentMoquiMathCheckoutWhenConfigured() {
+    void evaluatesLibTorchPlanExampleAgainstCurrentMoquiMathCheckoutWhenConfigured() {
         String external = System.getenv('MOQUI_MATH_ENTITIES')
         if (!external) return
 
         ModelDefinition definition = MoquiSchemaInspector.inspect(new File(external))
-        File example = new File(System.getProperty('user.dir'), 'examples/basic-model.groovy')
+        File example = new File(System.getProperty('user.dir'), 'examples/libtorch-mlp.groovy')
         MathGraph graph = MathDsl.evaluate(definition, example).validate()
 
-        assert graph.MathModelDef.named('NeuralNetwork').get().description == 'Neural network model definition'
-        assert graph.MathModel.named('Classifier').get().mathModelDefId == 'NeuralNetwork'
-        assert graph.Transformation.named('DenseProduct').get().transformationTypeEnumId == 'TtMatrixProduct'
-        assert graph.MathModelData.named('Classifier.DenseProduct').get().transformationId == 'DenseProduct'
+        assert graph.MathModel.named('IrisClassifier').get().mathModelDefId == 'LibTorchMlp'
+        assert graph.Tensor.named('Dense1Weight').get().shape == '[8,4]'
+        assert graph.Transformation.named('Dense1').get().transformationTypeEnumId == 'TtAffine'
+        assert graph.Transformation.named('HiddenRelu').get().resultTensorId == 'HiddenActivation'
+        assert graph.TransformationOperand.size() == 7
+        assert graph.MathModelData.named('Dense2Step').get().mathModelId == 'IrisClassifier'
     }
 
     @Test

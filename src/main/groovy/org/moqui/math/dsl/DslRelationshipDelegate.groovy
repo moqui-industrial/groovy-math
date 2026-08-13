@@ -15,24 +15,26 @@
 package org.moqui.math.dsl
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
 import org.moqui.math.model.EntityDefinition
 import org.moqui.math.model.RelationshipDefinition
 
 @CompileStatic
-final class RelationshipBlockBuilder {
+@PackageScope
+final class DslRelationshipDelegate {
     private final MathDslBuilder root
-    private final SeedRecord parent
-    final RelationshipDefinition relationship
+    private final DslDeclaration parent
+    private final RelationshipDefinition relationship
 
-    RelationshipBlockBuilder(final MathDslBuilder root, final SeedRecord parent,
-                             final RelationshipDefinition relationship) {
+    DslRelationshipDelegate(final MathDslBuilder root, final DslDeclaration parent,
+                            final RelationshipDefinition relationship) {
         this.root = root
         this.parent = parent
         this.relationship = relationship
     }
 
-    RelationshipBlockBuilder configure(final Closure<?> action) {
+    DslRelationshipDelegate configure(final Closure<?> action) {
         Closure<?> configured = (Closure<?>) action.rehydrate(this, action.owner, action.thisObject)
         configured.resolveStrategy = Closure.DELEGATE_ONLY
         if (configured.maximumNumberOfParameters == 0) configured.call()
@@ -42,11 +44,10 @@ final class RelationshipBlockBuilder {
 
     @CompileStatic(TypeCheckingMode.SKIP)
     Object methodMissing(final String name, final Object rawArguments) {
-        EntityDefinition child = root.relatedEntity(relationship)
+        EntityDefinition child = root.graph.definition.entity(relationship.relatedEntityName)
         if (name == child.name || name == child.fullName) {
             return root.declareNested(child.fullName, rawArguments, parent, relationship)
         }
-
         List<Object> arguments = normalizeArguments(rawArguments)
         arguments.add(0, name)
         root.declareNested(child.fullName, arguments as Object[], parent, relationship)
@@ -54,7 +55,9 @@ final class RelationshipBlockBuilder {
 
     private static List<Object> normalizeArguments(final Object rawArguments) {
         if (rawArguments == null) return []
-        if (rawArguments instanceof Object[]) return new ArrayList<Object>(Arrays.asList((Object[]) rawArguments))
+        if (rawArguments instanceof Object[]) {
+            return new ArrayList<Object>(Arrays.asList((Object[]) rawArguments))
+        }
         [rawArguments]
     }
 }

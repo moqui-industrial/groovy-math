@@ -15,6 +15,7 @@
 package org.moqui.math.dsl
 
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
 import org.moqui.math.model.EntityDefinition
 import org.moqui.math.model.FieldDefinition
@@ -45,16 +46,19 @@ final class MathDslBuilder {
         declare(entityDefinition, parsed.modelKey, parsed.values, parsed.action, null, null).provider
     }
 
-    SeedRecord declareNested(final String entityName, final Object rawArguments,
-                             final SeedRecord parent, final RelationshipDefinition relationship = null) {
+    @PackageScope
+    DslDeclaration declareNested(final String entityName, final Object rawArguments,
+                                 final DslDeclaration parent,
+                                 final RelationshipDefinition relationship = null) {
         EntityDefinition entityDefinition = graph.definition.entity(entityName)
         ParsedDeclaration parsed = parseArguments(entityName, normalizeArguments(rawArguments))
         declare(entityDefinition, parsed.modelKey, parsed.values, parsed.action, parent, relationship)
     }
 
-    private SeedRecord declare(final EntityDefinition entityDefinition, final String requestedKey,
-                               final LinkedHashMap<String, Object> values, final Closure<?> action,
-                               final SeedRecord parent, final RelationshipDefinition relationship) {
+    private DslDeclaration declare(final EntityDefinition entityDefinition, final String requestedKey,
+                                   final LinkedHashMap<String, Object> values, final Closure<?> action,
+                                   final DslDeclaration parent,
+                                   final RelationshipDefinition relationship) {
         if (parent != null) {
             inheritRelationshipKeys(parent, entityDefinition, values, relationship)
             inheritAncestorKeys(parent, entityDefinition, values)
@@ -63,24 +67,12 @@ final class MathDslBuilder {
         addSinglePrimaryKey(entityDefinition, modelKey, values)
 
         ModelProvider provider = graph.declare(entityDefinition.fullName, modelKey, values)
-        SeedRecord record = new SeedRecord(entityDefinition, modelKey, values, provider, parent)
-        if (action != null) new SeedRecordBuilder(this, record).configure(action)
+        DslDeclaration record = new DslDeclaration(entityDefinition, modelKey, values, provider, parent)
+        if (action != null) new DslRecordDelegate(this, record).configure(action)
         record
     }
 
-    RelationshipDefinition relationship(final SeedRecord parent, final String alias) {
-        RelationshipDefinition relationship = parent.definition.relationships.get(alias)
-        if (relationship == null) {
-            throw new IllegalArgumentException("Unknown relationship ${parent.definition.fullName}.${alias}")
-        }
-        relationship
-    }
-
-    EntityDefinition relatedEntity(final RelationshipDefinition relationship) {
-        graph.definition.entity(relationship.relatedEntityName)
-    }
-
-    private void inheritRelationshipKeys(final SeedRecord parent, final EntityDefinition child,
+    private void inheritRelationshipKeys(final DslDeclaration parent, final EntityDefinition child,
                                          final Map<String, Object> childValues,
                                          final RelationshipDefinition requestedRelationship) {
         RelationshipLink link = requestedRelationship != null ?
@@ -106,10 +98,10 @@ final class MathDslBuilder {
         }
     }
 
-    private static void inheritAncestorKeys(final SeedRecord parent, final EntityDefinition child,
+    private static void inheritAncestorKeys(final DslDeclaration parent, final EntityDefinition child,
                                             final Map<String, Object> childValues) {
         Set<String> childPrimaryKeys = child.primaryKeyFields.collect { FieldDefinition field -> field.name } as Set<String>
-        SeedRecord ancestor = parent
+        DslDeclaration ancestor = parent
         while (ancestor != null) {
             ancestor.definition.primaryKeyFields.each { FieldDefinition field ->
                 if (!childPrimaryKeys.contains(field.name) && child.fields.containsKey(field.name) &&
@@ -161,8 +153,12 @@ final class MathDslBuilder {
                                                              final RelationshipDefinition relationship) {
         LinkedHashMap<String, String> fields = new LinkedHashMap<>()
         if (relationship.keyMap.isEmpty()) {
-            parent.primaryKeyFields.each { FieldDefinition field ->
-                if (child.fields.containsKey(field.name)) fields.put(field.name, field.name)
+            List<FieldDefinition> sourceFields = relationship.type == 'many' ?
+                parent.primaryKeyFields : child.primaryKeyFields
+            sourceFields.each { FieldDefinition field ->
+                if (parent.fields.containsKey(field.name) && child.fields.containsKey(field.name)) {
+                    fields.put(field.name, field.name)
+                }
             }
         } else {
             fields.putAll(relationship.keyMap)
@@ -291,4 +287,5 @@ final class MathDslBuilder {
             this.parentToChildFields = fields
         }
     }
+
 }
