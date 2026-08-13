@@ -21,6 +21,7 @@ MathProvider SPI
       |
       +-- PyTorch provider -> LibTorch
       +-- OR-Tools provider -> GLOP
+      +-- PETSc/TAO provider -> BQPIP
       +-- future local or distributed providers
 ```
 
@@ -198,11 +199,22 @@ coefficient overrides and model types other than LP.
 Other providers may compile the same metadata to Spark, Flink, a remote service or
 a distributed runtime without changing the DSL.
 
-PETSc/TAO is the intended significant native extension after the provider
-contracts stabilize: PETSc for distributed sparse linear/nonlinear systems and
-ODE/PDE time integration, and TAO for scalable optimization. It should be a
-separate provider module with its own native or remote execution boundary, not
-an extension of the OR-Tools plan.
+The PETSc/TAO provider lowers `MmtQp` metadata to a native bound-constrained
+quadratic program:
+
+```text
+minimize 0.5 x^T Q x + c^T x
+subject to lower <= x <= upper
+```
+
+It selects TAO `BQPIP` and uses `PETSC_COMM_SELF` in the initial embedded JNI
+backend. This is a real native TAO execution, but intentionally single-process;
+the backend serializes PETSc entry because it cannot assume that an arbitrary
+PETSc/MPI build is thread-safe. A future MPI backend can implement the same
+`PetscTaoBackend` boundary using a separately launched executor and
+`PETSC_COMM_WORLD`, without changing the DSL. See
+[`docs/petsctao-provider.md`](docs/petsctao-provider.md) for the metadata mapping,
+native lifecycle and distributed boundary.
 
 ## Build
 
@@ -230,6 +242,17 @@ To execute the OR-Tools example:
 ```shell
 MOQUI_MATH_ENTITIES=/path/to/moqui-math/entity/MathEntities.xml \
   ./gradlew runOrToolsProductionPlan
+```
+
+Native PETSc/TAO verification is optional and requires a real-scalar PETSc
+development installation with TAO, CMake, Ninja and `pkg-config`:
+
+```shell
+MOQUI_MATH_ENTITIES=/path/to/moqui-math/entity/MathEntities.xml \
+  ./gradlew petscTaoNativeTest
+
+MOQUI_MATH_ENTITIES=/path/to/moqui-math/entity/MathEntities.xml \
+  ./gradlew runPetscTaoEnergyDispatch
 ```
 
 ## License

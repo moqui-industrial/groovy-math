@@ -42,10 +42,11 @@ java {
 
 tasks.named('test') {
     useJUnitPlatform()
-    useJUnitPlatform { excludeTags 'libtorch-native' }
+    useJUnitPlatform { excludeTags 'libtorch-native', 'petsctao-native' }
 }
 
 def nativeBuildDirectory = layout.buildDirectory.dir('native')
+def petscTaoBuildDirectory = layout.buildDirectory.dir('native-petsctao')
 
 tasks.register('configureLibTorchNative', Exec) {
     inputs.dir('src/main/cpp')
@@ -81,6 +82,39 @@ tasks.register('nativeTest', Test) {
         nativeBuildDirectory.get().file('libgroovy_math_libtorch.so').asFile.absolutePath
 }
 
+tasks.register('configurePetscTaoNative', Exec) {
+    inputs.dir('src/main/cpp/petsctao')
+    inputs.file('src/main/cpp/petsctao_jni.cpp')
+    outputs.file(petscTaoBuildDirectory.map { it.file('build.ninja') })
+    doFirst {
+        String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
+        commandLine cmake, '-S', file('src/main/cpp/petsctao').absolutePath,
+            '-B', petscTaoBuildDirectory.get().asFile.absolutePath, '-G', 'Ninja',
+            '-DCMAKE_BUILD_TYPE=Release'
+    }
+}
+
+tasks.register('buildPetscTaoNative', Exec) {
+    dependsOn tasks.named('configurePetscTaoNative')
+    inputs.file('src/main/cpp/petsctao_jni.cpp')
+    inputs.file(petscTaoBuildDirectory.map { it.file('build.ninja') })
+    outputs.file(petscTaoBuildDirectory.map { it.file('libgroovy_math_petsctao.so') })
+    doFirst {
+        String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
+        commandLine cmake, '--build', petscTaoBuildDirectory.get().asFile.absolutePath, '--parallel'
+    }
+}
+
+tasks.register('petscTaoNativeTest', Test) {
+    dependsOn tasks.named('buildPetscTaoNative')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'petsctao-native' }
+    systemProperty 'groovy.math.petsctao.library',
+        petscTaoBuildDirectory.get().file('libgroovy_math_petsctao.so').asFile.absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: ''
+}
+
 tasks.register('benchmarkLibTorch', JavaExec) {
     dependsOn tasks.named('buildLibTorchNative'), tasks.named('testClasses')
     classpath = sourceSets.test.runtimeClasspath
@@ -109,6 +143,15 @@ tasks.register('runOrToolsProductionPlan', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'groovy.ui.GroovyMain'
     args file('examples/run-ortools-production-plan.groovy').absolutePath
+}
+
+tasks.register('runPetscTaoEnergyDispatch', JavaExec) {
+    dependsOn tasks.named('buildPetscTaoNative'), tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'groovy.ui.GroovyMain'
+    args file('examples/run-petsctao-energy-dispatch.groovy').absolutePath
+    systemProperty 'groovy.math.petsctao.library',
+        petscTaoBuildDirectory.get().file('libgroovy_math_petsctao.so').asFile.absolutePath
 }
 
 tasks.named('check') {

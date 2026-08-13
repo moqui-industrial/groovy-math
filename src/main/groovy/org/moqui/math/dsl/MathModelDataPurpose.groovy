@@ -10,7 +10,9 @@ enum MathModelDataPurpose implements DslEnumValue {
     CostVector('MmdpCostVector'),
     ConstraintMatrix('MmdpConstraintMatrix'),
     RightHandSide('MmdpRhsVector'),
-    VariableBounds('MmdpVarBounds')
+    VariableBounds('MmdpVarBounds'),
+    Hessian('MmdpHessian'),
+    InitialCondition('MmdpInitialCondition')
 
     final String id
 

@@ -6,7 +6,8 @@
 package org.moqui.math.dsl
 
 enum MathModelSolvingMethod implements DslEnumValue {
-    Simplex('MmsmSimplex')
+    Simplex('MmsmSimplex'),
+    InteriorPoint('MmsmInteriorPoint')
 
     final String id
 

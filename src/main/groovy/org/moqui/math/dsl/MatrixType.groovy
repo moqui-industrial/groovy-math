@@ -16,7 +16,8 @@ package org.moqui.math.dsl
 
 enum MatrixType implements DslEnumValue {
     Dense('MtDense'),
-    Rectangular('MtRectangular')
+    Rectangular('MtRectangular'),
+    Symmetric('MtSymmetric')
 
     final String id
 

@@ -178,6 +178,24 @@ MathModel('Simulator') {
         assert mathMeta.MathModelData.size() == 5
     }
 
+    @Test
+    void evaluatesEnergyDispatchExampleAgainstCurrentMoquiMathCheckoutWhenConfigured() {
+        String external = System.getenv('MOQUI_MATH_ENTITIES')
+        if (!external) return
+
+        ModelDefinition definition = MoquiSchemaInspector.inspect(new File(external))
+        File example = new File(System.getProperty('user.dir'), 'examples/energy-dispatch.groovy')
+        MathMeta mathMeta = MathDsl.evaluate(definition, example).validate()
+
+        assert mathMeta.MathModelDef.named('QuadraticEnergyDispatch').get().modelTypeEnumId == 'MmtQp'
+        assert mathMeta.MathModel.named('EnergyDispatch').get().solvingMethodEnumId == 'MmsmInteriorPoint'
+        assert mathMeta.Parameter.named('EnergyDispatch.ObjectiveSense').get().symbolicValue == 'MINIMIZE'
+        assert mathMeta.Matrix.named('DispatchHessian').get().componentArray == '[[2,0],[0,4]]'
+        assert mathMeta.MathModelData.matching { ModelValue value ->
+            value.mathModelId == 'EnergyDispatch'
+        }.size() == 5
+    }
+
     private static ModelDefinition modelDefinition() {
         ModelDefinition model = new ModelDefinition()
 

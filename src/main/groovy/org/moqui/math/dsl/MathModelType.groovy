@@ -17,7 +17,8 @@ package org.moqui.math.dsl
 enum MathModelType implements DslEnumValue {
     LinearAlgebra('MmtLinearAlgebra'),
     DlFeedforward('MmtDlFeedforward'),
-    LinearProgram('MmtLp')
+    LinearProgram('MmtLp'),
+    QuadraticProgram('MmtQp')
 
     final String id
 
