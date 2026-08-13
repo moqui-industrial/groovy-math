@@ -18,6 +18,7 @@ import groovy.lang.Binding
 import groovy.lang.GroovyShell
 import groovy.transform.CompileStatic
 import groovy.util.DelegatingScript
+import org.codehaus.groovy.control.customizers.ImportCustomizer
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.moqui.math.model.ModelDefinition
 import org.moqui.math.moqui.MoquiSchemaInspector
@@ -43,6 +44,9 @@ final class MathDsl {
 
         CompilerConfiguration configuration = new CompilerConfiguration()
         configuration.scriptBaseClass = DelegatingScript.name
+        ImportCustomizer imports = new ImportCustomizer()
+        imports.addStarImports('org.moqui.math.dsl')
+        configuration.addCompilationCustomizers(imports)
         GroovyShell shell = new GroovyShell(MathDsl.classLoader, new Binding(), configuration)
         DelegatingScript script = (DelegatingScript) shell.parse(dslFile)
 

@@ -24,4 +24,17 @@ interface MathProvider<P, R> {
     String getProviderId()
     P compile(MathMeta mathMeta)
     R execute(P plan, Map<String, ?> inputs)
+
+    default R run(final MathMeta mathMeta) {
+        run(mathMeta, Collections.emptyMap())
+    }
+
+    default R run(final MathMeta mathMeta, final Map<String, ?> inputs) {
+        P plan = compile(mathMeta)
+        try {
+            execute(plan, inputs)
+        } finally {
+            if (plan instanceof AutoCloseable) ((AutoCloseable) plan).close()
+        }
+    }
 }

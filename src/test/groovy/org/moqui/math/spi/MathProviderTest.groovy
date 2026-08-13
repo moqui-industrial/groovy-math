@@ -37,35 +37,45 @@ class MathProviderTest {
         }
         RecordingProvider provider = new RecordingProvider()
 
-        RecordingPlan plan = provider.compile(mathMeta)
-        Map<String, Object> result = provider.execute(plan, [input: 'tensor-handle'])
+        Map<String, Object> result = provider.run(mathMeta, [input: 'tensor-handle'])
 
         assert provider.providerId == 'recording'
-        assert plan.operations == ['TtTensorReLu']
         assert result == [output: 'tensor-handle', operations: 1]
+        assert provider.lastPlan.operations == ['TtTensorReLu']
+        assert provider.lastPlan.closed
         assertThrows(IllegalStateException) { mathMeta.Transformation.remove('relu') }
     }
 
-    private static final class RecordingPlan {
+    private static final class RecordingPlan implements AutoCloseable {
         final List<String> operations
+        boolean closed
 
         RecordingPlan(final List<String> operations) {
             this.operations = operations
         }
+
+        @Override
+        void close() {
+            closed = true
+        }
     }
 
     private static final class RecordingProvider implements MathProvider<RecordingPlan, Map<String, Object>> {
+        RecordingPlan lastPlan
+
         @Override
         String getProviderId() { 'recording' }
 
         @Override
         RecordingPlan compile(final MathMeta mathMeta) {
             mathMeta.freeze()
-            new RecordingPlan(mathMeta.Transformation.collect { it.transformationTypeEnumId as String })
+            lastPlan = new RecordingPlan(mathMeta.Transformation.collect { it.transformationTypeEnumId as String })
+            lastPlan
         }
 
         @Override
         Map<String, Object> execute(final RecordingPlan plan, final Map<String, ?> inputs) {
+            assert !plan.closed
             [output: inputs.input, operations: plan.operations.size()]
         }
     }

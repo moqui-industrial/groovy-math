@@ -59,15 +59,16 @@ final class MathDslBuilder {
                                    final LinkedHashMap<String, Object> values, final Closure<?> action,
                                    final DslDeclaration parent,
                                    final RelationshipDefinition relationship) {
+        LinkedHashMap<String, Object> normalizedValues = normalizeFieldAliases(entityDefinition, values)
         if (parent != null) {
-            inheritRelationshipKeys(parent, entityDefinition, values, relationship)
-            inheritAncestorKeys(parent, entityDefinition, values)
+            inheritRelationshipKeys(parent, entityDefinition, normalizedValues, relationship)
+            inheritAncestorKeys(parent, entityDefinition, normalizedValues)
         }
-        String modelKey = requestedKey ?: keyFromValues(entityDefinition, values)
-        addSinglePrimaryKey(entityDefinition, modelKey, values)
+        String modelKey = requestedKey ?: keyFromValues(entityDefinition, normalizedValues)
+        addSinglePrimaryKey(entityDefinition, modelKey, normalizedValues)
 
-        ModelProvider provider = mathMeta.declare(entityDefinition.fullName, modelKey, values)
-        DslDeclaration record = new DslDeclaration(entityDefinition, modelKey, values, provider, parent)
+        ModelProvider provider = mathMeta.declare(entityDefinition.fullName, modelKey, normalizedValues)
+        DslDeclaration record = new DslDeclaration(entityDefinition, modelKey, normalizedValues, provider, parent)
         if (action != null) new DslRecordDelegate(this, record).configure(action)
         record
     }
@@ -221,8 +222,53 @@ final class MathDslBuilder {
 
     private static LinkedHashMap<String, Object> copyValues(final Map<String, ?> source) {
         LinkedHashMap<String, Object> values = new LinkedHashMap<>()
-        source.each { String name, Object value -> values.put(name, value) }
+        source.each { String name, Object value -> values.put(name, normalizeValue(value)) }
         values
+    }
+
+    @PackageScope
+    static Object normalizeValue(final Object value) {
+        if (value instanceof DslEnumValue) return ((DslEnumValue) value).id
+        if (value instanceof Map) {
+            LinkedHashMap<Object, Object> normalized = new LinkedHashMap<>()
+            ((Map<?, ?>) value).each { Object key, Object nestedValue -> normalized.put(key, normalizeValue(nestedValue)) }
+            return normalized
+        }
+        if (value instanceof Collection) {
+            List<Object> normalized = []
+            ((Collection<?>) value).each { Object nestedValue -> normalized.add(normalizeValue(nestedValue)) }
+            return normalized
+        }
+        if (value instanceof Object[]) {
+            List<Object> normalized = []
+            ((Object[]) value).each { Object nestedValue -> normalized.add(normalizeValue(nestedValue)) }
+            return normalized
+        }
+        value
+    }
+
+    @PackageScope
+    static String resolveFieldName(final EntityDefinition definition, final String requestedName) {
+        if (definition.fields.containsKey(requestedName)) return requestedName
+        if (requestedName.endsWith('Enum')) {
+            String alias = requestedName + 'Id'
+            if (definition.fields.containsKey(alias)) return alias
+        }
+        requestedName
+    }
+
+    private static LinkedHashMap<String, Object> normalizeFieldAliases(final EntityDefinition definition,
+                                                                       final LinkedHashMap<String, Object> source) {
+        LinkedHashMap<String, Object> normalized = new LinkedHashMap<>()
+        source.each { String name, Object value ->
+            String resolved = resolveFieldName(definition, name)
+            if (normalized.containsKey(resolved) && resolved != name) {
+                throw new IllegalArgumentException(
+                    "Duplicate DSL values for ${definition.fullName}.${resolved} via '${name}' alias")
+            }
+            normalized.put(resolved, normalizeValue(value))
+        }
+        normalized
     }
 
     private static void addSinglePrimaryKey(final EntityDefinition definition, final String modelKey,

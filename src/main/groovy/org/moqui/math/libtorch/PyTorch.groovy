@@ -20,12 +20,7 @@ final class PyTorch {
         if (execution.intraOpThreads != null || execution.interOpThreads != null) {
             provider.configureThreads(execution.intraOpThreads ?: 1, execution.interOpThreads ?: 1)
         }
-        LibTorchPlan plan = provider.compile(mathMeta)
-        try {
-            provider.execute(plan, execution.inputs)
-        } finally {
-            plan.close()
-        }
+        provider.run(mathMeta, execution.inputs)
     }
 
     @CompileStatic

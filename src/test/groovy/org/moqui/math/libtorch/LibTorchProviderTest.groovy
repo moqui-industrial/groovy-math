@@ -36,6 +36,25 @@ class LibTorchProviderTest {
         assert backend.destroyed
     }
 
+    @Test
+    void runsPolymorphicProviderLifecycleWhenSchemaIsConfigured() {
+        String schemaPath = System.getenv('MOQUI_MATH_ENTITIES')
+        if (!schemaPath) return
+        RecordingBackend backend = new RecordingBackend()
+        LibTorchProvider provider = new LibTorchProvider('MatrixProduct', backend)
+
+        LibTorchResult result = provider.run(MathDsl.evaluate(
+            MoquiSchemaInspector.inspect(new File(schemaPath)),
+            new File(System.getProperty('user.dir'), 'examples/matrix-product.groovy')),
+            [A: [[1, 2, 3], [4, 5, 6]]])
+
+        assert result.tensorName == 'C'
+        assert result.batchSize == 2
+        assert result.width == 2
+        assert result.values.toList() == [58f, 64f, 139f, 154f]
+        assert backend.destroyed
+    }
+
     private static final class RecordingBackend implements LibTorchBackend {
         final List<String> operations = []
         boolean sealed
@@ -59,7 +78,10 @@ class LibTorchProviderTest {
             assert rightMatrix.toList() == [7f, 8f, 9f, 10f, 11f, 12f]
         }
         @Override void seal(final long handle, final int outputSlot, final int outputWidth) { sealed = true }
-        @Override float[] execute(final long handle, final float[] input, final int batchSize) { new float[batchSize * 3] }
+        @Override float[] execute(final long handle, final float[] input, final int batchSize) {
+            assert input.toList() == [1f, 2f, 3f, 4f, 5f, 6f]
+            [58f, 64f, 139f, 154f] as float[]
+        }
         @Override void executeDirect(final long handle, final ByteBuffer input, final int batchSize,
                                      final ByteBuffer output) { }
         @Override void destroy(final long handle) { destroyed = true }

@@ -4,42 +4,42 @@
  */
 
 MathModelDef('MatrixAlgebra',
-    modelTypeEnumId: 'MmtLinearAlgebra',
-    usageContextEnumId: 'MmucInference',
+    modelTypeEnum: MathModelType.LinearAlgebra,
+    usageContextEnum: MathModelUsageContext.Inference,
     modelName: 'Matrix algebra transformations',
     description: 'Provider-neutral mathematical declarations') {
 
     MathModel('MatrixProduct',
         modelAlias: 'matrix_product',
-        sourceEnumId: 'MmsManual',
+        sourceEnum: MathModelSource.Manual,
         description: 'C = A x B, where A is supplied at execution time',
         statusId: 'MathModelDraft') {
 
-        data('LeftMatrixData', dataTypeEnumId: 'MmdtMatrix', matrixId: 'A', sequenceNum: 0) {
-            Matrix('A', matrixTypeEnumId: 'MtDense', purposeEnumId: 'MpOriginal',
-                domainSpaceEnumId: 'R3', codomainSpaceEnumId: 'R2',
+        data('LeftMatrixData', dataTypeEnum: MathModelDataType.Matrix, matrixId: 'A', sequenceNum: 0) {
+            Matrix('A', matrixTypeEnum: MatrixType.Dense, purposeEnum: MatrixPurpose.Original,
+                domainSpaceEnum: MathSpace.R3, codomainSpaceEnum: MathSpace.R2,
                 name: 'A', symbol: 'A', rows: 2, cols: 3)
         }
 
-        data('RightMatrixData', dataTypeEnumId: 'MmdtMatrix', matrixId: 'B', sequenceNum: 1) {
-            Matrix('B', matrixTypeEnumId: 'MtDense', purposeEnumId: 'MpOriginal',
-                domainSpaceEnumId: 'R2', codomainSpaceEnumId: 'R3',
+        data('RightMatrixData', dataTypeEnum: MathModelDataType.Matrix, matrixId: 'B', sequenceNum: 1) {
+            Matrix('B', matrixTypeEnum: MatrixType.Dense, purposeEnum: MatrixPurpose.Original,
+                domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R3,
                 name: 'B', symbol: 'B', rows: 3, cols: 2,
                 componentArray: '[[7,8],[9,10],[11,12]]')
         }
 
-        data('ResultMatrixData', dataTypeEnumId: 'MmdtMatrix', matrixId: 'C', sequenceNum: 2) {
-            Matrix('C', matrixTypeEnumId: 'MtDense',
-                domainSpaceEnumId: 'R2', codomainSpaceEnumId: 'R2',
+        data('ResultMatrixData', dataTypeEnum: MathModelDataType.Matrix, matrixId: 'C', sequenceNum: 2) {
+            Matrix('C', matrixTypeEnum: MatrixType.Dense,
+                domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
                 name: 'C', symbol: 'C', rows: 2, cols: 2)
         }
 
-        data('ProductStep', dataTypeEnumId: 'MmdtTransformation',
+        data('ProductStep', dataTypeEnum: MathModelDataType.Transformation,
             transformationId: 'MultiplyAB', sequenceNum: 10) {
-            Transformation('MultiplyAB', transformationTypeEnumId: 'TtMatrixProduct',
+            Transformation('MultiplyAB', transformationTypeEnum: TransformationType.MatrixProduct,
                 name: 'Matrix product A x B', resultMatrixId: 'C') {
-                operands(operandIndex: 0, operandTypeEnumId: 'TotLeftMatrix', operandMatrixId: 'A')
-                operands(operandIndex: 1, operandTypeEnumId: 'TotRightMatrix', operandMatrixId: 'B')
+                operands(operandIndex: 0, operandTypeEnum: TransformationOperandType.LeftMatrix, operandMatrixId: 'A')
+                operands(operandIndex: 1, operandTypeEnum: TransformationOperandType.RightMatrix, operandMatrixId: 'B')
             }
         }
     }

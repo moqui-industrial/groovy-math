@@ -42,13 +42,14 @@ final class DslRecordDelegate {
     Object methodMissing(final String name, final Object rawArguments) {
         Object[] arguments = rawArguments instanceof Object[] ?
             (Object[]) rawArguments : [rawArguments] as Object[]
-        if (record.definition.fields.containsKey(name)) {
+        String fieldName = MathDslBuilder.resolveFieldName(record.definition, name)
+        if (record.definition.fields.containsKey(fieldName)) {
             if (arguments.length != 1 || arguments[0] instanceof Closure) {
                 throw new MissingMethodException(name, getClass(), arguments)
             }
-            Object fieldValue = arguments[0]
-            record.values.put(name, fieldValue)
-            record.provider.configure { value -> value.put(name, fieldValue) }
+            Object fieldValue = MathDslBuilder.normalizeValue(arguments[0])
+            record.values.put(fieldName, fieldValue)
+            record.provider.configure { value -> value.put(fieldName, fieldValue) }
             return this
         }
 

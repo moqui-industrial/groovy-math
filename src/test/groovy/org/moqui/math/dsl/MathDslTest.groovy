@@ -30,16 +30,24 @@ class MathDslTest {
     @Test
     void buildsSeedStyleDeclarationsFromClosure() {
         MathMeta mathMeta = MathDsl.math(modelDefinition()) {
-            MathModelDef(mathModelDefId: 'NeuralNetwork', description: 'Definition')
+            MathModelDef(
+                mathModelDefId: 'NeuralNetwork',
+                modelTypeEnum: MathModelType.LinearAlgebra,
+                usageContextEnum: MathModelUsageContext.Inference,
+                description: 'Definition')
             MathModel('Classifier') {
                 mathModelDefId 'NeuralNetwork'
+                sourceEnum MathModelSource.Manual
                 description 'Configured through field methods'
             }
         }.validate()
 
         assert mathMeta.size() == 2
         assert mathMeta.MathModelDef.named('NeuralNetwork').get().description == 'Definition'
+        assert mathMeta.MathModelDef.named('NeuralNetwork').get().modelTypeEnumId == 'MmtLinearAlgebra'
+        assert mathMeta.MathModelDef.named('NeuralNetwork').get().usageContextEnumId == 'MmucInference'
         assert mathMeta.MathModel.named('Classifier').get().mathModelDefId == 'NeuralNetwork'
+        assert mathMeta.MathModel.named('Classifier').get().sourceEnumId == 'MmsManual'
     }
 
     @Test
@@ -48,9 +56,12 @@ class MathDslTest {
         dslFile.text = '''
 MathModelDef('NeuralNetwork') {
     description 'Neural network definition'
+    modelTypeEnum MathModelType.LinearAlgebra
+    usageContextEnum MathModelUsageContext.Inference
 }
 MathModel('Classifier') {
     mathModelDefId 'NeuralNetwork'
+    sourceEnum MathModelSource.Manual
 }
 MathModel('Simulator') {
     mathModelDefId 'PhysicalModel'
@@ -62,6 +73,8 @@ MathModel('Simulator') {
             .configureEach { description 'Selected model' }
 
         assert mathMeta.MathModel.named('Classifier').get().description == 'Selected model'
+        assert mathMeta.MathModelDef.named('NeuralNetwork').get().modelTypeEnumId == 'MmtLinearAlgebra'
+        assert mathMeta.MathModel.named('Classifier').get().sourceEnumId == 'MmsManual'
         assert mathMeta.MathModel.named('Simulator').get().description == null
         assert mathMeta.MathModel.remove('Simulator')
         assert mathMeta.MathModel.size() == 1
@@ -154,12 +167,15 @@ MathModel('Simulator') {
 
         EntityDefinition mathModelDef = new EntityDefinition('moqui.math', 'MathModelDef')
         mathModelDef.addField(new FieldDefinition('mathModelDefId', 'id', true, true, null))
+        mathModelDef.addField(new FieldDefinition('modelTypeEnumId', 'id', false, false, null))
+        mathModelDef.addField(new FieldDefinition('usageContextEnumId', 'id', false, false, null))
         mathModelDef.addField(new FieldDefinition('description', 'text-medium', false, false, null))
         model.addEntity(mathModelDef)
 
         EntityDefinition mathModel = new EntityDefinition('moqui.math', 'MathModel')
         mathModel.addField(new FieldDefinition('mathModelId', 'id', true, true, null))
         mathModel.addField(new FieldDefinition('mathModelDefId', 'id', false, true, null))
+        mathModel.addField(new FieldDefinition('sourceEnumId', 'id', false, false, null))
         mathModel.addField(new FieldDefinition('description', 'text-medium', false, false, null))
         model.addEntity(mathModel)
 
