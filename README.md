@@ -5,8 +5,8 @@ It carries the semantics of the Moqui Math model without requiring the Moqui
 runtime or a database.
 
 The project is not a numerical execution engine. A Groovy DSL builds and
-configures a typed object graph; provider implementations will validate and
-lower that graph to platform-specific execution, initially PyTorch/LibTorch.
+configures `MathMeta`, a typed in-memory metadata set; provider implementations
+validate and lower it to platform-specific execution, initially PyTorch/LibTorch.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ lower that graph to platform-specific execution, initially PyTorch/LibTorch.
 Groovy Math DSL
       |
       v
-in-memory model graph
+MathMeta
       |
       v
 MathProvider SPI
@@ -24,8 +24,8 @@ MathProvider SPI
 ```
 
 The executor never parses arbitrary Groovy source. Groovy evaluates the DSL in
-a controlled JVM environment and produces a validated model graph. A
-`MathProvider<P, R>` compiles that graph directly into its own plan type `P` and
+a controlled JVM environment and produces validated `MathMeta`. A
+`MathProvider<P, R>` compiles that metadata directly into its own plan type `P` and
 returns its own execution result type `R`.
 
 ## Modules and API
@@ -34,7 +34,7 @@ The library contains four boundaries:
 
 - `model`: schema definitions, map-backed values, named containers and lazy
   providers;
-- `dsl`: seed-style Groovy evaluation and the normalized in-memory graph;
+- `dsl`: seed-style Groovy evaluation and the normalized `MathMeta` root;
 - `moqui`: structural loading of `MathEntities.xml`, without a Moqui runtime;
 - `spi`: the provider compilation and execution boundary.
 
@@ -46,30 +46,31 @@ live, and `configureEach` applies to existing and future matching objects.
 
 The DSL mirrors Moqui seed-data records, including relationship-driven nested
 records, while adding a Gradle-style named object lifecycle. The complete
-native-execution example begins with a model definition and nests the model,
-its data, tensors, transformations and operands:
+native-execution example declares a true matrix product and nests its matrices,
+transformation and operands:
 
 ```groovy
-MathModelDef('LibTorchMlp', modelTypeEnumId: 'MmtDlFeedforward') {
-    MathModel('IrisClassifier', statusId: 'MathModelDraft') {
-        data('InputData', dataTypeEnumId: 'MmdtTensor', tensorId: 'Input') {
-            Tensor('Input', tensorTypeEnumId: 'TtDense', rank: 2, shape: '[-1,4]')
+MathModelDef('MatrixAlgebra', modelTypeEnumId: 'MmtLinearAlgebra') {
+    MathModel('MatrixProduct', statusId: 'MathModelDraft') {
+        data('LeftMatrixData', dataTypeEnumId: 'MmdtMatrix', matrixId: 'A') {
+            Matrix('A', rows: 2, cols: 3, purposeEnumId: 'MpOriginal')
         }
-        data('ReluStep', dataTypeEnumId: 'MmdtTransformation',
-            transformationId: 'HiddenRelu', sequenceNum: 11) {
-            Transformation('HiddenRelu', transformationTypeEnumId: 'TtTensorReLu',
-                resultTensorId: 'HiddenActivation') {
-                operands(operandIndex: 0, operandTypeEnumId: 'TotSingle',
-                    operandTensorId: 'HiddenPreActivation')
+        data('ProductStep', dataTypeEnumId: 'MmdtTransformation',
+            transformationId: 'MultiplyAB', sequenceNum: 10) {
+            Transformation('MultiplyAB', transformationTypeEnumId: 'TtMatrixProduct',
+                resultMatrixId: 'C') {
+                operands(operandIndex: 0, operandTypeEnumId: 'TotLeftMatrix', operandMatrixId: 'A')
+                operands(operandIndex: 1, operandTypeEnumId: 'TotRightMatrix', operandMatrixId: 'B')
             }
         }
     }
 }
 ```
 
-See [`examples/libtorch-mlp.groovy`](examples/libtorch-mlp.groovy) for the full
-two-layer network and [`docs/libtorch-provider.md`](docs/libtorch-provider.md)
-for its direct lowering to PyTorch C++.
+See [`examples/matrix-product.groovy`](examples/matrix-product.groovy) for the
+complete declaration and
+[`examples/run-pytorch-matrix-product.groovy`](examples/run-pytorch-matrix-product.groovy)
+for the explicit PyTorch execution block.
 
 The nested form follows the same convention as Moqui data files: a relationship
 short alias names a child record and the schema supplies foreign-key values.
@@ -116,21 +117,21 @@ keys are preserved.
 Default expressions originating in Moqui, such as `ec.user.nowTimestamp`, are
 preserved as schema metadata. They are not executed by the standalone DSL.
 
-The resulting graph exposes containers such as:
+The resulting `MathMeta` exposes containers such as:
 
 ```groovy
-graph.MathModel.named('Classifier')
-graph.MathModel.matching { it.mathModelDefId == 'NeuralNetwork' }
+mathMeta.MathModel.named('Classifier')
+mathMeta.MathModel.matching { it.mathModelDefId == 'NeuralNetwork' }
     .configureEach { description 'Selected model' }
-graph.MathModel.remove('ObsoleteModel')
-graph.validate()
-graph.freeze() // validate, realize and prohibit structural mutation
+mathMeta.MathModel.remove('ObsoleteModel')
+mathMeta.validate()
+mathMeta.freeze() // validate, realize and prohibit structural mutation
 ```
 
 The container lifecycle follows Gradle's domain-object collection contract:
 
 ```groovy
-def models = graph.MathModel
+def models = mathMeta.MathModel
 
 models.register('Deferred') { /* lazy */ }
 models.create('Immediate') { /* eager */ }
@@ -139,7 +140,7 @@ models.getByName('Deferred')             // eager value
 models.names                             // does not realize values
 models.configureEach { /* lazy action */ }
 models.all { /* eager action */ }
-models.disallowChanges()                 // freeze graph structure
+models.disallowChanges()                 // freeze metadata structure
 models.configure { NamedModel { /* create if missing, like Gradle */ } }
 ```
 
@@ -158,15 +159,15 @@ The SPI does not add another public IR:
 ```groovy
 interface MathProvider<P, R> {
     String getProviderId()
-    P compile(MathGraph graph)
+    P compile(MathMeta mathMeta)
     R execute(P plan, Map<String, ?> inputs)
 }
 ```
 
 The included LibTorch provider owns `LibTorchPlan` and a narrow JNI bridge. It
-currently lowers `TtAffine` and `TtTensorReLu`, accepts Java arrays or reusable
+currently lowers `TtMatrixProduct`, `TtAffine` and `TtTensorReLu`, accepts Java arrays or reusable
 direct buffers, and permits concurrent inference on one immutable native plan.
-Other providers may compile the same graph to Spark, Flink, a remote service or
+Other providers may compile the same metadata to Spark, Flink, a remote service or
 a distributed runtime without changing the DSL.
 
 ## Build

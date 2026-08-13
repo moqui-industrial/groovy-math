@@ -16,6 +16,7 @@ final class LibTorchPlan implements AutoCloseable {
     final String mathModelId
     final String inputName
     final String outputName
+    final int inputRows
     final int inputWidth
     final int outputWidth
     final int operationCount
@@ -24,11 +25,12 @@ final class LibTorchPlan implements AutoCloseable {
     private long handle
 
     LibTorchPlan(final String mathModelId, final String inputName, final String outputName,
-                 final int inputWidth, final int outputWidth, final int operationCount,
+                 final int inputRows, final int inputWidth, final int outputWidth, final int operationCount,
                  final LibTorchBackend backend, final long handle) {
         this.mathModelId = mathModelId
         this.inputName = inputName
         this.outputName = outputName
+        this.inputRows = inputRows
         this.inputWidth = inputWidth
         this.outputWidth = outputWidth
         this.operationCount = operationCount
@@ -41,6 +43,7 @@ final class LibTorchPlan implements AutoCloseable {
             throw new IllegalArgumentException("Input length must be a positive multiple of ${inputWidth}")
         }
         int batchSize = input.length.intdiv(inputWidth)
+        assertBatchSize(batchSize)
         lifecycle.readLock().lock()
         try {
             assertOpen()
@@ -73,6 +76,7 @@ final class LibTorchPlan implements AutoCloseable {
         if (output.remaining() < batchSize * outputWidth * Float.BYTES) {
             throw new IllegalArgumentException('Output buffer is smaller than the declared batch')
         }
+        assertBatchSize(batchSize)
         lifecycle.readLock().lock()
         try {
             assertOpen()
@@ -102,5 +106,11 @@ final class LibTorchPlan implements AutoCloseable {
 
     private void assertOpen() {
         if (handle == 0L) throw new IllegalStateException('LibTorch plan is closed')
+    }
+
+    private void assertBatchSize(final int batchSize) {
+        if (inputRows > 0 && batchSize != inputRows) {
+            throw new IllegalArgumentException("Input has ${batchSize} rows; ${mathModelId} requires ${inputRows}")
+        }
     }
 }

@@ -16,7 +16,7 @@ package org.moqui.math.spi
 
 import org.junit.jupiter.api.Test
 import org.moqui.math.dsl.MathDsl
-import org.moqui.math.dsl.MathGraph
+import org.moqui.math.dsl.MathMeta
 import org.moqui.math.model.EntityDefinition
 import org.moqui.math.model.FieldDefinition
 import org.moqui.math.model.ModelDefinition
@@ -32,18 +32,18 @@ class MathProviderTest {
         transformation.addField(new FieldDefinition('transformationTypeEnumId', 'id', false, true, null))
         definition.addEntity(transformation)
 
-        MathGraph graph = MathDsl.math(definition) {
+        MathMeta mathMeta = MathDsl.math(definition) {
             Transformation('relu', transformationTypeEnumId: 'TtTensorReLu')
         }
         RecordingProvider provider = new RecordingProvider()
 
-        RecordingPlan plan = provider.compile(graph)
+        RecordingPlan plan = provider.compile(mathMeta)
         Map<String, Object> result = provider.execute(plan, [input: 'tensor-handle'])
 
         assert provider.providerId == 'recording'
         assert plan.operations == ['TtTensorReLu']
         assert result == [output: 'tensor-handle', operations: 1]
-        assertThrows(IllegalStateException) { graph.Transformation.remove('relu') }
+        assertThrows(IllegalStateException) { mathMeta.Transformation.remove('relu') }
     }
 
     private static final class RecordingPlan {
@@ -59,9 +59,9 @@ class MathProviderTest {
         String getProviderId() { 'recording' }
 
         @Override
-        RecordingPlan compile(final MathGraph graph) {
-            graph.freeze()
-            new RecordingPlan(graph.Transformation.collect { it.transformationTypeEnumId as String })
+        RecordingPlan compile(final MathMeta mathMeta) {
+            mathMeta.freeze()
+            new RecordingPlan(mathMeta.Transformation.collect { it.transformationTypeEnumId as String })
         }
 
         @Override

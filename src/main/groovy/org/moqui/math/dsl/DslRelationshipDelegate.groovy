@@ -44,7 +44,7 @@ final class DslRelationshipDelegate {
 
     @CompileStatic(TypeCheckingMode.SKIP)
     Object methodMissing(final String name, final Object rawArguments) {
-        EntityDefinition child = root.graph.definition.entity(relationship.relatedEntityName)
+        EntityDefinition child = root.mathMeta.definition.entity(relationship.relatedEntityName)
         if (name == child.name || name == child.fullName) {
             return root.declareNested(child.fullName, rawArguments, parent, relationship)
         }

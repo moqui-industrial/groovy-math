@@ -24,16 +24,16 @@ import org.moqui.math.model.RelationshipDefinition
 
 @CompileStatic
 final class MathDslBuilder {
-    final MathGraph graph
+    final MathMeta mathMeta
 
-    MathDslBuilder(final MathGraph graph) {
-        this.graph = Objects.requireNonNull(graph, 'Math graph must not be null')
+    MathDslBuilder(final MathMeta mathMeta) {
+        this.mathMeta = Objects.requireNonNull(mathMeta, 'Math metadata must not be null')
     }
 
     ModelProvider entity(final String entityName, final String modelKey,
                          final Map<String, ?> values = Collections.emptyMap(),
                          final Closure<?> action = null) {
-        EntityDefinition definition = graph.definition.entity(entityName)
+        EntityDefinition definition = mathMeta.definition.entity(entityName)
         LinkedHashMap<String, Object> attributes = copyValues(values)
         declare(definition, modelKey, attributes, action, null, null).provider
     }
@@ -41,7 +41,7 @@ final class MathDslBuilder {
     @CompileStatic(TypeCheckingMode.SKIP)
     Object methodMissing(final String entityName, final Object rawArguments) {
         List<Object> arguments = normalizeArguments(rawArguments)
-        EntityDefinition entityDefinition = graph.definition.entity(entityName)
+        EntityDefinition entityDefinition = mathMeta.definition.entity(entityName)
         ParsedDeclaration parsed = parseArguments(entityName, arguments)
         declare(entityDefinition, parsed.modelKey, parsed.values, parsed.action, null, null).provider
     }
@@ -50,7 +50,7 @@ final class MathDslBuilder {
     DslDeclaration declareNested(final String entityName, final Object rawArguments,
                                  final DslDeclaration parent,
                                  final RelationshipDefinition relationship = null) {
-        EntityDefinition entityDefinition = graph.definition.entity(entityName)
+        EntityDefinition entityDefinition = mathMeta.definition.entity(entityName)
         ParsedDeclaration parsed = parseArguments(entityName, normalizeArguments(rawArguments))
         declare(entityDefinition, parsed.modelKey, parsed.values, parsed.action, parent, relationship)
     }
@@ -66,7 +66,7 @@ final class MathDslBuilder {
         String modelKey = requestedKey ?: keyFromValues(entityDefinition, values)
         addSinglePrimaryKey(entityDefinition, modelKey, values)
 
-        ModelProvider provider = graph.declare(entityDefinition.fullName, modelKey, values)
+        ModelProvider provider = mathMeta.declare(entityDefinition.fullName, modelKey, values)
         DslDeclaration record = new DslDeclaration(entityDefinition, modelKey, values, provider, parent)
         if (action != null) new DslRecordDelegate(this, record).configure(action)
         record

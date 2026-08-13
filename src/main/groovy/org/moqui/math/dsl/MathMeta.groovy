@@ -22,11 +22,11 @@ import org.moqui.math.model.ModelValue
 import org.moqui.math.model.NamedModelContainer
 
 @CompileStatic
-final class MathGraph implements Iterable<ModelValue> {
+final class MathMeta implements Iterable<ModelValue> {
     final ModelDefinition definition
     private final LinkedHashMap<String, NamedModelContainer> containers = new LinkedHashMap<>()
 
-    MathGraph(final ModelDefinition definition) {
+    MathMeta(final ModelDefinition definition) {
         this.definition = Objects.requireNonNull(definition, 'Model definition must not be null')
     }
 
@@ -55,14 +55,14 @@ final class MathGraph implements Iterable<ModelValue> {
         entity(entityName)
     }
 
-    MathGraph validate() {
+    MathMeta validate() {
         containers.values().each { NamedModelContainer container ->
             container.providers.each { ModelProvider provider -> provider.get() }
         }
         this
     }
 
-    MathGraph freeze() {
+    MathMeta freeze() {
         validate()
         containers.values().each { NamedModelContainer container -> container.disallowChanges() }
         this

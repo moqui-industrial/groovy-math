@@ -7,8 +7,8 @@ contract. It does not own tensor kernels, device scheduling or distributed
 transport.
 
 The DSL source is executable configuration for the JVM-side control plane. Its
-resulting object graph is the provider-neutral executable specification. A
-provider may compile this graph into an internal platform plan, but that plan is
+resulting `MathMeta` is the provider-neutral executable specification. A
+provider may compile this metadata into an internal platform plan, but that plan is
 an implementation detail and is not a second public intermediate language.
 
 ## Dependency direction
@@ -22,7 +22,7 @@ Spark, Flink or an in-memory data grid. Integrations depend on the core, never
 the reverse.
 
 The provider contract is generic in its plan and result types. There is no
-provider-neutral JSON plan after `MathGraph`: the graph is the declarative
+provider-neutral JSON plan after `MathMeta`: the metadata is the declarative
 specification, and the next representation belongs to the selected provider.
 
 ## Object lifecycle
@@ -33,8 +33,8 @@ specification, and the next representation belongs to the selected provider.
 4. The schema validates field writes and required fields.
 5. The primary identity becomes immutable after realization.
 6. Filtered views can configure matching existing and future objects.
-7. `MathGraph.freeze()` realizes, validates and locks all containers before a
-   provider retains or compiles the graph.
+7. `MathMeta.freeze()` realizes, validates and locks all containers before a
+   provider retains or compiles the metadata.
 
 ## Seed-style nesting
 

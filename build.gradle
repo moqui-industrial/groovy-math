@@ -61,6 +61,7 @@ tasks.register('configureLibTorchNative', Exec) {
 
 tasks.register('buildLibTorchNative', Exec) {
     dependsOn tasks.named('configureLibTorchNative')
+    inputs.dir('src/main/cpp')
     inputs.file(nativeBuildDirectory.map { it.file('build.ninja') })
     outputs.file(nativeBuildDirectory.map { it.file('libgroovy_math_libtorch.so') })
     doFirst {

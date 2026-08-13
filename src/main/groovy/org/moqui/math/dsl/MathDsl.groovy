@@ -26,17 +26,17 @@ import org.moqui.math.moqui.MoquiSchemaInspector
 final class MathDsl {
     private MathDsl() { }
 
-    static MathGraph math(final ModelDefinition definition, final Closure<?> declarations) {
-        MathGraph graph = new MathGraph(definition)
-        MathDslBuilder builder = new MathDslBuilder(graph)
+    static MathMeta math(final ModelDefinition definition, final Closure<?> declarations) {
+        MathMeta mathMeta = new MathMeta(definition)
+        MathDslBuilder builder = new MathDslBuilder(mathMeta)
         Closure<?> configured = (Closure<?>) declarations.rehydrate(builder, declarations.owner, declarations.thisObject)
         configured.resolveStrategy = Closure.DELEGATE_FIRST
         if (configured.maximumNumberOfParameters == 0) configured.call()
         else configured.call(builder)
-        graph
+        mathMeta
     }
 
-    static MathGraph evaluate(final ModelDefinition definition, final File dslFile) {
+    static MathMeta evaluate(final ModelDefinition definition, final File dslFile) {
         if (dslFile == null || !dslFile.isFile()) {
             throw new IllegalArgumentException("DSL file does not exist: ${dslFile}")
         }
@@ -46,13 +46,13 @@ final class MathDsl {
         GroovyShell shell = new GroovyShell(MathDsl.classLoader, new Binding(), configuration)
         DelegatingScript script = (DelegatingScript) shell.parse(dslFile)
 
-        MathGraph graph = new MathGraph(definition)
-        script.delegate = new MathDslBuilder(graph)
+        MathMeta mathMeta = new MathMeta(definition)
+        script.delegate = new MathDslBuilder(mathMeta)
         script.run()
-        graph
+        mathMeta
     }
 
-    static MathGraph evaluate(final File schemaFile, final File dslFile) {
+    static MathMeta evaluate(final File schemaFile, final File dslFile) {
         evaluate(MoquiSchemaInspector.inspect(schemaFile), dslFile)
     }
 }

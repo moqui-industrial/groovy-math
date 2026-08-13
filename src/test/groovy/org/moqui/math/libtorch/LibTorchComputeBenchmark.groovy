@@ -42,7 +42,7 @@ final class LibTorchComputeBenchmark {
             backend.addRelu(handle, 1, 2)
             backend.addAffine(handle, 2, 3, width, width, weight, bias)
             backend.seal(handle, 3, width)
-            new LibTorchPlan('SyntheticDense', 'input', 'output', width, width, 3, backend, handle)
+            new LibTorchPlan('SyntheticDense', 'input', 'output', -1, width, width, 3, backend, handle)
         } catch (Throwable failure) {
             backend.destroy(handle)
             throw failure

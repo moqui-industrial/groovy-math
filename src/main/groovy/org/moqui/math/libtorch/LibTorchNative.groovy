@@ -34,6 +34,13 @@ final class LibTorchNative implements LibTorchBackend {
     @Override void addRelu(final long handle, final int inputSlot, final int outputSlot) {
         ensureLoaded(); LibTorchBindings.nativeAddRelu(handle, inputSlot, outputSlot)
     }
+    @Override void addMatrixProduct(final long handle, final int inputSlot, final int outputSlot,
+                                    final int inputWidth, final int outputWidth,
+                                    final float[] rightMatrix) {
+        ensureLoaded()
+        LibTorchBindings.nativeAddMatrixProduct(
+            handle, inputSlot, outputSlot, inputWidth, outputWidth, rightMatrix)
+    }
     @Override void seal(final long handle, final int outputSlot, final int outputWidth) {
         ensureLoaded(); LibTorchBindings.nativeSeal(handle, outputSlot, outputWidth)
     }

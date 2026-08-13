@@ -16,12 +16,12 @@ import java.util.concurrent.Executors
 final class LibTorchParallelBenchmark {
     static void main(final String[] arguments) {
         File schema = new File(requiredEnvironment('MOQUI_MATH_ENTITIES'))
-        File example = new File(System.getProperty('user.dir'), 'examples/libtorch-mlp.groovy')
+        File example = new File(System.getProperty('user.dir'), 'examples/matrix-product.groovy')
         int iterations = Integer.getInteger('groovy.math.benchmark.iterations', 2000)
         println 'mode,intraOp,callers,batch,iterations,elapsedMs,samplesPerSecond'
 
         [1, 2, 4, 8].each { int intraOp ->
-            LibTorchProvider provider = new LibTorchProvider('IrisClassifier')
+            LibTorchProvider provider = new LibTorchProvider('MatrixProduct')
             provider.configureThreads(intraOp, 1)
             LibTorchPlan plan = provider.compile(MathDsl.evaluate(MoquiSchemaInspector.inspect(schema), example))
             try {
@@ -60,7 +60,7 @@ final class LibTorchParallelBenchmark {
                                   final int iterations) {
         float[] input = new float[batch * plan.inputWidth]
         for (int index = 0; index < input.length; index += plan.inputWidth) {
-            input[index] = 1f; input[index + 1] = 2f; input[index + 2] = 3f; input[index + 3] = 4f
+            input[index] = 1f; input[index + 1] = 2f; input[index + 2] = 3f
         }
         long checksum = 0L
         if (mode == 'array') {

@@ -14,14 +14,14 @@
 
 package org.moqui.math.spi
 
-import org.moqui.math.dsl.MathGraph
+import org.moqui.math.dsl.MathMeta
 
 /**
- * Compiles the declarative graph into a provider-owned plan and executes it.
+ * Compiles the declarative metadata into a provider-owned plan and executes it.
  * The plan type is deliberately not defined by Groovy Math.
  */
 interface MathProvider<P, R> {
     String getProviderId()
-    P compile(MathGraph graph)
+    P compile(MathMeta mathMeta)
     R execute(P plan, Map<String, ?> inputs)
 }

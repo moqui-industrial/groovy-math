@@ -29,7 +29,7 @@ class MathDslTest {
 
     @Test
     void buildsSeedStyleDeclarationsFromClosure() {
-        MathGraph graph = MathDsl.math(modelDefinition()) {
+        MathMeta mathMeta = MathDsl.math(modelDefinition()) {
             MathModelDef(mathModelDefId: 'NeuralNetwork', description: 'Definition')
             MathModel('Classifier') {
                 mathModelDefId 'NeuralNetwork'
@@ -37,9 +37,9 @@ class MathDslTest {
             }
         }.validate()
 
-        assert graph.size() == 2
-        assert graph.MathModelDef.named('NeuralNetwork').get().description == 'Definition'
-        assert graph.MathModel.named('Classifier').get().mathModelDefId == 'NeuralNetwork'
+        assert mathMeta.size() == 2
+        assert mathMeta.MathModelDef.named('NeuralNetwork').get().description == 'Definition'
+        assert mathMeta.MathModel.named('Classifier').get().mathModelDefId == 'NeuralNetwork'
     }
 
     @Test
@@ -57,30 +57,30 @@ MathModel('Simulator') {
 }
 '''
 
-        MathGraph graph = MathDsl.evaluate(modelDefinition(), dslFile).validate()
-        graph.MathModel.matching { ModelValue value -> value.mathModelDefId == 'NeuralNetwork' }
+        MathMeta mathMeta = MathDsl.evaluate(modelDefinition(), dslFile).validate()
+        mathMeta.MathModel.matching { ModelValue value -> value.mathModelDefId == 'NeuralNetwork' }
             .configureEach { description 'Selected model' }
 
-        assert graph.MathModel.named('Classifier').get().description == 'Selected model'
-        assert graph.MathModel.named('Simulator').get().description == null
-        assert graph.MathModel.remove('Simulator')
-        assert graph.MathModel.size() == 1
+        assert mathMeta.MathModel.named('Classifier').get().description == 'Selected model'
+        assert mathMeta.MathModel.named('Simulator').get().description == null
+        assert mathMeta.MathModel.remove('Simulator')
+        assert mathMeta.MathModel.size() == 1
     }
 
     @Test
     void derivesStableDslKeyForCompositeSeedRecord() {
-        MathGraph graph = MathDsl.math(modelDefinition()) {
+        MathMeta mathMeta = MathDsl.math(modelDefinition()) {
             TransformationOperand(transformationId: 'DenseProduct', operandIndex: 0)
         }.validate()
 
-        assert graph.TransformationOperand
+        assert mathMeta.TransformationOperand
             .named('transformationId=DenseProduct|operandIndex=0')
             .get().entityKey.fields == [transformationId: 'DenseProduct', operandIndex: 0]
     }
 
     @Test
     void buildsNestedSeedRecordsAndInheritsRelationshipKeys() {
-        MathGraph graph = MathDsl.math(nestedModelDefinition()) {
+        MathMeta mathMeta = MathDsl.math(nestedModelDefinition()) {
             Category('AgentEntityModel') {
                 categoryName 'Moqui Entity Model'
                 objects('ObjectA', objectName: 'BillingAccount')
@@ -93,17 +93,17 @@ MathModel('Simulator') {
             }
         }.validate()
 
-        assert graph.size() == 5
-        assert graph.CategoryObject.named('ObjectA').get().categoryId == 'AgentEntityModel'
-        assert graph.Morphism.named('SchemaA').get().categoryId == 'AgentEntityModel'
-        assert graph.Parameter.named('SchemaA.Source').get().morphismId == 'SchemaA'
-        assert graph.Morphism.named('RelationshipA').get().parentMorphismId == 'SchemaA'
-        assert graph.Morphism.named('RelationshipA').get().categoryId == 'AgentEntityModel'
+        assert mathMeta.size() == 5
+        assert mathMeta.CategoryObject.named('ObjectA').get().categoryId == 'AgentEntityModel'
+        assert mathMeta.Morphism.named('SchemaA').get().categoryId == 'AgentEntityModel'
+        assert mathMeta.Parameter.named('SchemaA.Source').get().morphismId == 'SchemaA'
+        assert mathMeta.Morphism.named('RelationshipA').get().parentMorphismId == 'SchemaA'
+        assert mathMeta.Morphism.named('RelationshipA').get().categoryId == 'AgentEntityModel'
     }
 
     @Test
     void supportsGradleStyleRelationshipContainerBlocks() {
-        MathGraph graph = MathDsl.math(nestedModelDefinition()) {
+        MathMeta mathMeta = MathDsl.math(nestedModelDefinition()) {
             Category('AgentEntityModel') {
                 categoryName 'Moqui Entity Model'
                 objects {
@@ -113,25 +113,25 @@ MathModel('Simulator') {
             }
         }.validate()
 
-        assert graph.CategoryObject.named('ObjectA').get().categoryId == 'AgentEntityModel'
-        assert graph.CategoryObject.named('ObjectB').get().objectName == 'Party'
+        assert mathMeta.CategoryObject.named('ObjectA').get().categoryId == 'AgentEntityModel'
+        assert mathMeta.CategoryObject.named('ObjectB').get().objectName == 'Party'
     }
 
     @Test
-    void evaluatesLibTorchPlanExampleAgainstCurrentMoquiMathCheckoutWhenConfigured() {
+    void evaluatesMatrixProductExampleAgainstCurrentMoquiMathCheckoutWhenConfigured() {
         String external = System.getenv('MOQUI_MATH_ENTITIES')
         if (!external) return
 
         ModelDefinition definition = MoquiSchemaInspector.inspect(new File(external))
-        File example = new File(System.getProperty('user.dir'), 'examples/libtorch-mlp.groovy')
-        MathGraph graph = MathDsl.evaluate(definition, example).validate()
+        File example = new File(System.getProperty('user.dir'), 'examples/matrix-product.groovy')
+        MathMeta mathMeta = MathDsl.evaluate(definition, example).validate()
 
-        assert graph.MathModel.named('IrisClassifier').get().mathModelDefId == 'LibTorchMlp'
-        assert graph.Tensor.named('Dense1Weight').get().shape == '[8,4]'
-        assert graph.Transformation.named('Dense1').get().transformationTypeEnumId == 'TtAffine'
-        assert graph.Transformation.named('HiddenRelu').get().resultTensorId == 'HiddenActivation'
-        assert graph.TransformationOperand.size() == 7
-        assert graph.MathModelData.named('Dense2Step').get().mathModelId == 'IrisClassifier'
+        assert mathMeta.MathModel.named('MatrixProduct').get().mathModelDefId == 'MatrixAlgebra'
+        assert mathMeta.Matrix.named('A').get().cols == 3
+        assert mathMeta.Matrix.named('B').get().componentArray == '[[7,8],[9,10],[11,12]]'
+        assert mathMeta.Transformation.named('MultiplyAB').get().transformationTypeEnumId == 'TtMatrixProduct'
+        assert mathMeta.Transformation.named('MultiplyAB').get().resultMatrixId == 'C'
+        assert mathMeta.TransformationOperand.size() == 2
     }
 
     @Test
@@ -141,11 +141,11 @@ MathModel('Simulator') {
 
         ModelDefinition definition = MoquiSchemaInspector.inspect(new File(external))
         File example = new File(System.getProperty('user.dir'), 'examples/entity-morphism.groovy')
-        MathGraph graph = MathDsl.evaluate(definition, example).validate()
+        MathMeta mathMeta = MathDsl.evaluate(definition, example).validate()
 
-        assert graph.CategoryObject.named('AgEntObj_BillingAccount').get().categoryId == 'AgentEntityModel'
-        assert graph.Morphism.named('AgEntSchema_BillingAccount').get().categoryId == 'AgentEntityModel'
-        assert graph.Parameter.named('AgEntSchema_BillingAccount_001').get().morphismId ==
+        assert mathMeta.CategoryObject.named('AgEntObj_BillingAccount').get().categoryId == 'AgentEntityModel'
+        assert mathMeta.Morphism.named('AgEntSchema_BillingAccount').get().categoryId == 'AgentEntityModel'
+        assert mathMeta.Parameter.named('AgEntSchema_BillingAccount_001').get().morphismId ==
             'AgEntSchema_BillingAccount'
     }
 

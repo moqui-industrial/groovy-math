@@ -1,9 +1,8 @@
 # LibTorch provider mapping
 
-The file [`examples/libtorch-mlp.groovy`](../examples/libtorch-mlp.groovy)
-declares a complete two-layer feed-forward inference graph using only Moqui Math
-objects. The included provider compiles and executes it through LibTorch; the
-example weights produce `[1.1, 1.9, 7.05]` for `[1, 2, 3, 4]`.
+The file [`examples/matrix-product.groovy`](../examples/matrix-product.groovy)
+declares `C = A x B` entirely as Moqui Math objects. The execution example calls
+PyTorch explicitly and produces `[58, 64, 139, 154]`.
 
 ## Compilation boundary
 
@@ -14,35 +13,43 @@ execution-plan format:
 ```groovy
 final class LibTorchProvider
         implements MathProvider<LibTorchPlan, LibTorchResult> {
-    LibTorchPlan compile(MathGraph graph) { /* provider-specific lowering */ }
+    LibTorchPlan compile(MathMeta mathMeta) { /* provider-specific lowering */ }
     LibTorchResult execute(LibTorchPlan plan, Map<String, ?> inputs) { /* native call */ }
 }
 ```
 
-`LibTorchProvider.compile` freezes the graph, selects one `MathModel`, follows
+`LibTorchProvider.compile` freezes `MathMeta`, selects one `MathModel`, follows
 its ordered `MathModelData`, resolves operand roles and emits calls directly to
 an opaque native plan. There is no public intermediate representation. The
-initial implementation supports `TtAffine` and `TtTensorReLu` and rejects every
+initial implementation supports `TtMatrixProduct`, `TtAffine` and
+`TtTensorReLu` and rejects every
 unknown transformation explicitly.
 
 ## Example lowering
 
-The example has three ordered transformations:
+The example has one declared transformation:
 
 | Groovy Math declaration | Operand roles | LibTorch operation |
 |---|---|---|
-| `Dense1 : TtAffine` | left, kernel, bias | `at::matmul(x, weight.T) + bias` |
-| `HiddenRelu : TtTensorReLu` | single | `torch::relu` |
-| `Dense2 : TtAffine` | left, kernel, bias | `at::matmul(x, weight.T) + bias` |
+| `MultiplyAB : TtMatrixProduct` | left matrix, right matrix | `at::matmul(A, B)` |
 
 The provider resolves roles from `TransformationOperand.operandTypeEnumId`, not
 from declaration order alone. `MathModelData.sequenceNum` gives the initial
 ordering, while tensor producer/consumer references allow the provider to
 validate and topologically order the final plan.
 
-Tensor declarations provide logical shape, layout, purpose and storage. The
-prototype reads `elementArray` for `TpModelParams`; durable SafeTensor loading
-is a later storage adapter and does not alter plan compilation.
+The left matrix is supplied at execution time. The right matrix is declared in
+`Matrix.componentArray` and becomes a native constant owned by the compiled
+plan. Tensor affine/ReLU plans remain supported.
+
+The provider choice is outside the mathematical declaration:
+
+```groovy
+LibTorchResult product = PyTorch.execute(mathMeta, 'MatrixProduct') {
+    threads intraOp: 1, interOp: 1
+    input 'A', [[1, 2, 3], [4, 5, 6]]
+}
+```
 
 ## Native boundary
 

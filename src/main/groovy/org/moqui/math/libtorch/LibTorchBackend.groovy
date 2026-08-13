@@ -11,6 +11,8 @@ interface LibTorchBackend {
     long createPlan(int inputWidth)
     void addAffine(long handle, int inputSlot, int outputSlot, int inputWidth, int outputWidth,
                    float[] weight, float[] bias)
+    void addMatrixProduct(long handle, int inputSlot, int outputSlot, int inputWidth, int outputWidth,
+                          float[] rightMatrix)
     void addRelu(long handle, int inputSlot, int outputSlot)
     void seal(long handle, int outputSlot, int outputWidth)
     float[] execute(long handle, float[] input, int batchSize)

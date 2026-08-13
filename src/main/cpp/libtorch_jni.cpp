@@ -36,7 +36,15 @@ struct Relu {
     int output_slot;
 };
 
-using Operation = std::variant<Affine, Relu>;
+struct MatrixProduct {
+    int input_slot;
+    int output_slot;
+    int input_width;
+    int output_width;
+    at::Tensor right;
+};
+
+using Operation = std::variant<Affine, Relu, MatrixProduct>;
 
 struct Plan {
     explicit Plan(int width) : input_width(width) {
@@ -89,8 +97,13 @@ at::Tensor run(const Plan& execution_plan, float* input, int batch_size) {
                     throw std::invalid_argument("affine input width does not match the tensor");
                 }
                 slots[typed.output_slot] = at::matmul(source->second, typed.weight.transpose(0, 1)) + typed.bias;
-            } else {
+            } else if constexpr (std::is_same_v<T, Relu>) {
                 slots[typed.output_slot] = at::relu(source->second);
+            } else {
+                if (source->second.size(-1) != typed.input_width) {
+                    throw std::invalid_argument("matrix product input width does not match the left matrix");
+                }
+                slots[typed.output_slot] = at::matmul(source->second, typed.right);
             }
         }, operation);
     }
@@ -145,6 +158,26 @@ Java_org_moqui_math_libtorch_LibTorchBindings_nativeAddRelu(
         Plan& target = plan(handle);
         if (target.sealed) throw std::logic_error("cannot modify a sealed native plan");
         target.operations.emplace_back(Relu{input_slot, output_slot});
+    } catch (const std::exception& error) {
+        throw_java(env, error);
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_org_moqui_math_libtorch_LibTorchBindings_nativeAddMatrixProduct(
+        JNIEnv* env, jclass, jlong handle, jint input_slot, jint output_slot,
+        jint input_width, jint output_width, jfloatArray right_array) {
+    try {
+        Plan& target = plan(handle);
+        if (target.sealed) throw std::logic_error("cannot modify a sealed native plan");
+        std::vector<float> right = floats(env, right_array);
+        if (right.size() != static_cast<std::size_t>(input_width * output_width)) {
+            throw std::invalid_argument("right matrix element count is invalid");
+        }
+        target.operations.emplace_back(MatrixProduct{
+            input_slot, output_slot, input_width, output_width,
+            at::from_blob(right.data(), {input_width, output_width}, at::kFloat).clone()
+        });
     } catch (const std::exception& error) {
         throw_java(env, error);
     }

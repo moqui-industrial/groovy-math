@@ -8,7 +8,7 @@ package org.moqui.math.libtorch
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.moqui.math.dsl.MathDsl
-import org.moqui.math.dsl.MathGraph
+import org.moqui.math.dsl.MathMeta
 import org.moqui.math.moqui.MoquiSchemaInspector
 
 import java.nio.ByteBuffer
@@ -19,31 +19,51 @@ import java.util.concurrent.Executors
 @Tag('libtorch-native')
 class LibTorchNativeTest {
     @Test
+    void executesNestedMatrixInputThroughPyTorchBlock() {
+        String schemaPath = System.getenv('MOQUI_MATH_ENTITIES')
+        assert schemaPath
+        MathMeta mathMeta = MathDsl.evaluate(
+            new File(schemaPath),
+            new File(System.getProperty('user.dir'), 'examples/matrix-product.groovy'))
+
+        LibTorchResult result = PyTorch.execute(mathMeta, 'MatrixProduct') {
+            threads intraOp: 1, interOp: 1
+            input 'A', [[1, 2, 3], [4, 5, 6]]
+        }
+
+        assert result.tensorName == 'C'
+        assert result.batchSize == 2
+        assert result.width == 2
+        assert result.values.toList() == [58f, 64f, 139f, 154f]
+    }
+
+    @Test
     void executesArraysDirectBuffersAndConcurrentRequests() {
         String schemaPath = System.getenv('MOQUI_MATH_ENTITIES')
         assert schemaPath
-        MathGraph graph = MathDsl.evaluate(
+        MathMeta mathMeta = MathDsl.evaluate(
             MoquiSchemaInspector.inspect(new File(schemaPath)),
-            new File(System.getProperty('user.dir'), 'examples/libtorch-mlp.groovy'))
-        LibTorchProvider provider = new LibTorchProvider('IrisClassifier')
+            new File(System.getProperty('user.dir'), 'examples/matrix-product.groovy'))
+        LibTorchProvider provider = new LibTorchProvider('MatrixProduct')
         provider.configureThreads(1, 1)
 
-        LibTorchPlan plan = provider.compile(graph)
+        LibTorchPlan plan = provider.compile(mathMeta)
         try {
-            LibTorchResult result = plan.execute([1f, 2f, 3f, 4f] as float[])
-            assert result.values.toList() == [1.1f, 1.9f, 7.05f]
+            LibTorchResult result = plan.execute([1f, 2f, 3f, 4f, 5f, 6f] as float[])
+            assert result.values.toList() == [58f, 64f, 139f, 154f]
 
-            ByteBuffer input = directFloats([1f, 2f, 3f, 4f] as float[])
-            ByteBuffer output = plan.executeDirect(input, 1)
+            ByteBuffer input = directFloats([1f, 2f, 3f, 4f, 5f, 6f] as float[])
+            ByteBuffer output = plan.executeDirect(input, 2)
             assert [output.asFloatBuffer().get(0), output.asFloatBuffer().get(1),
-                    output.asFloatBuffer().get(2)] == [1.1f, 1.9f, 7.05f]
+                    output.asFloatBuffer().get(2), output.asFloatBuffer().get(3)] ==
+                [58f, 64f, 139f, 154f]
 
             def pool = Executors.newFixedThreadPool(8)
             try {
                 List<Callable<Float>> work = (0..<64).collect {
-                    { -> plan.execute([1f, 2f, 3f, 4f] as float[]).values[2] } as Callable<Float>
+                    { -> plan.execute([1f, 2f, 3f, 4f, 5f, 6f] as float[]).values[3] } as Callable<Float>
                 }
-                assert pool.invokeAll(work)*.get().every { Math.abs(it - 7.05f) < 0.0001f }
+                assert pool.invokeAll(work)*.get().every { Math.abs(it - 154f) < 0.0001f }
             } finally {
                 pool.shutdown()
             }

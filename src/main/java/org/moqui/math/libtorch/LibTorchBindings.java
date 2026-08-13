@@ -13,6 +13,8 @@ final class LibTorchBindings {
     static native long nativeCreatePlan(int inputWidth);
     static native void nativeAddAffine(long handle, int inputSlot, int outputSlot,
                                        int inputWidth, int outputWidth, float[] weight, float[] bias);
+    static native void nativeAddMatrixProduct(long handle, int inputSlot, int outputSlot,
+                                              int inputWidth, int outputWidth, float[] rightMatrix);
     static native void nativeAddRelu(long handle, int inputSlot, int outputSlot);
     static native void nativeSeal(long handle, int outputSlot, int outputWidth);
     static native float[] nativeExecute(long handle, float[] input, int batchSize);
