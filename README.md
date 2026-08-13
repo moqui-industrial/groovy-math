@@ -41,8 +41,8 @@ executable DSL layer:
 
 ## DSL
 
-The DSL mirrors Moqui seed-data records while adding a Gradle-style named
-object lifecycle:
+The DSL mirrors Moqui seed-data records, including relationship-driven nested
+records, while adding a Gradle-style named object lifecycle:
 
 ```groovy
 MathModelDef('NeuralNetwork') {
@@ -61,6 +61,38 @@ Transformation('DenseProduct') {
 MathModelData('Classifier.DenseProduct') {
     mathModelId 'Classifier'
     transformationId 'DenseProduct'
+}
+```
+
+The nested form follows the same convention as Moqui data files: a relationship
+short alias names a child record and the schema supplies foreign-key values.
+
+```groovy
+Category('AgentEntityModel', categoryTypeEnumId: 'CtSmall') {
+    objects('BillingAccountObject', objectName: 'BillingAccount')
+    morphisms('BillingAccountSchema',
+        sourceObjectId: 'BillingAccountObject',
+        targetObjectId: 'BillingAccountObject',
+        morphismName: 'schema::BillingAccount') {
+        parameters('SourceDialect',
+            parameterDefId: 'AgMorphSourceDialectDef',
+            symbolicValue: 'entity-definition')
+    }
+}
+```
+
+Here `categoryId` is inherited by `objects` and `morphisms`, while `morphismId`
+is inherited by `parameters`. Records are stored in their normal entity
+containers; nesting is the declarative authoring form, not a denormalized
+runtime representation. A relationship may alternatively be used as a
+Gradle-style container:
+
+```groovy
+Category('AgentEntityModel') {
+    objects {
+        CategoryObject('BillingAccountObject') { objectName 'BillingAccount' }
+        PartyObject(objectName: 'Party')
+    }
 }
 ```
 

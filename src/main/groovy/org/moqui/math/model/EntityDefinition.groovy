@@ -21,14 +21,16 @@ final class EntityDefinition {
     final String name
     final String packageName
     final String fullName
+    final String shortAlias
     final LinkedHashMap<String, FieldDefinition> fields = new LinkedHashMap<>()
     final LinkedHashMap<String, RelationshipDefinition> relationships = new LinkedHashMap<>()
 
-    EntityDefinition(final String packageName, final String name) {
+    EntityDefinition(final String packageName, final String name, final String shortAlias = null) {
         if (!name) throw new IllegalArgumentException('Entity name must not be empty')
         this.name = name
         this.packageName = packageName ?: ''
         this.fullName = this.packageName ? "${this.packageName}.${name}" : name
+        this.shortAlias = shortAlias
     }
 
     void addField(final FieldDefinition field) {

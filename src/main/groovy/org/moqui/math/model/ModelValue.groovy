@@ -77,7 +77,7 @@ final class ModelValue extends LinkedHashMap<String, Object> {
             if (value == null) throw new IllegalStateException("Missing primary key ${definition.fullName}.${field.name}")
             keyFields.put(field.name, value)
         }
-        if (keyFields.empty) keyFields.put('modelKey', modelKey)
+        if (keyFields.isEmpty()) keyFields.put('modelKey', modelKey)
         entityKey = new EntityKey(definition.fullName, keyFields)
         identityLocked = true
         entityKey

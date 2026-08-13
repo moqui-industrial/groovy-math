@@ -30,6 +30,23 @@ the reverse.
 5. The primary identity becomes immutable after realization.
 6. Filtered views can configure matching existing and future objects.
 
+## Seed-style nesting
+
+Nested DSL declarations are resolved through the relationships loaded from the
+Moqui Math schema. A relationship short alias acts as a child factory. The DSL
+copies the relationship key map from the parent declaration to the child, then
+stores both as independent normalized values in their entity containers.
+Primary-key values from enclosing records are also available as context for
+deeper descendants with matching fields. This is what allows a grandchild to
+inherit, for example, both its immediate `parentMorphismId` and the enclosing
+Category's `categoryId`.
+
+If the parent has no declared `many` relationship, the builder can use the
+child's `one` relationship back to the parent. This supports records such as a
+Morphism with nested Parameter values even though only Parameter declares the
+relationship. Ambiguous relationships must be selected with an explicit
+relationship block; the builder never guesses between multiple key mappings.
+
 This lifecycle follows the useful part of Gradle's DSL model without embedding
 the Gradle runtime or its build-engine concerns.
 

@@ -61,7 +61,9 @@ final class MoquiSchemaInspector {
     }
 
     private static EntityDefinition parseEntity(final Element node) {
-        EntityDefinition entity = new EntityDefinition(node.getAttribute('package'), node.getAttribute('entity-name'))
+        EntityDefinition entity = new EntityDefinition(
+            node.getAttribute('package'), node.getAttribute('entity-name'), attributeOrNull(node, 'short-alias')
+        )
         childElements(node, 'field').each { Element field -> entity.addField(parseField(field)) }
         childElements(node, 'relationship').each { Element relationship ->
             entity.addRelationship(parseRelationship(relationship))

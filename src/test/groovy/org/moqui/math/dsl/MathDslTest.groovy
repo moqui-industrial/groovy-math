@@ -20,6 +20,7 @@ import org.moqui.math.model.EntityDefinition
 import org.moqui.math.model.FieldDefinition
 import org.moqui.math.model.ModelDefinition
 import org.moqui.math.model.ModelValue
+import org.moqui.math.model.RelationshipDefinition
 import org.moqui.math.moqui.MoquiSchemaInspector
 
 class MathDslTest {
@@ -78,6 +79,45 @@ MathModel('Simulator') {
     }
 
     @Test
+    void buildsNestedSeedRecordsAndInheritsRelationshipKeys() {
+        MathGraph graph = MathDsl.math(nestedModelDefinition()) {
+            Category('AgentEntityModel') {
+                categoryName 'Moqui Entity Model'
+                objects('ObjectA', objectName: 'BillingAccount')
+                morphisms('SchemaA', sourceObjectId: 'ObjectA', targetObjectId: 'ObjectA') {
+                    morphismName 'schema::BillingAccount'
+                    parameters('SchemaA.Source', parameterDefId: 'SourceDialect', symbolicValue: 'entity-definition')
+                    Morphism('RelationshipA', sourceObjectId: 'ObjectA', targetObjectId: 'ObjectA',
+                        morphismName: 'rel::Party')
+                }
+            }
+        }.validate()
+
+        assert graph.size() == 5
+        assert graph.CategoryObject.named('ObjectA').get().categoryId == 'AgentEntityModel'
+        assert graph.Morphism.named('SchemaA').get().categoryId == 'AgentEntityModel'
+        assert graph.Parameter.named('SchemaA.Source').get().morphismId == 'SchemaA'
+        assert graph.Morphism.named('RelationshipA').get().parentMorphismId == 'SchemaA'
+        assert graph.Morphism.named('RelationshipA').get().categoryId == 'AgentEntityModel'
+    }
+
+    @Test
+    void supportsGradleStyleRelationshipContainerBlocks() {
+        MathGraph graph = MathDsl.math(nestedModelDefinition()) {
+            Category('AgentEntityModel') {
+                categoryName 'Moqui Entity Model'
+                objects {
+                    CategoryObject('ObjectA') { objectName 'BillingAccount' }
+                    ObjectB(objectName: 'Party')
+                }
+            }
+        }.validate()
+
+        assert graph.CategoryObject.named('ObjectA').get().categoryId == 'AgentEntityModel'
+        assert graph.CategoryObject.named('ObjectB').get().objectName == 'Party'
+    }
+
+    @Test
     void evaluatesExampleAgainstCurrentMoquiMathCheckoutWhenConfigured() {
         String external = System.getenv('MOQUI_MATH_ENTITIES')
         if (!external) return
@@ -90,6 +130,21 @@ MathModel('Simulator') {
         assert graph.MathModel.named('Classifier').get().mathModelDefId == 'NeuralNetwork'
         assert graph.Transformation.named('DenseProduct').get().transformationTypeEnumId == 'TtMatrixProduct'
         assert graph.MathModelData.named('Classifier.DenseProduct').get().transformationId == 'DenseProduct'
+    }
+
+    @Test
+    void evaluatesNestedEntityMorphismExampleAgainstCurrentMoquiMathCheckoutWhenConfigured() {
+        String external = System.getenv('MOQUI_MATH_ENTITIES')
+        if (!external) return
+
+        ModelDefinition definition = MoquiSchemaInspector.inspect(new File(external))
+        File example = new File(System.getProperty('user.dir'), 'examples/entity-morphism.groovy')
+        MathGraph graph = MathDsl.evaluate(definition, example).validate()
+
+        assert graph.CategoryObject.named('AgEntObj_BillingAccount').get().categoryId == 'AgentEntityModel'
+        assert graph.Morphism.named('AgEntSchema_BillingAccount').get().categoryId == 'AgentEntityModel'
+        assert graph.Parameter.named('AgEntSchema_BillingAccount_001').get().morphismId ==
+            'AgEntSchema_BillingAccount'
     }
 
     private static ModelDefinition modelDefinition() {
@@ -110,6 +165,53 @@ MathModel('Simulator') {
         operand.addField(new FieldDefinition('transformationId', 'id', true, true, null))
         operand.addField(new FieldDefinition('operandIndex', 'number-integer', true, true, null))
         model.addEntity(operand)
+        model
+    }
+
+    private static ModelDefinition nestedModelDefinition() {
+        ModelDefinition model = new ModelDefinition()
+
+        EntityDefinition category = new EntityDefinition('moqui.math.ct', 'Category')
+        category.addField(new FieldDefinition('categoryId', 'id', true, true, null))
+        category.addField(new FieldDefinition('categoryName', 'text-short', false, true, null))
+        category.addRelationship(new RelationshipDefinition(
+            'objects', 'many', 'moqui.math.ct.CategoryObject', [categoryId: 'categoryId']
+        ))
+        category.addRelationship(new RelationshipDefinition(
+            'morphisms', 'many', 'moqui.math.ct.Morphism', [categoryId: 'categoryId']
+        ))
+        model.addEntity(category)
+
+        EntityDefinition object = new EntityDefinition('moqui.math.ct', 'CategoryObject')
+        object.addField(new FieldDefinition('categoryObjectId', 'id', true, true, null))
+        object.addField(new FieldDefinition('categoryId', 'id', false, true, null))
+        object.addField(new FieldDefinition('objectName', 'text-short', false, true, null))
+        object.addRelationship(new RelationshipDefinition(
+            'category', 'one', 'moqui.math.ct.Category', Collections.emptyMap()
+        ))
+        model.addEntity(object)
+
+        EntityDefinition morphism = new EntityDefinition('moqui.math.ct', 'Morphism')
+        morphism.addField(new FieldDefinition('morphismId', 'id', true, true, null))
+        morphism.addField(new FieldDefinition('parentMorphismId', 'id', false, false, null))
+        morphism.addField(new FieldDefinition('categoryId', 'id', false, true, null))
+        morphism.addField(new FieldDefinition('sourceObjectId', 'id', false, true, null))
+        morphism.addField(new FieldDefinition('targetObjectId', 'id', false, true, null))
+        morphism.addField(new FieldDefinition('morphismName', 'text-short', false, true, null))
+        morphism.addRelationship(new RelationshipDefinition(
+            'parent', 'one', 'moqui.math.ct.Morphism', [parentMorphismId: 'morphismId']
+        ))
+        model.addEntity(morphism)
+
+        EntityDefinition parameter = new EntityDefinition('moqui.math', 'Parameter', 'parameters')
+        parameter.addField(new FieldDefinition('parameterId', 'id', true, true, null))
+        parameter.addField(new FieldDefinition('parameterDefId', 'id', false, true, null))
+        parameter.addField(new FieldDefinition('morphismId', 'id', false, false, null))
+        parameter.addField(new FieldDefinition('symbolicValue', 'text-short', false, false, null))
+        parameter.addRelationship(new RelationshipDefinition(
+            'morphism', 'one', 'moqui.math.ct.Morphism', Collections.emptyMap()
+        ))
+        model.addEntity(parameter)
         model
     }
 }

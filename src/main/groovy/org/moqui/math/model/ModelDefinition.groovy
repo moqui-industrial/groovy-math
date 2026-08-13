@@ -33,9 +33,9 @@ final class ModelDefinition {
         EntityDefinition exact = entities.get(name)
         if (exact != null) return exact
 
-        List<EntityDefinition> matches = new ArrayList<EntityDefinition>(
-            entities.values().findAll { EntityDefinition entity -> entity.name == name }
-        )
+        List<EntityDefinition> matches = new ArrayList<EntityDefinition>(entities.values().findAll {
+            EntityDefinition entity -> entity.name == name || entity.shortAlias == name
+        })
         if (matches.size() == 1) return matches.first()
         if (matches.empty) throw new IllegalArgumentException("Unknown entity ${name}")
         throw new IllegalArgumentException("Ambiguous entity ${name}: ${matches*.fullName.join(', ')}")
