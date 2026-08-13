@@ -29,3 +29,27 @@ jobs:
         env:
           MOQUI_MATH_ENTITIES: ${{ github.workspace }}/moqui-math/entity/MathEntities.xml
         run: ./gradlew runOrToolsProductionPlan
+
+  petsc-native:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: moqui/moqui-math
+          path: moqui-math
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install PETSc development files
+        run: sudo apt-get update && sudo apt-get install --yes petsc-dev ninja-build pkg-config
+      - name: Build bridge and run native TAO tests
+        env:
+          MOQUI_MATH_ENTITIES: ${{ github.workspace }}/moqui-math/entity/MathEntities.xml
+        run: ./gradlew petscTaoNativeTest
+      - name: Run PETSc/TAO energy dispatch example
+        env:
+          MOQUI_MATH_ENTITIES: ${{ github.workspace }}/moqui-math/entity/MathEntities.xml
+        run: ./gradlew runPetscTaoEnergyDispatch
