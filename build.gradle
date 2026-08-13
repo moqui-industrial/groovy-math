@@ -47,15 +47,17 @@ tasks.named('test') {
 
 def nativeBuildDirectory = layout.buildDirectory.dir('native')
 def petscTaoBuildDirectory = layout.buildDirectory.dir('native-petsctao')
+def libTorchSourceDirectory = layout.projectDirectory.dir('src/main/cpp')
+def petscTaoSourceDirectory = layout.projectDirectory.dir('src/main/cpp/petsctao')
 
 tasks.register('configureLibTorchNative', Exec) {
-    inputs.dir('src/main/cpp')
+    inputs.dir(libTorchSourceDirectory)
     outputs.file(nativeBuildDirectory.map { it.file('build.ninja') })
     doFirst {
         String libTorchHome = System.getenv('LIBTORCH_HOME')
         if (!libTorchHome) throw new GradleException('LIBTORCH_HOME must point to an unpacked LibTorch distribution')
         String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
-        commandLine cmake, '-S', file('src/main/cpp').absolutePath,
+        commandLine cmake, '-S', libTorchSourceDirectory.asFile.absolutePath,
             '-B', nativeBuildDirectory.get().asFile.absolutePath, '-G', 'Ninja',
             '-DCMAKE_BUILD_TYPE=Release', "-DCMAKE_PREFIX_PATH=${libTorchHome}",
             "-DTorch_DIR=${new File(libTorchHome, 'share/cmake/Torch').absolutePath}"
@@ -64,7 +66,7 @@ tasks.register('configureLibTorchNative', Exec) {
 
 tasks.register('buildLibTorchNative', Exec) {
     dependsOn tasks.named('configureLibTorchNative')
-    inputs.dir('src/main/cpp')
+    inputs.dir(libTorchSourceDirectory)
     inputs.file(nativeBuildDirectory.map { it.file('build.ninja') })
     outputs.file(nativeBuildDirectory.map { it.file('libgroovy_math_libtorch.so') })
     doFirst {
@@ -83,12 +85,12 @@ tasks.register('nativeTest', Test) {
 }
 
 tasks.register('configurePetscTaoNative', Exec) {
-    inputs.dir('src/main/cpp/petsctao')
+    inputs.dir(petscTaoSourceDirectory)
     inputs.file('src/main/cpp/petsctao_jni.cpp')
     outputs.file(petscTaoBuildDirectory.map { it.file('build.ninja') })
     doFirst {
         String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
-        commandLine cmake, '-S', file('src/main/cpp/petsctao').absolutePath,
+        commandLine cmake, '-S', petscTaoSourceDirectory.asFile.absolutePath,
             '-B', petscTaoBuildDirectory.get().asFile.absolutePath, '-G', 'Ninja',
             '-DCMAKE_BUILD_TYPE=Release'
     }
