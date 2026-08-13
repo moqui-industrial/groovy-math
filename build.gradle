@@ -25,6 +25,8 @@ repositories {
 
 dependencies {
     api 'org.apache.groovy:groovy:5.0.8'
+    implementation 'org.apache.groovy:groovy-json:5.0.8'
+    implementation 'com.google.ortools:ortools-java:9.15.6755'
 
     testImplementation platform('org.junit:junit-bom:5.13.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -100,6 +102,13 @@ tasks.register('benchmarkLibTorchCompute', JavaExec) {
         String value = System.getProperty("groovy.math.benchmark.${option}")
         if (value) systemProperty "groovy.math.benchmark.${option}", value
     }
+}
+
+tasks.register('runOrToolsProductionPlan', JavaExec) {
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'groovy.ui.GroovyMain'
+    args file('examples/run-ortools-production-plan.groovy').absolutePath
 }
 
 tasks.named('check') {

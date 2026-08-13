@@ -17,7 +17,8 @@ package org.moqui.math.dsl
 enum MathModelDataType implements DslEnumValue {
     Matrix('MmdtMatrix'),
     Transformation('MmdtTransformation'),
-    Tensor('MmdtTensor')
+    Tensor('MmdtTensor'),
+    Vector('MmdtVector')
 
     final String id
 

@@ -162,6 +162,22 @@ MathModel('Simulator') {
             'AgEntSchema_BillingAccount'
     }
 
+    @Test
+    void evaluatesProductionPlanExampleAgainstCurrentMoquiMathCheckoutWhenConfigured() {
+        String external = System.getenv('MOQUI_MATH_ENTITIES')
+        if (!external) return
+
+        ModelDefinition definition = MoquiSchemaInspector.inspect(new File(external))
+        File example = new File(System.getProperty('user.dir'), 'examples/production-plan.groovy')
+        MathMeta mathMeta = MathDsl.evaluate(definition, example).validate()
+
+        assert mathMeta.MathModelDef.named('LinearProductionPlanning').get().modelTypeEnumId == 'MmtLp'
+        assert mathMeta.MathModel.named('ProductionPlan').get().solvingMethodEnumId == 'MmsmSimplex'
+        assert mathMeta.Parameter.named('ProductionPlan.ObjectiveSense').get().symbolicValue == 'MAXIMIZE'
+        assert mathMeta.Matrix.named('MachineCapacityCoefficients').get().componentArray == '[[2,1],[1,2]]'
+        assert mathMeta.MathModelData.size() == 5
+    }
+
     private static ModelDefinition modelDefinition() {
         ModelDefinition model = new ModelDefinition()
 

@@ -1,0 +1,31 @@
+name: Gradle
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: moqui/moqui-math
+          path: moqui-math
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Test
+        env:
+          MOQUI_MATH_ENTITIES: ${{ github.workspace }}/moqui-math/entity/MathEntities.xml
+        run: ./gradlew check
+      - name: Run OR-Tools example
+        env:
+          MOQUI_MATH_ENTITIES: ${{ github.workspace }}/moqui-math/entity/MathEntities.xml
+        run: ./gradlew runOrToolsProductionPlan

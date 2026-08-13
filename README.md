@@ -20,6 +20,7 @@ MathMeta
 MathProvider SPI
       |
       +-- PyTorch provider -> LibTorch
+      +-- OR-Tools provider -> GLOP
       +-- future local or distributed providers
 ```
 
@@ -71,6 +72,13 @@ See [`examples/matrix-product.groovy`](examples/matrix-product.groovy) for the
 complete declaration and
 [`examples/run-pytorch-matrix-product.groovy`](examples/run-pytorch-matrix-product.groovy)
 for the explicit PyTorch execution block.
+
+The optimization example in
+[`examples/production-plan.groovy`](examples/production-plan.groovy) declares
+a linear production plan using the same seed-data style. It maximizes unit
+margin for two products under two machine-capacity constraints. The matching
+[`examples/run-ortools-production-plan.groovy`](examples/run-ortools-production-plan.groovy)
+loads the metadata and solves it with OR-Tools.
 
 The nested form follows the same convention as Moqui data files: a relationship
 short alias names a child record and the schema supplies foreign-key values.
@@ -167,8 +175,34 @@ interface MathProvider<P, R> {
 The included LibTorch provider owns `LibTorchPlan` and a narrow JNI bridge. It
 currently lowers `TtMatrixProduct`, `TtAffine` and `TtTensorReLu`, accepts Java arrays or reusable
 direct buffers, and permits concurrent inference on one immutable native plan.
+
+The included OR-Tools provider lowers `MmtLp` models to the native GLOP linear
+solver through the official OR-Tools Java API. Its initial contract is the
+standard linear program:
+
+```text
+maximize or minimize c^T x
+subject to A x <= b
+and variable lower/upper bounds
+```
+
+`MathModelData.purposeEnumId` identifies the decision-variable names
+(`MmdpDecisionVars`), cost vector (`MmdpCostVector`), constraint matrix
+(`MmdpConstraintMatrix`), right-hand side (`MmdpRhsVector`) and optional 2 x n
+lower/upper-bound matrix (`MmdpVarBounds`). The model parameter with alias
+`objectiveSense` must contain `MAXIMIZE` or `MINIMIZE`. Values are declared as
+JSON in `Vector.componentArray` and `Matrix.componentArray`; execution does not
+parse the Groovy source again. This first version deliberately rejects runtime
+coefficient overrides and model types other than LP.
+
 Other providers may compile the same metadata to Spark, Flink, a remote service or
 a distributed runtime without changing the DSL.
+
+PETSc/TAO is the intended significant native extension after the provider
+contracts stabilize: PETSc for distributed sparse linear/nonlinear systems and
+ODE/PDE time integration, and TAO for scalable optimization. It should be a
+separate provider module with its own native or remote execution boundary, not
+an extension of the OR-Tools plan.
 
 ## Build
 
@@ -189,6 +223,13 @@ To run the compatibility test against a local checkout of Moqui Math:
 
 ```shell
 MOQUI_MATH_ENTITIES=/path/to/moqui-math/entity/MathEntities.xml ./gradlew test
+```
+
+To execute the OR-Tools example:
+
+```shell
+MOQUI_MATH_ENTITIES=/path/to/moqui-math/entity/MathEntities.xml \
+  ./gradlew runOrToolsProductionPlan
 ```
 
 ## License

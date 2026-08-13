@@ -15,7 +15,8 @@
 package org.moqui.math.dsl
 
 enum MathModelUsageContext implements DslEnumValue {
-    Inference('MmucInference')
+    Inference('MmucInference'),
+    Optimisation('MmucOptimisation')
 
     final String id
 
