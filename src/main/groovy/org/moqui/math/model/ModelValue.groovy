@@ -15,6 +15,7 @@
 package org.moqui.math.model
 
 import groovy.transform.CompileStatic
+import groovy.transform.TypeCheckingMode
 
 @CompileStatic
 final class ModelValue extends LinkedHashMap<String, Object> {
@@ -59,6 +60,16 @@ final class ModelValue extends LinkedHashMap<String, Object> {
         this
     }
 
+    @CompileStatic(TypeCheckingMode.SKIP)
+    Object methodMissing(final String fieldName, final Object rawArguments) {
+        Object[] arguments = rawArguments instanceof Object[] ? (Object[]) rawArguments : [rawArguments] as Object[]
+        if (arguments.length != 1 || !definition.fields.containsKey(fieldName)) {
+            throw new MissingMethodException(fieldName, getClass(), arguments)
+        }
+        put(fieldName, arguments[0])
+        this
+    }
+
     EntityKey lockIdentity() {
         LinkedHashMap<String, Object> keyFields = new LinkedHashMap<>()
         definition.primaryKeyFields.each { FieldDefinition field ->
@@ -82,7 +93,7 @@ final class ModelValue extends LinkedHashMap<String, Object> {
 
     ModelValue validate() {
         definition.fields.values().each { FieldDefinition field ->
-            if (field.required && get(field.name) == null) {
+            if (field.required && field.defaultExpression == null && get(field.name) == null) {
                 throw new IllegalStateException("Missing required field ${definition.fullName}.${field.name}")
             }
         }

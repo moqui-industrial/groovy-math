@@ -29,16 +29,90 @@ consume that graph through the SPI introduced in a later milestone.
 
 ## Current milestone
 
-The first milestone supplies the generic model foundation:
+The project currently supplies the generic model foundation and the first
+executable DSL layer:
 
 - schema definitions for fields, relationships and composite identifiers;
 - map-backed `ModelValue` objects with schema validation;
 - named containers and lazy providers inspired by Gradle DSL semantics;
 - live filtered collections and ordered configuration actions;
 - a structural reader used to verify compatibility with `MathEntities.xml`.
+- closure-based declarations and evaluation of trusted `.groovy` DSL files.
 
-The mathematical domain DSL and the PyTorch provider are intentionally separate
-milestones built on this foundation.
+## DSL
+
+The DSL mirrors Moqui seed-data records while adding a Gradle-style named
+object lifecycle:
+
+```groovy
+MathModelDef('NeuralNetwork') {
+    description 'Neural network model definition'
+}
+
+MathModel('Classifier') {
+    mathModelDefId 'NeuralNetwork'
+    statusId 'MathModelDraft'
+}
+
+Transformation('DenseProduct') {
+    transformationTypeEnumId 'TtMatrixProduct'
+}
+
+MathModelData('Classifier.DenseProduct') {
+    mathModelId 'Classifier'
+    transformationId 'DenseProduct'
+}
+```
+
+Simple seed records may also be written entirely as named arguments:
+
+```groovy
+MathModel(mathModelId: 'Classifier', mathModelDefId: 'NeuralNetwork', statusId: 'MathModelDraft')
+```
+
+Each entity name is resolved against the loaded schema. Each field assignment
+is validated, required values are checked on realization, and composite primary
+keys are preserved.
+
+Default expressions originating in Moqui, such as `ec.user.nowTimestamp`, are
+preserved as schema metadata and resolved later by a provider; they are not
+executed by the standalone DSL.
+
+The resulting graph exposes containers such as:
+
+```groovy
+graph.MathModel.named('Classifier')
+graph.MathModel.matching { it.mathModelDefId == 'NeuralNetwork' }
+    .configureEach { description 'Selected model' }
+graph.MathModel.remove('ObsoleteModel')
+graph.validate()
+```
+
+The container lifecycle follows Gradle's domain-object collection contract:
+
+```groovy
+def models = graph.MathModel
+
+models.register('Deferred') { /* lazy */ }
+models.create('Immediate') { /* eager */ }
+models.named('Deferred')                 // lazy provider
+models.getByName('Deferred')             // eager value
+models.names                             // does not realize values
+models.configureEach { /* lazy action */ }
+models.all { /* eager action */ }
+models.disallowChanges()                 // freeze graph structure
+```
+
+The precise mapping and realization rules are documented in
+[`docs/gradle-collection-semantics.md`](docs/gradle-collection-semantics.md).
+
+Use `MathDsl.evaluate(schemaDefinition, dslFile)` or
+`MathDsl.evaluate(mathEntitiesXml, dslFile)` to read a DSL file. DSL files are
+trusted executable Groovy configuration, like `build.gradle`; this API is not a
+sandbox for untrusted input.
+
+Typed mathematical conveniences, generated enumeration types and the PyTorch
+provider are subsequent milestones built on this layer.
 
 ## Build
 
