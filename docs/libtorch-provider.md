@@ -2,9 +2,8 @@
 
 The file [`examples/libtorch-mlp.groovy`](../examples/libtorch-mlp.groovy)
 declares a complete two-layer feed-forward inference graph using only Moqui Math
-objects. It is the acceptance example for the first native PyTorch provider.
-[`examples/libtorch-mlp-plan.cpp`](../examples/libtorch-mlp-plan.cpp) shows the
-small LibTorch module that this particular graph is expected to produce.
+objects. The included provider compiles and executes it through LibTorch; the
+example weights produce `[1.1, 1.9, 7.05]` for `[1, 2, 3, 4]`.
 
 ## Compilation boundary
 
@@ -20,10 +19,11 @@ final class LibTorchProvider
 }
 ```
 
-`compile` must call `graph.freeze()` before retaining references. The resulting
-`LibTorchPlan` may contain native handles, provider operation objects or an
-immutable list of calls. None of these becomes part of the Groovy Math public
-model.
+`LibTorchProvider.compile` freezes the graph, selects one `MathModel`, follows
+its ordered `MathModelData`, resolves operand roles and emits calls directly to
+an opaque native plan. There is no public intermediate representation. The
+initial implementation supports `TtAffine` and `TtTensorReLu` and rejects every
+unknown transformation explicitly.
 
 ## Example lowering
 
@@ -31,26 +31,75 @@ The example has three ordered transformations:
 
 | Groovy Math declaration | Operand roles | LibTorch operation |
 |---|---|---|
-| `Dense1 : TtAffine` | left, kernel, bias | `torch::nn::Linear::forward` |
+| `Dense1 : TtAffine` | left, kernel, bias | `at::matmul(x, weight.T) + bias` |
 | `HiddenRelu : TtTensorReLu` | single | `torch::relu` |
-| `Dense2 : TtAffine` | left, kernel, bias | `torch::nn::Linear::forward` |
+| `Dense2 : TtAffine` | left, kernel, bias | `at::matmul(x, weight.T) + bias` |
 
 The provider resolves roles from `TransformationOperand.operandTypeEnumId`, not
 from declaration order alone. `MathModelData.sequenceNum` gives the initial
 ordering, while tensor producer/consumer references allow the provider to
 validate and topologically order the final plan.
 
-Tensor declarations provide logical shape, layout, purpose and storage. A
-provider should bind tensors with `TpModelParams` and `TstSafeTensor` to model
-weights, bind the input tensor from the execution request, and allocate result
-tensors owned by the native plan.
+Tensor declarations provide logical shape, layout, purpose and storage. The
+prototype reads `elementArray` for `TpModelParams`; durable SafeTensor loading
+is a later storage adapter and does not alter plan compilation.
 
 ## Native boundary
 
-The SPI does not prescribe JNI, the Java Foreign Function and Memory API or a
-remote transport. For an in-process implementation, keep the Java/native
-surface narrow and put a stable C ABI shim in front of LibTorch's C++ API. The
-shim should expose lifecycle operations such as compile, execute and release;
-the C++ side should own `torch::Tensor` and plan objects. This avoids exposing
-LibTorch C++ types or ABI details to Groovy code and permits the bridge mechanism
-to change without changing the DSL or provider SPI.
+This provider uses a narrow JNI bridge because Java 17 is the current baseline.
+The C++ side owns all `at::Tensor` parameters and the immutable operation list.
+Java owns an opaque handle through `LibTorchPlan`, whose read/write lock permits
+concurrent execution while making `close()` exclusive. Execution uses
+`c10::InferenceMode`.
+
+Two input boundaries are available:
+
+- `float[]` copies Java input into native memory and native output back to Java;
+- direct `ByteBuffer` lets LibTorch view the input in place and writes the
+  result into reusable off-heap output storage with one native copy, avoiding
+  JNI array marshalling and per-call allocation.
+
+## Build and verification
+
+The normal JVM build does not require LibTorch. Native tasks require JDK 17,
+CMake, Ninja and an unpacked CPU or accelerator LibTorch distribution:
+
+```shell
+export JAVA_HOME=/path/to/jdk-17
+export LIBTORCH_HOME=/path/to/libtorch
+./gradlew nativeTest
+./gradlew benchmarkLibTorch
+./gradlew benchmarkLibTorchCompute
+```
+
+Set `CMAKE_COMMAND` if CMake is not on `PATH`. `nativeTest` verifies array and
+direct-buffer results plus 64 concurrent calls on one plan.
+
+## Parallelism
+
+There are two independent CPU axes:
+
+- caller parallelism: the number of JVM requests executing the same plan;
+- intra-op parallelism: the native threads used inside each tensor operation.
+
+Inter-op threads are process-global in PyTorch and may be configured only once,
+before inter-op work begins. Intra-op threads may be changed, but changing them
+while requests are active is unsupported by this provider. A deployment must
+configure threads during startup.
+
+On a 9-core Xeon test machine, the synthetic plan `1024 -> 1024 -> ReLU ->
+1024` with batch 64 showed the useful boundary clearly. One caller improved
+from about 11.4k samples/s at one intra-op thread to 45.6k at four. At eight
+callers, one or two intra-op threads reached about 114k/103k samples/s, while
+four and eight intra-op threads fell to about 74k/55k because the product of
+caller threads and native threads oversubscribed the CPU. These are environment
+measurements, not portable guarantees.
+
+The practical CPU policy is therefore:
+
+- many independent requests: keep intra-op threads at 1 or 2 and scale callers;
+- one large batch: use several intra-op threads, normally no more than physical
+  cores;
+- never multiply both axes up to the core count;
+- benchmark real tensor sizes, because the tiny example is dominated by JNI,
+  allocation and scheduler overhead.

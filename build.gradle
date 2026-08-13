@@ -40,6 +40,65 @@ java {
 
 tasks.named('test') {
     useJUnitPlatform()
+    useJUnitPlatform { excludeTags 'libtorch-native' }
+}
+
+def nativeBuildDirectory = layout.buildDirectory.dir('native')
+
+tasks.register('configureLibTorchNative', Exec) {
+    inputs.dir('src/main/cpp')
+    outputs.file(nativeBuildDirectory.map { it.file('build.ninja') })
+    doFirst {
+        String libTorchHome = System.getenv('LIBTORCH_HOME')
+        if (!libTorchHome) throw new GradleException('LIBTORCH_HOME must point to an unpacked LibTorch distribution')
+        String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
+        commandLine cmake, '-S', file('src/main/cpp').absolutePath,
+            '-B', nativeBuildDirectory.get().asFile.absolutePath, '-G', 'Ninja',
+            '-DCMAKE_BUILD_TYPE=Release', "-DCMAKE_PREFIX_PATH=${libTorchHome}",
+            "-DTorch_DIR=${new File(libTorchHome, 'share/cmake/Torch').absolutePath}"
+    }
+}
+
+tasks.register('buildLibTorchNative', Exec) {
+    dependsOn tasks.named('configureLibTorchNative')
+    inputs.file(nativeBuildDirectory.map { it.file('build.ninja') })
+    outputs.file(nativeBuildDirectory.map { it.file('libgroovy_math_libtorch.so') })
+    doFirst {
+        String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
+        commandLine cmake, '--build', nativeBuildDirectory.get().asFile.absolutePath, '--parallel'
+    }
+}
+
+tasks.register('nativeTest', Test) {
+    dependsOn tasks.named('buildLibTorchNative')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'libtorch-native' }
+    systemProperty 'groovy.math.libtorch.library',
+        nativeBuildDirectory.get().file('libgroovy_math_libtorch.so').asFile.absolutePath
+}
+
+tasks.register('benchmarkLibTorch', JavaExec) {
+    dependsOn tasks.named('buildLibTorchNative'), tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.moqui.math.libtorch.LibTorchParallelBenchmark'
+    systemProperty 'groovy.math.libtorch.library',
+        nativeBuildDirectory.get().file('libgroovy_math_libtorch.so').asFile.absolutePath
+    if (System.getProperty('groovy.math.benchmark.iterations')) {
+        systemProperty 'groovy.math.benchmark.iterations', System.getProperty('groovy.math.benchmark.iterations')
+    }
+}
+
+tasks.register('benchmarkLibTorchCompute', JavaExec) {
+    dependsOn tasks.named('buildLibTorchNative'), tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.moqui.math.libtorch.LibTorchComputeBenchmark'
+    systemProperty 'groovy.math.libtorch.library',
+        nativeBuildDirectory.get().file('libgroovy_math_libtorch.so').asFile.absolutePath
+    ['width', 'batch', 'iterations'].each { String option ->
+        String value = System.getProperty("groovy.math.benchmark.${option}")
+        if (value) systemProperty "groovy.math.benchmark.${option}", value
+    }
 }
 
 tasks.named('check') {

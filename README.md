@@ -69,9 +69,7 @@ MathModelDef('LibTorchMlp', modelTypeEnumId: 'MmtDlFeedforward') {
 
 See [`examples/libtorch-mlp.groovy`](examples/libtorch-mlp.groovy) for the full
 two-layer network and [`docs/libtorch-provider.md`](docs/libtorch-provider.md)
-for its intended lowering to PyTorch C++. The corresponding provider output is
-illustrated by
-[`examples/libtorch-mlp-plan.cpp`](examples/libtorch-mlp-plan.cpp).
+for its direct lowering to PyTorch C++.
 
 The nested form follows the same convention as Moqui data files: a relationship
 short alias names a child record and the schema supplies foreign-key values.
@@ -165,9 +163,11 @@ interface MathProvider<P, R> {
 }
 ```
 
-A LibTorch implementation owns `LibTorchPlan` and the Java/native bridge. Other
-providers may compile the same graph to Spark, Flink, a remote service or a
-distributed runtime without changing the DSL.
+The included LibTorch provider owns `LibTorchPlan` and a narrow JNI bridge. It
+currently lowers `TtAffine` and `TtTensorReLu`, accepts Java arrays or reusable
+direct buffers, and permits concurrent inference on one immutable native plan.
+Other providers may compile the same graph to Spark, Flink, a remote service or
+a distributed runtime without changing the DSL.
 
 ## Build
 
@@ -175,6 +175,13 @@ Requires JDK 17 or newer.
 
 ```shell
 ./gradlew check
+```
+
+Native LibTorch verification is optional and requires CMake, Ninja and an
+unpacked LibTorch distribution:
+
+```shell
+JAVA_HOME=/path/to/jdk-17 LIBTORCH_HOME=/path/to/libtorch ./gradlew nativeTest
 ```
 
 To run the compatibility test against a local checkout of Moqui Math:

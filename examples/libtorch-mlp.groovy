@@ -31,11 +31,17 @@ MathModelDef('LibTorchMlp',
 
         data('Dense1WeightData', dataTypeEnumId: 'MmdtTensor', tensorId: 'Dense1Weight', sequenceNum: 1) {
             Tensor('Dense1Weight', tensorTypeEnumId: 'TtDense', purposeEnumId: 'TpModelParams',
-                name: 'dense1.weight', rank: 2, shape: '[8,4]', storageTypeEnumId: 'TstSafeTensor')
+                name: 'dense1.weight', rank: 2, shape: '[8,4]', storageTypeEnumId: 'TstArrayField',
+                arrayEncodingEnumId: 'TaeJson',
+                elementArray: '''[
+                    [1,0,0,0], [0,1,0,0], [0,0,1,0], [0,0,0,1],
+                    [-1,0,0,0], [0,-1,0,0], [0,0,-1,0], [0,0,0,-1]
+                ]''')
         }
         data('Dense1BiasData', dataTypeEnumId: 'MmdtTensor', tensorId: 'Dense1Bias', sequenceNum: 2) {
             Tensor('Dense1Bias', tensorTypeEnumId: 'TtDense', purposeEnumId: 'TpModelParams',
-                name: 'dense1.bias', rank: 1, shape: '[8]', storageTypeEnumId: 'TstSafeTensor')
+                name: 'dense1.bias', rank: 1, shape: '[8]', storageTypeEnumId: 'TstArrayField',
+                arrayEncodingEnumId: 'TaeJson', elementArray: '[0,0,0,0,0,0,0,0]')
         }
         data('HiddenPreActivationData', dataTypeEnumId: 'MmdtTensor', tensorId: 'HiddenPreActivation',
             sequenceNum: 3) {
@@ -50,11 +56,18 @@ MathModelDef('LibTorchMlp',
 
         data('Dense2WeightData', dataTypeEnumId: 'MmdtTensor', tensorId: 'Dense2Weight', sequenceNum: 5) {
             Tensor('Dense2Weight', tensorTypeEnumId: 'TtDense', purposeEnumId: 'TpModelParams',
-                name: 'dense2.weight', rank: 2, shape: '[3,8]', storageTypeEnumId: 'TstSafeTensor')
+                name: 'dense2.weight', rank: 2, shape: '[3,8]', storageTypeEnumId: 'TstArrayField',
+                arrayEncodingEnumId: 'TaeJson',
+                elementArray: '''[
+                    [1,0,0,0,-1,0,0,0],
+                    [0,1,0,0,0,-1,0,0],
+                    [0,0,1,1,0,0,-1,-1]
+                ]''')
         }
         data('Dense2BiasData', dataTypeEnumId: 'MmdtTensor', tensorId: 'Dense2Bias', sequenceNum: 6) {
             Tensor('Dense2Bias', tensorTypeEnumId: 'TtDense', purposeEnumId: 'TpModelParams',
-                name: 'dense2.bias', rank: 1, shape: '[3]', storageTypeEnumId: 'TstSafeTensor')
+                name: 'dense2.bias', rank: 1, shape: '[3]', storageTypeEnumId: 'TstArrayField',
+                arrayEncodingEnumId: 'TaeJson', elementArray: '[0.1,-0.1,0.05]')
         }
         data('LogitsData', dataTypeEnumId: 'MmdtTensor', tensorId: 'IrisLogits', sequenceNum: 7) {
             Tensor('IrisLogits', tensorTypeEnumId: 'TtDense',
