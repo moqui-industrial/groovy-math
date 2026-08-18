@@ -107,11 +107,11 @@ tasks.register('buildPetscTaoNative', Exec) {
     }
 }
 
-tasks.register('petscTaoNativeTest', Test) {
-    dependsOn tasks.named('buildPetscTaoNative')
-    testClassesDirs = sourceSets.test.output.classesDirs
-    classpath = sourceSets.test.runtimeClasspath
-    useJUnitPlatform { includeTags 'petsctao-native' }
+tasks.register('petscTaoNativeTest', JavaExec) {
+    dependsOn tasks.named('buildPetscTaoNative'), tasks.named('testClasses')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'groovy.ui.GroovyMain'
+    args file('src/test/scripts/run-petsctao-native-check.groovy').absolutePath
     systemProperty 'groovy.math.petsctao.library',
         petscTaoBuildDirectory.get().file('libgroovy_math_petsctao.so').asFile.absolutePath
     environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: ''

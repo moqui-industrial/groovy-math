@@ -13,25 +13,25 @@
  */
 
 ParameterDef('AgMorphSourceDialectDef',
-    parameterTypeEnumId: 'PtTextShort',
-    purposeEnumId: 'PpMathModel',
+    parameterTypeEnum: ParameterType.TextShort,
+    purposeEnum: ParameterPurpose.MathModel,
     parameterCode: 'agMorphSourceDialect',
     parameterName: 'Source Dialect')
 
 Category('AgentEntityModel',
-    categoryTypeEnumId: 'CtSmall',
+    categoryTypeEnum: CategoryType.Small,
     categoryName: 'Moqui Entity Model',
     description: 'Entity objects and structural morphisms extracted from entity-definition XML.') {
 
     objects('AgEntObj_BillingAccount',
         objectEntityName: 'mantle.account.billing.BillingAccount',
         objectPkValue: 'mantle.account.billing.BillingAccount',
-        objectTypeEnumId: 'CotGeneric',
+        objectTypeEnum: CategoryObjectType.Generic,
         objectName: 'BillingAccount',
         objectSymbol: 'BillingAccount')
 
     morphisms('AgEntSchema_BillingAccount',
-        morphismTypeEnumId: 'MtEndo',
+        morphismTypeEnum: MorphismType.Endo,
         sourceObjectId: 'AgEntObj_BillingAccount',
         targetObjectId: 'AgEntObj_BillingAccount',
         morphismName: 'schema::BillingAccount',
@@ -43,7 +43,7 @@ Category('AgentEntityModel',
             symbolicValue: 'entity-definition')
 
         Morphism('AgEntRel_BillingAccountParty',
-            morphismTypeEnumId: 'MtGeneral',
+            morphismTypeEnum: MorphismType.General,
             sourceObjectId: 'AgEntObj_BillingAccount',
             targetObjectId: 'AgEntObj_BillingAccount',
             morphismName: 'rel::BillingAccountParty',

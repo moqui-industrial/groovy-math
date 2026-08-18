@@ -17,6 +17,7 @@ package org.moqui.math.spi
 import org.junit.jupiter.api.Test
 import org.moqui.math.dsl.MathDsl
 import org.moqui.math.dsl.MathMeta
+import org.moqui.math.dsl.TransformationType
 import org.moqui.math.model.EntityDefinition
 import org.moqui.math.model.FieldDefinition
 import org.moqui.math.model.ModelDefinition
@@ -33,7 +34,7 @@ class MathProviderTest {
         definition.addEntity(transformation)
 
         MathMeta mathMeta = MathDsl.math(definition) {
-            Transformation('relu', transformationTypeEnumId: 'TtTensorReLu')
+            Transformation('relu', transformationTypeEnum: TransformationType.TensorReLu)
         }
         RecordingProvider provider = new RecordingProvider()
 

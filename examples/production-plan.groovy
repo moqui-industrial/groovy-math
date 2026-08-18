@@ -4,8 +4,8 @@
  */
 
 ParameterDef('OptimizationObjectiveSense',
-    parameterTypeEnumId: 'PtTextShort',
-    purposeEnumId: 'PpMathModel',
+    parameterTypeEnum: ParameterType.TextShort,
+    purposeEnum: ParameterPurpose.MathModel,
     parameterCode: 'objectiveSense',
     parameterName: 'Optimization objective sense')
 

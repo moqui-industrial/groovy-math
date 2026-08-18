@@ -4,8 +4,8 @@
  */
 
 ParameterDef('QuadraticObjectiveSense',
-    parameterTypeEnumId: 'PtTextShort',
-    purposeEnumId: 'PpMathModel',
+    parameterTypeEnum: ParameterType.TextShort,
+    purposeEnum: ParameterPurpose.MathModel,
     parameterCode: 'objectiveSense',
     parameterName: 'Quadratic optimization objective sense')
 

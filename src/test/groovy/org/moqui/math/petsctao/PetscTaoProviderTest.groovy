@@ -7,6 +7,9 @@ package org.moqui.math.petsctao
 
 import org.junit.jupiter.api.Test
 import org.moqui.math.dsl.MathDsl
+import org.moqui.math.dsl.MathModelDataPurpose
+import org.moqui.math.dsl.MathModelSolvingMethod
+import org.moqui.math.dsl.MathModelType
 import org.moqui.math.dsl.MathMeta
 import org.moqui.math.model.EntityDefinition
 import org.moqui.math.model.FieldDefinition
@@ -62,9 +65,9 @@ class PetscTaoProviderTest {
 
     private static MathMeta energyDispatch() {
         MathDsl.math(modelDefinition()) {
-            MathModelDef('QuadraticEnergyDispatch', modelTypeEnumId: 'MmtQp')
+            MathModelDef('QuadraticEnergyDispatch', modelTypeEnum: MathModelType.QuadraticProgram)
             MathModel('EnergyDispatch', mathModelDefId: 'QuadraticEnergyDispatch',
-                solvingMethodEnumId: 'MmsmInteriorPoint')
+                solvingMethodEnum: MathModelSolvingMethod.InteriorPoint)
             Parameter('ObjectiveSense', mathModelId: 'EnergyDispatch',
                 parameterAlias: 'objectiveSense', symbolicValue: 'MINIMIZE')
             Vector('EnergySourceVariables', componentArray: '["GridPower","StoredEnergy"]')
@@ -73,15 +76,15 @@ class PetscTaoProviderTest {
             Matrix('DispatchBounds', rows: 2, cols: 2, componentArray: '[[0,0],[5,3]]')
             Vector('DispatchInitialCondition', componentArray: '[1,1]')
             MathModelData('variables', mathModelId: 'EnergyDispatch',
-                purposeEnumId: 'MmdpDecisionVars', vectorId: 'EnergySourceVariables')
+                purposeEnum: MathModelDataPurpose.DecisionVariables, vectorId: 'EnergySourceVariables')
             MathModelData('hessian', mathModelId: 'EnergyDispatch',
-                purposeEnumId: 'MmdpHessian', matrixId: 'DispatchHessian')
+                purposeEnum: MathModelDataPurpose.Hessian, matrixId: 'DispatchHessian')
             MathModelData('linear', mathModelId: 'EnergyDispatch',
-                purposeEnumId: 'MmdpCostVector', vectorId: 'DispatchLinearCost')
+                purposeEnum: MathModelDataPurpose.CostVector, vectorId: 'DispatchLinearCost')
             MathModelData('bounds', mathModelId: 'EnergyDispatch',
-                purposeEnumId: 'MmdpVarBounds', matrixId: 'DispatchBounds')
+                purposeEnum: MathModelDataPurpose.VariableBounds, matrixId: 'DispatchBounds')
             MathModelData('initial', mathModelId: 'EnergyDispatch',
-                purposeEnumId: 'MmdpInitialCondition', vectorId: 'DispatchInitialCondition')
+                purposeEnum: MathModelDataPurpose.InitialCondition, vectorId: 'DispatchInitialCondition')
         }
     }
 

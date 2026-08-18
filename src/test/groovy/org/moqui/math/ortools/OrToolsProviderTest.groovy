@@ -7,6 +7,9 @@ package org.moqui.math.ortools
 
 import org.junit.jupiter.api.Test
 import org.moqui.math.dsl.MathDsl
+import org.moqui.math.dsl.MathModelDataPurpose
+import org.moqui.math.dsl.MathModelSolvingMethod
+import org.moqui.math.dsl.MathModelType
 import org.moqui.math.dsl.MathMeta
 import org.moqui.math.model.EntityDefinition
 import org.moqui.math.model.FieldDefinition
@@ -55,9 +58,9 @@ class OrToolsProviderTest {
 
     private static MathMeta productionPlan() {
         MathDsl.math(modelDefinition()) {
-            MathModelDef('LinearProductionPlanning', modelTypeEnumId: 'MmtLp')
+            MathModelDef('LinearProductionPlanning', modelTypeEnum: MathModelType.LinearProgram)
             MathModel('ProductionPlan', mathModelDefId: 'LinearProductionPlanning',
-                solvingMethodEnumId: 'MmsmSimplex')
+                solvingMethodEnum: MathModelSolvingMethod.Simplex)
             Parameter('ObjectiveSense', mathModelId: 'ProductionPlan',
                 parameterAlias: 'objectiveSense', symbolicValue: 'MAXIMIZE')
 
@@ -70,15 +73,15 @@ class OrToolsProviderTest {
                 componentArray: '[[0,0],[40,50]]')
 
             MathModelData('variables', mathModelId: 'ProductionPlan',
-                purposeEnumId: 'MmdpDecisionVars', vectorId: 'ProductionVariables')
+                purposeEnum: MathModelDataPurpose.DecisionVariables, vectorId: 'ProductionVariables')
             MathModelData('costs', mathModelId: 'ProductionPlan',
-                purposeEnumId: 'MmdpCostVector', vectorId: 'UnitMargin')
+                purposeEnum: MathModelDataPurpose.CostVector, vectorId: 'UnitMargin')
             MathModelData('constraints', mathModelId: 'ProductionPlan',
-                purposeEnumId: 'MmdpConstraintMatrix', matrixId: 'MachineCapacityCoefficients')
+                purposeEnum: MathModelDataPurpose.ConstraintMatrix, matrixId: 'MachineCapacityCoefficients')
             MathModelData('rhs', mathModelId: 'ProductionPlan',
-                purposeEnumId: 'MmdpRhsVector', vectorId: 'MachineCapacity')
+                purposeEnum: MathModelDataPurpose.RightHandSide, vectorId: 'MachineCapacity')
             MathModelData('bounds', mathModelId: 'ProductionPlan',
-                purposeEnumId: 'MmdpVarBounds', matrixId: 'ProductionBounds')
+                purposeEnum: MathModelDataPurpose.VariableBounds, matrixId: 'ProductionBounds')
         }
     }
 
