@@ -21,7 +21,7 @@ final class LibTorchProvider implements MathProvider<LibTorchPlan, LibTorchResul
     private final LibTorchBackend backend
 
     LibTorchProvider(final String mathModelId) {
-        this(mathModelId, LibTorchNative.INSTANCE)
+        this(mathModelId, LibTorchPanama.INSTANCE)
     }
 
     LibTorchProvider(final String mathModelId, final LibTorchBackend backend) {

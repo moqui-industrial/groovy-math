@@ -21,7 +21,7 @@ final class PetscTaoProvider implements MathProvider<PetscTaoPlan, PetscTaoResul
     private final PetscTaoBackend backend
 
     PetscTaoProvider(final String mathModelId) {
-        this(mathModelId, PetscTaoNative.INSTANCE)
+        this(mathModelId, PetscTaoPanama.INSTANCE)
     }
 
     PetscTaoProvider(final String mathModelId, final PetscTaoBackend backend) {

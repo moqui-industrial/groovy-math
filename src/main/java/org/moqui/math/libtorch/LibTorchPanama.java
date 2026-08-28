@@ -22,6 +22,7 @@ public final class LibTorchPanama implements LibTorchBackend {
     private final SymbolLookup symbols;
     private final MethodHandle createPlanHandle;
     private final MethodHandle destroyHandle;
+    private final MethodHandle outputWidthHandle;
     private final MethodHandle sealHandle;
     private final MethodHandle addAffineHandle;
     private final MethodHandle addReluHandle;
@@ -43,6 +44,9 @@ public final class LibTorchPanama implements LibTorchBackend {
 
         this.destroyHandle = find("torch_panama_destroy",
             FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG));
+
+        this.outputWidthHandle = find("torch_panama_output_width",
+            FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG));
 
         this.sealHandle = find("torch_panama_seal",
             FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
@@ -72,13 +76,13 @@ public final class LibTorchPanama implements LibTorchBackend {
             FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.JAVA_LONG,
                 ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
 
-        this.configureThreadsHandle = find("torch_panama_configure_threads",
+        this.configureThreadsHandle = findOptional("torch_panama_configure_threads",
             FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
 
-        this.intraOpThreadsHandle = find("torch_panama_intra_op_threads",
+        this.intraOpThreadsHandle = findOptional("torch_panama_intra_op_threads",
             FunctionDescriptor.of(ValueLayout.JAVA_INT));
 
-        this.interOpThreadsHandle = find("torch_panama_inter_op_threads",
+        this.interOpThreadsHandle = findOptional("torch_panama_inter_op_threads",
             FunctionDescriptor.of(ValueLayout.JAVA_INT));
     }
 
@@ -100,6 +104,10 @@ public final class LibTorchPanama implements LibTorchBackend {
         return linker.downcallHandle(symbol, descriptor);
     }
 
+    private MethodHandle findOptional(String symbolName, FunctionDescriptor descriptor) {
+        return symbols.find(symbolName).map(s -> linker.downcallHandle(s, descriptor)).orElse(null);
+    }
+
     public static MemorySegment allocateFloats(Arena arena, float[] values) {
         MemorySegment seg = arena.allocate((long) values.length * Float.BYTES);
         MemorySegment.copy(MemorySegment.ofArray(values), ValueLayout.JAVA_FLOAT, 0L, seg, ValueLayout.JAVA_FLOAT, 0L, values.length);
@@ -108,6 +116,14 @@ public final class LibTorchPanama implements LibTorchBackend {
 
     public static MemorySegment allocateFloatBuffer(Arena arena, long floatCount) {
         return arena.allocate(floatCount * Float.BYTES);
+    }
+
+    public int outputWidth(long handle) {
+        try {
+            return (int) outputWidthHandle.invokeExact(handle);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
     }
 
     @Override
@@ -189,8 +205,10 @@ public final class LibTorchPanama implements LibTorchBackend {
     @Override
     public float[] execute(long handle, float[] input, int batchSize) {
         try (Arena arena = Arena.ofConfined()) {
+            int outWidth = outputWidth(handle);
+            long totalOut = (long) batchSize * (outWidth > 0 ? outWidth : (input.length / batchSize));
             MemorySegment inputSeg = allocateFloats(arena, input);
-            MemorySegment outputSeg = allocateFloatBuffer(arena, (long) batchSize * 1024L);
+            MemorySegment outputSeg = allocateFloatBuffer(arena, totalOut);
             executeHandle.invokeExact(handle, inputSeg, batchSize, outputSeg);
             return outputSeg.toArray(ValueLayout.JAVA_FLOAT);
         } catch (Throwable t) {
@@ -230,7 +248,9 @@ public final class LibTorchPanama implements LibTorchBackend {
     @Override
     public void configureThreads(int intraOpThreads, int interOpThreads) {
         try {
-            configureThreadsHandle.invokeExact(intraOpThreads, interOpThreads);
+            if (configureThreadsHandle != null) {
+                configureThreadsHandle.invokeExact(intraOpThreads, interOpThreads);
+            }
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
@@ -239,7 +259,7 @@ public final class LibTorchPanama implements LibTorchBackend {
     @Override
     public int intraOpThreads() {
         try {
-            return (int) intraOpThreadsHandle.invokeExact();
+            return intraOpThreadsHandle != null ? (int) intraOpThreadsHandle.invokeExact() : 1;
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
@@ -248,7 +268,7 @@ public final class LibTorchPanama implements LibTorchBackend {
     @Override
     public int interOpThreads() {
         try {
-            return (int) interOpThreadsHandle.invokeExact();
+            return interOpThreadsHandle != null ? (int) interOpThreadsHandle.invokeExact() : 1;
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }

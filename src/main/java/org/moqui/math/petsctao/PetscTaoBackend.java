@@ -3,12 +3,12 @@
  * Grant of Patent License.
  */
 
-package org.moqui.math.petsctao
+package org.moqui.math.petsctao;
 
-interface PetscTaoBackend {
+public interface PetscTaoBackend {
     long createBoundedQuadraticPlan(int dimension, double[] hessian, double[] linear,
                                     double[] lowerBounds, double[] upperBounds,
-                                    double[] initialPoint)
-    PetscTaoNativeResult solve(long handle, int dimension)
-    void destroy(long handle)
+                                    double[] initialPoint);
+    PetscTaoNativeResult solve(long handle, int dimension);
+    void destroy(long handle);
 }

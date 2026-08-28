@@ -3,11 +3,12 @@
  * Grant of Patent License.
  */
 
-#include <jni.h>
 #include <petsctao.h>
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <cstdlib>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -34,12 +35,20 @@ std::mutex petsc_execution_mutex;
 
 void ensure_petsc() {
     std::call_once(petsc_initialization, [] {
+        // Prevent hwloc in OpenMPI from hanging on unresponsive X11 display sockets
+        setenv("HWLOC_COMPONENTS", "-gl", 0);
+
         PetscBool initialized = PETSC_FALSE;
         PetscErrorCode code = PetscInitialized(&initialized);
-        if (code != PETSC_SUCCESS) throw std::runtime_error("PetscInitialized failed");
+        if (code != PETSC_SUCCESS) return;
         if (!initialized) {
-            code = PetscInitializeNoArguments();
-            if (code != PETSC_SUCCESS) throw std::runtime_error("PetscInitialize failed");
+            int argc = 2;
+            char arg0[] = "groovy-math";
+            char arg1[] = "-no_signal_handler";
+            char* argv[] = {arg0, arg1, nullptr};
+            char** pargv = argv;
+            PetscInitialize(&argc, &pargv, nullptr, nullptr);
+            PetscPopSignalHandler();
         }
     });
 }
@@ -51,26 +60,7 @@ void check(PetscErrorCode code, const char* operation) {
     }
 }
 
-void throw_java(JNIEnv* env, const std::exception& error) {
-    jclass type = env->FindClass("java/lang/IllegalStateException");
-    if (type != nullptr) env->ThrowNew(type, error.what());
-}
-
-std::vector<PetscScalar> scalars(JNIEnv* env, jdoubleArray array, jsize expected,
-                                 const char* label) {
-    if (array == nullptr) throw std::invalid_argument(std::string(label) + " must not be null");
-    jsize size = env->GetArrayLength(array);
-    if (size != expected) throw std::invalid_argument(std::string(label) + " has invalid length");
-    std::vector<double> raw(static_cast<std::size_t>(size));
-    env->GetDoubleArrayRegion(array, 0, size, raw.data());
-    if (env->ExceptionCheck()) throw std::runtime_error(std::string("could not read ") + label);
-    std::vector<PetscScalar> result(raw.size());
-    std::transform(raw.begin(), raw.end(), result.begin(),
-                   [](double value) { return static_cast<PetscScalar>(value); });
-    return result;
-}
-
-Plan& plan(jlong handle) {
+Plan& plan(int64_t handle) {
     if (handle == 0) throw std::invalid_argument("native plan handle is zero");
     return *reinterpret_cast<Plan*>(handle);
 }
@@ -142,40 +132,44 @@ void fill_vector(Vec vector, const std::vector<PetscScalar>& values) {
     check(VecRestoreArrayWrite(vector, &target), "VecRestoreArrayWrite");
 }
 
-}
+} // namespace
 
 extern "C" {
 
-JNIEXPORT jlong JNICALL
-Java_org_moqui_math_petsctao_PetscTaoBindings_nativeCreateBoundedQuadraticPlan(
-        JNIEnv* env, jclass, jint dimension, jdoubleArray hessian_array,
-        jdoubleArray linear_array, jdoubleArray lower_array, jdoubleArray upper_array,
-        jdoubleArray initial_array) {
+int64_t petsc_panama_create_bounded_quadratic_plan(
+        int32_t dimension,
+        const double* hessian_data,
+        const double* linear_data,
+        const double* lower_data,
+        const double* upper_data,
+        const double* initial_data) {
     try {
         ensure_petsc();
-        if (dimension <= 0) throw std::invalid_argument("dimension must be positive");
+        if (dimension <= 0) return 0;
+        if (!hessian_data || !linear_data || !lower_data || !upper_data || !initial_data) return 0;
+
         auto result = std::make_unique<Plan>();
         result->dimension = static_cast<PetscInt>(dimension);
-        result->hessian = scalars(env, hessian_array, dimension * dimension, "Hessian");
-        result->linear = scalars(env, linear_array, dimension, "linear vector");
-        result->lower = scalars(env, lower_array, dimension, "lower bounds");
-        result->upper = scalars(env, upper_array, dimension, "upper bounds");
-        result->initial = scalars(env, initial_array, dimension, "initial point");
-        return reinterpret_cast<jlong>(result.release());
-    } catch (const std::exception& error) {
-        throw_java(env, error);
+        result->hessian.assign(hessian_data, hessian_data + dimension * dimension);
+        result->linear.assign(linear_data, linear_data + dimension);
+        result->lower.assign(lower_data, lower_data + dimension);
+        result->upper.assign(upper_data, upper_data + dimension);
+        result->initial.assign(initial_data, initial_data + dimension);
+
+        return reinterpret_cast<int64_t>(result.release());
+    } catch (...) {
         return 0;
     }
 }
 
-JNIEXPORT jdoubleArray JNICALL
-Java_org_moqui_math_petsctao_PetscTaoBindings_nativeSolve(
-        JNIEnv* env, jclass, jlong handle) {
+int32_t petsc_panama_solve(int64_t handle, double* out_solution_and_meta) {
     try {
+        if (handle == 0 || !out_solution_and_meta) return -1;
         ensure_petsc();
         std::lock_guard<std::mutex> execution_guard(petsc_execution_mutex);
         Plan& target = plan(handle);
         Objects objects;
+
         check(VecCreateSeq(PETSC_COMM_SELF, target.dimension, &objects.solution), "VecCreateSeq");
         check(VecDuplicate(objects.solution, &objects.gradient), "VecDuplicate gradient");
         check(VecDuplicate(objects.solution, &objects.lower), "VecDuplicate lower bounds");
@@ -211,33 +205,27 @@ Java_org_moqui_math_petsctao_PetscTaoBindings_nativeSolve(
 
         const PetscScalar* solution_values = nullptr;
         check(VecGetArrayRead(objects.solution, &solution_values), "VecGetArrayRead solution");
-        std::vector<double> encoded(static_cast<std::size_t>(target.dimension + 4));
         for (PetscInt index = 0; index < target.dimension; ++index) {
-            encoded[static_cast<std::size_t>(index)] =
-                static_cast<double>(PetscRealPart(solution_values[index]));
+            out_solution_and_meta[index] = static_cast<double>(PetscRealPart(solution_values[index]));
         }
         check(VecRestoreArrayRead(objects.solution, &solution_values),
               "VecRestoreArrayRead solution");
-        encoded[static_cast<std::size_t>(target.dimension)] = static_cast<double>(objective);
-        encoded[static_cast<std::size_t>(target.dimension + 1)] = static_cast<double>(gradient_norm);
-        encoded[static_cast<std::size_t>(target.dimension + 2)] = static_cast<double>(iterations);
-        encoded[static_cast<std::size_t>(target.dimension + 3)] = static_cast<double>(reason);
 
-        jdoubleArray result = env->NewDoubleArray(static_cast<jsize>(encoded.size()));
-        if (result == nullptr) throw std::runtime_error("could not allocate Java result array");
-        env->SetDoubleArrayRegion(result, 0, static_cast<jsize>(encoded.size()), encoded.data());
-        if (env->ExceptionCheck()) return nullptr;
-        return result;
-    } catch (const std::exception& error) {
-        throw_java(env, error);
-        return nullptr;
+        out_solution_and_meta[target.dimension] = static_cast<double>(objective);
+        out_solution_and_meta[target.dimension + 1] = static_cast<double>(gradient_norm);
+        out_solution_and_meta[target.dimension + 2] = static_cast<double>(iterations);
+        out_solution_and_meta[target.dimension + 3] = static_cast<double>(reason);
+
+        return 0; // Success
+    } catch (...) {
+        return -1;
     }
 }
 
-JNIEXPORT void JNICALL
-Java_org_moqui_math_petsctao_PetscTaoBindings_nativeDestroy(
-        JNIEnv*, jclass, jlong handle) {
-    delete reinterpret_cast<Plan*>(handle);
+void petsc_panama_destroy(int64_t handle) {
+    if (handle != 0) {
+        delete reinterpret_cast<Plan*>(handle);
+    }
 }
 
-}
+} // extern "C"

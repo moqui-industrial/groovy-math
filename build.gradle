@@ -103,7 +103,6 @@ tasks.register('nativeTest', Test) {
 
 tasks.register('configurePetscTaoNative', Exec) {
     inputs.dir(petscTaoSourceDirectory)
-    inputs.file('src/main/cpp/petsctao_jni.cpp')
     outputs.file(petscTaoBuildDirectory.map { it.file('build.ninja') })
     doFirst {
         String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
@@ -115,7 +114,7 @@ tasks.register('configurePetscTaoNative', Exec) {
 
 tasks.register('buildPetscTaoNative', Exec) {
     dependsOn tasks.named('configurePetscTaoNative')
-    inputs.file('src/main/cpp/petsctao_jni.cpp')
+    inputs.dir(petscTaoSourceDirectory)
     inputs.file(petscTaoBuildDirectory.map { it.file('build.ninja') })
     outputs.file(petscTaoBuildDirectory.map { it.file('libgroovy_math_petsctao.so') })
     doFirst {
@@ -124,14 +123,26 @@ tasks.register('buildPetscTaoNative', Exec) {
     }
 }
 
-tasks.register('petscTaoNativeTest', JavaExec) {
+tasks.register('petscTaoNativeTest', Test) {
+    dependsOn tasks.named('buildPetscTaoNative')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'petsctao-native' }
+    systemProperty 'groovy.math.petsctao.library',
+        petscTaoBuildDirectory.get().file('libgroovy_math_petsctao.so').asFile.absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
+    environment 'HWLOC_COMPONENTS', '-gl'
+}
+
+tasks.register('runPetscTaoNativeCheck', JavaExec) {
     dependsOn tasks.named('buildPetscTaoNative'), tasks.named('testClasses')
-    classpath = sourceSets.main.runtimeClasspath
+    classpath = sourceSets.main.runtimeClasspath + sourceSets.test.runtimeClasspath
     mainClass = 'groovy.ui.GroovyMain'
     args file('src/test/scripts/run-petsctao-native-check.groovy').absolutePath
     systemProperty 'groovy.math.petsctao.library',
         petscTaoBuildDirectory.get().file('libgroovy_math_petsctao.so').asFile.absolutePath
-    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: ''
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
+    environment 'HWLOC_COMPONENTS', '-gl'
 }
 
 tasks.register('benchmarkLibTorch', JavaExec) {

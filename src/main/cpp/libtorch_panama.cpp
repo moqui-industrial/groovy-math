@@ -131,6 +131,11 @@ void torch_panama_destroy(int64_t handle) {
     delete reinterpret_cast<Plan*>(handle);
 }
 
+int32_t torch_panama_output_width(int64_t handle) {
+    if (handle == 0) return 0;
+    return plan(handle).output_width;
+}
+
 void torch_panama_seal(int64_t handle, int32_t output_slot, int32_t output_width) {
     Plan& target = plan(handle);
     if (target.operations.empty()) throw std::logic_error("cannot seal an empty native plan");
