@@ -34,10 +34,26 @@ dependencies {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
     withSourcesJar()
     withJavadocJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['--enable-preview']
+}
+
+tasks.withType(GroovyCompile).configureEach {
+    groovyOptions.forkOptions.jvmArgs += ['--enable-preview']
+}
+
+tasks.withType(Test).configureEach {
+    jvmArgs += ['--enable-preview']
+}
+
+tasks.withType(JavaExec).configureEach {
+    jvmArgs += ['--enable-preview']
 }
 
 tasks.named('test') {
@@ -54,8 +70,8 @@ tasks.register('configureLibTorchNative', Exec) {
     inputs.dir(libTorchSourceDirectory)
     outputs.file(nativeBuildDirectory.map { it.file('build.ninja') })
     doFirst {
-        String libTorchHome = System.getenv('LIBTORCH_HOME')
-        if (!libTorchHome) throw new GradleException('LIBTORCH_HOME must point to an unpacked LibTorch distribution')
+        String libTorchHome = System.getenv('LIBTORCH_HOME') ?: '/home/igor/.local/opt/libtorch-2.7.1-cpu'
+        if (!libTorchHome || !new File(libTorchHome).exists()) throw new GradleException("LIBTORCH_HOME must point to an unpacked LibTorch distribution: ${libTorchHome}")
         String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
         commandLine cmake, '-S', libTorchSourceDirectory.asFile.absolutePath,
             '-B', nativeBuildDirectory.get().asFile.absolutePath, '-G', 'Ninja',
@@ -82,6 +98,7 @@ tasks.register('nativeTest', Test) {
     useJUnitPlatform { includeTags 'libtorch-native' }
     systemProperty 'groovy.math.libtorch.library',
         nativeBuildDirectory.get().file('libgroovy_math_libtorch.so').asFile.absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
 }
 
 tasks.register('configurePetscTaoNative', Exec) {
@@ -166,4 +183,12 @@ publishing {
             from components.java
         }
     }
+}
+
+tasks.register('generateModels', JavaExec) {
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'groovy.ui.GroovyMain'
+    args file('scripts/GenerateModelClasses.groovy').absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
 }

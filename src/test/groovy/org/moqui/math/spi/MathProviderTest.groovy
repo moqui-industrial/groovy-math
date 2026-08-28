@@ -18,9 +18,9 @@ import org.junit.jupiter.api.Test
 import org.moqui.math.dsl.MathDsl
 import org.moqui.math.dsl.MathMeta
 import org.moqui.math.dsl.TransformationType
-import org.moqui.math.model.EntityDefinition
-import org.moqui.math.model.FieldDefinition
-import org.moqui.math.model.ModelDefinition
+import org.moqui.math.entity.EntityDefinition
+import org.moqui.math.entity.FieldDefinition
+import org.moqui.math.entity.ModelDefinition
 
 import static org.junit.jupiter.api.Assertions.assertThrows
 

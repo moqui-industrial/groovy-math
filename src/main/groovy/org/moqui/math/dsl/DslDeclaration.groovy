@@ -16,8 +16,8 @@ package org.moqui.math.dsl
 
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
-import org.moqui.math.model.EntityDefinition
-import org.moqui.math.model.ModelProvider
+import org.moqui.math.entity.EntityDefinition
+import org.moqui.math.entity.ModelProvider
 
 @CompileStatic
 @PackageScope

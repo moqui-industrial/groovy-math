@@ -17,7 +17,7 @@ package org.moqui.math.dsl
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
-import org.moqui.math.model.RelationshipDefinition
+import org.moqui.math.entity.RelationshipDefinition
 
 @CompileStatic
 @PackageScope

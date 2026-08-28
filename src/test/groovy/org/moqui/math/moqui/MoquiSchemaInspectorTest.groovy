@@ -16,8 +16,8 @@ package org.moqui.math.moqui
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.moqui.math.model.EntityDefinition
-import org.moqui.math.model.ModelDefinition
+import org.moqui.math.entity.EntityDefinition
+import org.moqui.math.entity.ModelDefinition
 
 class MoquiSchemaInspectorTest {
     @TempDir

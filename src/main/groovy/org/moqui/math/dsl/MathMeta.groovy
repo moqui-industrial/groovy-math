@@ -15,11 +15,11 @@
 package org.moqui.math.dsl
 
 import groovy.transform.CompileStatic
-import org.moqui.math.model.EntityDefinition
-import org.moqui.math.model.ModelDefinition
-import org.moqui.math.model.ModelProvider
-import org.moqui.math.model.ModelValue
-import org.moqui.math.model.NamedModelContainer
+import org.moqui.math.entity.EntityDefinition
+import org.moqui.math.entity.ModelDefinition
+import org.moqui.math.entity.ModelProvider
+import org.moqui.math.entity.ModelValue
+import org.moqui.math.entity.NamedModelContainer
 
 @CompileStatic
 final class MathMeta implements Iterable<ModelValue> {

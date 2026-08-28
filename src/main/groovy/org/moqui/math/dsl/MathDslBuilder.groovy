@@ -17,10 +17,10 @@ package org.moqui.math.dsl
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
-import org.moqui.math.model.EntityDefinition
-import org.moqui.math.model.FieldDefinition
-import org.moqui.math.model.ModelProvider
-import org.moqui.math.model.RelationshipDefinition
+import org.moqui.math.entity.EntityDefinition
+import org.moqui.math.entity.FieldDefinition
+import org.moqui.math.entity.ModelProvider
+import org.moqui.math.entity.RelationshipDefinition
 
 @CompileStatic
 final class MathDslBuilder {

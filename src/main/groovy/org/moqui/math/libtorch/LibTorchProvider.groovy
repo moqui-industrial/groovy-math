@@ -7,7 +7,7 @@ package org.moqui.math.libtorch
 
 import groovy.transform.CompileStatic
 import org.moqui.math.dsl.MathMeta
-import org.moqui.math.model.ModelValue
+import org.moqui.math.entity.ModelValue
 import org.moqui.math.spi.MathProvider
 
 import java.util.regex.Matcher

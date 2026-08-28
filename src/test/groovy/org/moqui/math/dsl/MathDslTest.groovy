@@ -16,11 +16,11 @@ package org.moqui.math.dsl
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.moqui.math.model.EntityDefinition
-import org.moqui.math.model.FieldDefinition
-import org.moqui.math.model.ModelDefinition
-import org.moqui.math.model.ModelValue
-import org.moqui.math.model.RelationshipDefinition
+import org.moqui.math.entity.EntityDefinition
+import org.moqui.math.entity.FieldDefinition
+import org.moqui.math.entity.ModelDefinition
+import org.moqui.math.entity.ModelValue
+import org.moqui.math.entity.RelationshipDefinition
 import org.moqui.math.moqui.MoquiSchemaInspector
 
 class MathDslTest {
