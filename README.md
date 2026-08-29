@@ -44,59 +44,65 @@ The collection contracts follow Gradle's domain-object model: `register` and
 `named` are lazy, `create` and `getByName` are eager, filtered collections are
 live, and `configureEach` applies to existing and future matching objects.
 
-## DSL
+## DSL Styles: Dynamic & Type-Safe Fluent API
 
-The DSL mirrors Moqui seed-data records, including relationship-driven nested
-records, while adding a Gradle-style named object lifecycle. The complete
-native-execution example declares a true matrix product and nests its matrices,
-transformation and operands:
+Groovy Math supports two complementary DSL paradigms:
+
+### 1. Dynamic Seed-Style DSL
+Mirrors Moqui seed-data records, using relationship-driven nested blocks and Gradle-style object lifecycles:
 
 ```groovy
-MathModelDef('MatrixAlgebra', modelTypeEnumId: 'MmtLinearAlgebra') {
+MathModelDef('MatrixAlgebra', modelTypeEnum: MathModelType.LinearAlgebra) {
     MathModel('MatrixProduct', statusId: 'MathModelDraft') {
-        data('LeftMatrixData', dataTypeEnumId: 'MmdtMatrix', matrixId: 'A') {
-            Matrix('A', rows: 2, cols: 3, purposeEnumId: 'MpOriginal')
+        data('LeftMatrixData', dataTypeEnum: MathModelDataType.Matrix, matrixId: 'A') {
+            Matrix('A', rows: 2, cols: 3, purposeEnum: MatrixPurpose.Original)
         }
-        data('ProductStep', dataTypeEnumId: 'MmdtTransformation',
-            transformationId: 'MultiplyAB', sequenceNum: 10) {
-            Transformation('MultiplyAB', transformationTypeEnumId: 'TtMatrixProduct',
-                resultMatrixId: 'C') {
-                operands(operandIndex: 0, operandTypeEnumId: 'TotLeftMatrix', operandMatrixId: 'A')
-                operands(operandIndex: 1, operandTypeEnumId: 'TotRightMatrix', operandMatrixId: 'B')
+        data('ProductStep', dataTypeEnum: MathModelDataType.Transformation, transformationId: 'MultiplyAB') {
+            Transformation('MultiplyAB', transformationTypeEnum: TransformationType.MatrixProduct, resultMatrixId: 'C') {
+                operands(operandIndex: 0, operandTypeEnum: TransformationOperandType.LeftMatrix, operandMatrixId: 'A')
+                operands(operandIndex: 1, operandTypeEnum: TransformationOperandType.RightMatrix, operandMatrixId: 'B')
             }
         }
     }
 }
 ```
 
-See [`examples/matrix-product.groovy`](examples/matrix-product.groovy) for the
-complete declaration and
-[`examples/run-pytorch-matrix-product.groovy`](examples/run-pytorch-matrix-product.groovy)
-for the explicit PyTorch execution block.
-
-The optimization example in
-[`examples/production-plan.groovy`](examples/production-plan.groovy) declares
-a linear production plan using the same seed-data style. It maximizes unit
-margin for two products under two machine-capacity constraints. The matching
-[`examples/run-ortools-production-plan.groovy`](examples/run-ortools-production-plan.groovy)
-loads the metadata and solves it with OR-Tools.
-
-The nested form follows the same convention as Moqui data files: a relationship
-short alias names a child record and the schema supplies foreign-key values.
+### 2. Type-Safe Fluent API (JPA Criteria Metamodel Style)
+Provides full compile-time safety (`@CompileStatic`), IDE auto-completion, static attributes (`Matrix_`, `Graph_`, `GraphVertex_`), and object handles (`EntityRef<T>`):
 
 ```groovy
-Category('AgentEntityModel', categoryTypeEnumId: 'CtSmall') {
-    objects('BillingAccountObject', objectName: 'BillingAccount')
-    morphisms('BillingAccountSchema',
-        sourceObjectId: 'BillingAccountObject',
-        targetObjectId: 'BillingAccountObject',
-        morphismName: 'schema::BillingAccount') {
-        parameters('SourceDialect',
-            parameterDefId: 'AgMorphSourceDialectDef',
-            symbolicValue: 'entity-definition')
+MathMeta mathMeta = MathDsl.fluent(schemaFile) {
+    graph('ResearchLabGraph') {
+        name 'AI Research Institute Graph'
+
+        // Strongly-typed vertices
+        def alice = vertex('Alice') {
+            label 'Alice Cooper'
+            parameter('jobTitle', 'Principal AI Scientist')
+        }
+        def bob = vertex('Bob') { label 'Bob Martin' }
+        def aiDept = vertex('AI_Department') { label 'Neuro-Symbolic Lab' }
+
+        // Connect edges type-safely via EntityRef (zero manual string IDs)
+        connect(alice, aiDept, 'leads')
+        connect(bob, aiDept, 'memberOf')
+        connect(alice, bob, 'supervises')
     }
 }
 ```
+
+### Separated Models and Pipeline Runners
+
+All declarations in `examples/` are cleanly decoupled into **declarative model files** and **runtime execution runners**:
+
+| Model File | Execution Runner | Backend Engine |
+| :--- | :--- | :--- |
+| [`examples/matrix-product.groovy`](examples/matrix-product.groovy) | [`examples/run-pytorch-matrix-product.groovy`](examples/run-pytorch-matrix-product.groovy) | **LibTorch Panama C++** |
+| [`examples/matrix-product.groovy`](examples/matrix-product.groovy) | [`examples/run-jax-pipeline.groovy`](examples/run-jax-pipeline.groovy) | **LibTorch vs Google JAX Panama** |
+| [`examples/opencv-vision-pipeline.groovy`](examples/opencv-vision-pipeline.groovy) | [`examples/run-opencv-pipeline.groovy`](examples/run-opencv-pipeline.groovy) | **OpenCV Panama C++** |
+| [`examples/energy-dispatch.groovy`](examples/energy-dispatch.groovy) | [`examples/run-petsctao-energy-dispatch.groovy`](examples/run-petsctao-energy-dispatch.groovy) | **PETSc / TAO BQPIP Panama** |
+| [`examples/production-plan.groovy`](examples/production-plan.groovy) | [`examples/run-ortools-production-plan.groovy`](examples/run-ortools-production-plan.groovy) | **Google OR-Tools GLOP** |
+| [`examples/jena-knowledge-graph.groovy`](examples/jena-knowledge-graph.groovy) | [`examples/run-jena-graph-sparql.groovy`](examples/run-jena-graph-sparql.groovy) | **Apache Jena RDF / OWL / SPARQL** |
 
 Here `categoryId` is inherited by `objects` and `morphisms`, while `morphismId`
 is inherited by `parameters`. Records are stored in their normal entity
@@ -216,43 +222,74 @@ PETSc/MPI build is thread-safe. A future MPI backend can implement the same
 [`docs/petsctao-provider.md`](docs/petsctao-provider.md) for the metadata mapping,
 native lifecycle and distributed boundary.
 
-## Build
+## Unified Engine Dispatch Architecture (Project Panama & Native Providers)
 
-Requires JDK 17 or newer.
+Groovy Math provides a unified dispatching engine (`groovy.math.Math`) built on **Java 21 Project Panama (Foreign Function & Memory API)**. The engine inspects the declarative `MathMeta` model, solving method (`solvingMethodEnumId`), and transformation operators to route execution directly to the most appropriate native computational backend with zero JVM copy overhead.
+
+```mermaid
+graph TD
+    DSL[Math.execute mathMeta, modelId] --> Inspect[Model Inspection: SolvingMethod & Transformations]
+    Inspect -->|MmsmOpenCv / Vision Transformations| OpenCV[OpenCvProvider: Spatial Filters & Edge Detection]
+    Inspect -->|MmsmJax / XLA JIT| JAX[JaxProvider: Google JAX / OpenXLA via Panama]
+    Inspect -->|MmsmLibTorch / Neural Ops| Torch[LibTorchProvider: PyTorch / LibTorch C++ via Panama]
+    Inspect -->|MmsmPetscTao / Quadratic Constraints| PETSc[PetscTaoProvider: PETSc / TAO BQPIP via Panama]
+    Inspect -->|MmsmOrTools / LP & MILP| ORTools[OrToolsProvider: Google OR-Tools GLOP]
+```
+
+### Supported Providers & Native Capabilities
+
+| Provider | Engine / Runtime | Integration Type | Target Domain |
+| :--- | :--- | :--- | :--- |
+| **`PyTorch` / `LibTorch`** | LibTorch 2.7+ C++ | Java 21 Panama Downcall | Linear Algebra, Affine Layers, Softmax, Categorical Masking |
+| **`Google JAX`** | OpenXLA / JAX / PJRT | Java 21 Panama C ABI | JIT-compiled tensor operations, auto-differentiation |
+| **`OpenCV`** | OpenCV 5+ Computer Vision | Java 21 Panama C ABI | Gaussian Smoothing, Sobel Gradient, 2D Convolution, Affine Warping |
+| **`PETSc / TAO`** | PETSc 3.24+ TAO BQPIP | Java 21 Panama C ABI | Bounded quadratic optimization, large-scale PDE solvers |
+| **`Google OR-Tools`** | OR-Tools GLOP / CP-SAT | Java SPI | Mixed-integer linear programming, production scheduling |
+| **`Apache Jena`** | Apache Jena 5+ ARQ | Java SPI / Semantic Engine | RDF Triples, OWL Inference, SPARQL 1.1 Query Engine, Turtle / JSON-LD |
+
+### Unified Dispatch Usage
+
+```groovy
+import groovy.math.Math
+import groovy.math.dsl.MathDsl
+import groovy.math.dsl.MathMeta
+
+MathMeta mathMeta = MathDsl.evaluate(schemaFile, dslFile)
+
+// Automatically routed to the optimal native engine (e.g., OpenCV for vision, Torch/JAX for tensors)
+def result = Math.execute(mathMeta, 'EdgePipeline') {
+    input 'Image', inputMatrix
+}
+```
+
+## Build & Test
+
+Requires JDK 21 or newer with `--enable-preview`.
 
 ```shell
+# Run all unit tests and standard checks
 ./gradlew check
-```
 
-Native LibTorch verification is optional and requires CMake, Ninja and an
-unpacked LibTorch distribution:
+# Run Native LibTorch Panama suite
+./gradlew nativeTest
 
-```shell
-JAVA_HOME=/path/to/jdk-17 LIBTORCH_HOME=/path/to/libtorch ./gradlew nativeTest
-```
+# Run Native Google JAX Panama suite
+./gradlew jaxNativeTest
 
-To run the compatibility test against a local checkout of Moqui Math:
+# Run Native OpenCV Panama suite
+./gradlew openCvNativeTest
 
-```shell
-MOQUI_MATH_ENTITIES=/path/to/moqui-math/entity/MathEntities.xml ./gradlew test
-```
+# Run Native PETSc/TAO Panama suite
+./gradlew petscTaoNativeTest
 
-To execute the OR-Tools example:
+# Run Dual-Engine Pipeline (LibTorch vs Google JAX comparison)
+./gradlew runJaxPipeline
 
-```shell
-MOQUI_MATH_ENTITIES=/path/to/moqui-math/entity/MathEntities.xml \
-  ./gradlew runOrToolsProductionPlan
-```
+# Run OpenCV Vision Pipeline example
+./gradlew runOpenCvPipeline
 
-Native PETSc/TAO verification is optional and requires a real-scalar PETSc
-development installation with TAO, CMake, Ninja and `pkg-config`:
-
-```shell
-MOQUI_MATH_ENTITIES=/path/to/moqui-math/entity/MathEntities.xml \
-  ./gradlew petscTaoNativeTest
-
-MOQUI_MATH_ENTITIES=/path/to/moqui-math/entity/MathEntities.xml \
-  ./gradlew runPetscTaoEnergyDispatch
+# Run Apache Jena Semantic Graph & SPARQL example
+./gradlew runJenaGraphSparql
 ```
 
 ## License

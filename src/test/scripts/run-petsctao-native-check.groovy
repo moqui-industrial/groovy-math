@@ -3,12 +3,12 @@
  * Grant of Patent License.
  */
 
-import org.moqui.math.dsl.MathDsl
-import org.moqui.math.dsl.MathMeta
-import org.moqui.math.petsctao.PetscTao
-import org.moqui.math.petsctao.PetscTaoPlan
-import org.moqui.math.petsctao.PetscTaoProvider
-import org.moqui.math.petsctao.PetscTaoResult
+import groovy.math.dsl.MathDsl
+import groovy.math.dsl.MathMeta
+import groovy.math.petsctao.PetscTao
+import groovy.math.petsctao.PetscTaoPlan
+import groovy.math.petsctao.PetscTaoProvider
+import groovy.math.petsctao.PetscTaoResult
 
 import java.util.concurrent.CompletableFuture
 

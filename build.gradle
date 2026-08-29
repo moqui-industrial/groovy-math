@@ -27,6 +27,7 @@ dependencies {
     api 'org.apache.groovy:groovy:5.0.8'
     implementation 'org.apache.groovy:groovy-json:5.0.8'
     implementation 'com.google.ortools:ortools-java:9.15.6755'
+    implementation 'org.apache.jena:jena-arq:5.3.0'
 
     testImplementation platform('org.junit:junit-bom:5.13.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -58,13 +59,17 @@ tasks.withType(JavaExec).configureEach {
 
 tasks.named('test') {
     useJUnitPlatform()
-    useJUnitPlatform { excludeTags 'libtorch-native', 'petsctao-native' }
+    useJUnitPlatform { excludeTags 'libtorch-native', 'petsctao-native', 'jax-native', 'opencv-native' }
 }
 
 def nativeBuildDirectory = layout.buildDirectory.dir('native')
 def petscTaoBuildDirectory = layout.buildDirectory.dir('native-petsctao')
+def jaxBuildDirectory = layout.buildDirectory.dir('native-jax')
+def openCvBuildDirectory = layout.buildDirectory.dir('native-opencv')
 def libTorchSourceDirectory = layout.projectDirectory.dir('src/main/cpp')
 def petscTaoSourceDirectory = layout.projectDirectory.dir('src/main/cpp/petsctao')
+def jaxSourceDirectory = layout.projectDirectory.dir('src/main/cpp/jax')
+def openCvSourceDirectory = layout.projectDirectory.dir('src/main/cpp/opencv')
 
 tasks.register('configureLibTorchNative', Exec) {
     inputs.dir(libTorchSourceDirectory)
@@ -145,10 +150,74 @@ tasks.register('runPetscTaoNativeCheck', JavaExec) {
     environment 'HWLOC_COMPONENTS', '-gl'
 }
 
+tasks.register('configureJaxNative', Exec) {
+    inputs.dir(jaxSourceDirectory)
+    outputs.file(jaxBuildDirectory.map { it.file('build.ninja') })
+    doFirst {
+        String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
+        commandLine cmake, '-S', jaxSourceDirectory.asFile.absolutePath,
+            '-B', jaxBuildDirectory.get().asFile.absolutePath, '-G', 'Ninja',
+            '-DCMAKE_BUILD_TYPE=Release'
+    }
+}
+
+tasks.register('buildJaxNative', Exec) {
+    dependsOn tasks.named('configureJaxNative')
+    inputs.dir(jaxSourceDirectory)
+    inputs.file(jaxBuildDirectory.map { it.file('build.ninja') })
+    outputs.file(jaxBuildDirectory.map { it.file('libgroovy_math_jax.so') })
+    doFirst {
+        String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
+        commandLine cmake, '--build', jaxBuildDirectory.get().asFile.absolutePath, '--parallel'
+    }
+}
+
+tasks.register('jaxNativeTest', Test) {
+    dependsOn tasks.named('buildJaxNative')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'jax-native' }
+    systemProperty 'groovy.math.jax.library',
+        jaxBuildDirectory.get().file('libgroovy_math_jax.so').asFile.absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
+}
+
+tasks.register('configureOpenCvNative', Exec) {
+    inputs.dir(openCvSourceDirectory)
+    outputs.file(openCvBuildDirectory.map { it.file('build.ninja') })
+    doFirst {
+        String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
+        commandLine cmake, '-S', openCvSourceDirectory.asFile.absolutePath,
+            '-B', openCvBuildDirectory.get().asFile.absolutePath, '-G', 'Ninja',
+            '-DCMAKE_BUILD_TYPE=Release'
+    }
+}
+
+tasks.register('buildOpenCvNative', Exec) {
+    dependsOn tasks.named('configureOpenCvNative')
+    inputs.dir(openCvSourceDirectory)
+    inputs.file(openCvBuildDirectory.map { it.file('build.ninja') })
+    outputs.file(openCvBuildDirectory.map { it.file('libgroovy_math_opencv.so') })
+    doFirst {
+        String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
+        commandLine cmake, '--build', openCvBuildDirectory.get().asFile.absolutePath, '--parallel'
+    }
+}
+
+tasks.register('openCvNativeTest', Test) {
+    dependsOn tasks.named('buildOpenCvNative')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'opencv-native' }
+    systemProperty 'groovy.math.opencv.library',
+        openCvBuildDirectory.get().file('libgroovy_math_opencv.so').asFile.absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
+}
+
 tasks.register('benchmarkLibTorch', JavaExec) {
     dependsOn tasks.named('buildLibTorchNative'), tasks.named('testClasses')
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'org.moqui.math.libtorch.LibTorchParallelBenchmark'
+    mainClass = 'groovy.math.libtorch.LibTorchParallelBenchmark'
     systemProperty 'groovy.math.libtorch.library',
         nativeBuildDirectory.get().file('libgroovy_math_libtorch.so').asFile.absolutePath
     if (System.getProperty('groovy.math.benchmark.iterations')) {
@@ -159,7 +228,7 @@ tasks.register('benchmarkLibTorch', JavaExec) {
 tasks.register('benchmarkLibTorchCompute', JavaExec) {
     dependsOn tasks.named('buildLibTorchNative'), tasks.named('testClasses')
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'org.moqui.math.libtorch.LibTorchComputeBenchmark'
+    mainClass = 'groovy.math.libtorch.LibTorchComputeBenchmark'
     systemProperty 'groovy.math.libtorch.library',
         nativeBuildDirectory.get().file('libgroovy_math_libtorch.so').asFile.absolutePath
     ['width', 'batch', 'iterations'].each { String option ->
@@ -173,6 +242,29 @@ tasks.register('runOrToolsProductionPlan', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'groovy.ui.GroovyMain'
     args file('examples/run-ortools-production-plan.groovy').absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
+}
+
+tasks.register('runJaxPipeline', JavaExec) {
+    dependsOn tasks.named('buildLibTorchNative'), tasks.named('buildJaxNative'), tasks.named('testClasses')
+    classpath = sourceSets.main.runtimeClasspath + sourceSets.test.runtimeClasspath
+    mainClass = 'groovy.ui.GroovyMain'
+    args file('examples/run-jax-pipeline.groovy').absolutePath
+    systemProperty 'groovy.math.libtorch.library',
+        nativeBuildDirectory.get().file('libgroovy_math_libtorch.so').asFile.absolutePath
+    systemProperty 'groovy.math.jax.library',
+        jaxBuildDirectory.get().file('libgroovy_math_jax.so').asFile.absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
+}
+
+tasks.register('runOpenCvPipeline', JavaExec) {
+    dependsOn tasks.named('buildOpenCvNative'), tasks.named('testClasses')
+    classpath = sourceSets.main.runtimeClasspath + sourceSets.test.runtimeClasspath
+    mainClass = 'groovy.ui.GroovyMain'
+    args file('examples/run-opencv-pipeline.groovy').absolutePath
+    systemProperty 'groovy.math.opencv.library',
+        openCvBuildDirectory.get().file('libgroovy_math_opencv.so').asFile.absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
 }
 
 tasks.register('runPetscTaoEnergyDispatch', JavaExec) {
@@ -182,6 +274,16 @@ tasks.register('runPetscTaoEnergyDispatch', JavaExec) {
     args file('examples/run-petsctao-energy-dispatch.groovy').absolutePath
     systemProperty 'groovy.math.petsctao.library',
         petscTaoBuildDirectory.get().file('libgroovy_math_petsctao.so').asFile.absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
+    environment 'HWLOC_COMPONENTS', '-gl'
+}
+
+tasks.register('runJenaGraphSparql', JavaExec) {
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'groovy.ui.GroovyMain'
+    args file('examples/run-jena-graph-sparql.groovy').absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
 }
 
 tasks.named('check') {
@@ -196,10 +298,7 @@ publishing {
     }
 }
 
-tasks.register('generateModels', JavaExec) {
-    dependsOn tasks.named('classes')
-    classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'groovy.ui.GroovyMain'
-    args file('scripts/GenerateModelClasses.groovy').absolutePath
+tasks.register('generateModels', Exec) {
+    commandLine 'python3', file('scripts/generate_models.py').absolutePath
     environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
 }

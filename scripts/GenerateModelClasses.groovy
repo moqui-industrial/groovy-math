@@ -1,10 +1,10 @@
 package scripts
 
-import org.moqui.math.moqui.MoquiSchemaInspector
-import org.moqui.math.entity.ModelDefinition
-import org.moqui.math.entity.EntityDefinition
-import org.moqui.math.entity.FieldDefinition
-import org.moqui.math.entity.RelationshipDefinition
+import groovy.math.moqui.MoquiSchemaInspector
+import groovy.math.entity.ModelDefinition
+import groovy.math.entity.EntityDefinition
+import groovy.math.entity.FieldDefinition
+import groovy.math.entity.RelationshipDefinition
 import java.beans.Introspector
 
 File xmlFile = new File(System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml')
@@ -13,11 +13,11 @@ if (!xmlFile.exists()) {
     System.exit(1)
 }
 
-File outDir = new File('src/main/groovy/org/moqui/math/model')
-if (outDir.exists()) {
-    outDir.deleteDir()
-}
+File outDir = new File('src/main/groovy/groovy/math/model')
 outDir.mkdirs()
+
+File metaOutDir = new File('src/main/groovy/groovy/math/metamodel')
+metaOutDir.mkdirs()
 
 ModelDefinition model = MoquiSchemaInspector.inspect(xmlFile)
 
@@ -79,12 +79,13 @@ model.entities.values().each { EntityDefinition entity ->
     List<FieldDefinition> pks = entity.primaryKeyFields
     List<FieldDefinition> requiredFields = fields.findAll { it.isRequired() }
 
+    // 1. Generate Domain Model Entity
     StringBuilder code = new StringBuilder()
     code.append("""/*
  * Generated domain model for Moqui Math Metamodel
  * Entity: ${entity.fullName}
  */
-package org.moqui.math.model
+package groovy.math.model
 
 import groovy.transform.CompileStatic
 import groovy.transform.EqualsAndHashCode
@@ -99,163 +100,143 @@ import groovy.transform.AutoClone
 
     code.append("""import groovy.transform.builder.Builder
 import groovy.transform.builder.SimpleStrategy
-import groovy.lang.Closure
-import groovy.lang.DelegatesTo
+import groovy.transform.builder.ExternalStrategy
+import groovy.transform.NamedVariant
+import java.util.Map
 
 @CompileStatic
+@EqualsAndHashCode(includes = [${pks.collect { "'${sanitizeIdentifier(it.name)}'" }.join(', ')}])
+@ToString(includePackage = false, includeNames = true)
+@AutoClone
 """)
-
-    // Add EqualsAndHashCode on primary keys to prevent graph cycles in RAM
-    if (!pks.isEmpty()) {
-        String pkList = pks.collect { "'${it.name}'" }.join(', ')
-        code.append("@EqualsAndHashCode(includes = [${pkList}])\n")
-    } else {
-        String fieldList = fields.collect { "'${it.name}'" }.join(', ')
-        code.append("@EqualsAndHashCode(includes = [${fieldList}])\n")
-    }
-
-    code.append("@ToString(includeNames = true, ignoreNulls = true)\n")
-    code.append("@AutoClone\n")
     if (hasSequenceNum) {
         code.append("@Sortable(includes = ['sequenceNum'])\n")
     }
-    code.append("@Builder(builderStrategy = SimpleStrategy, prefix = '')\n")
-    code.append("class ${className} implements Serializable {\n")
-    code.append("    private static final long serialVersionUID = 1L\n\n")
-
-    // Direct entity fields
-    fields.each { FieldDefinition f ->
-        String fieldName = sanitizeIdentifier(f.name)
-        String fieldType = mapFieldType(f.type)
-        String comment = f.isRequired() ? " // Required${f.primaryKey ? ' (PK)' : ''}" : ""
-        code.append("    ${fieldType} ${fieldName}${comment}\n")
-    }
-
-    // Relationships (Dot Notation and in-memory graph navigation)
-    if (!relationships.isEmpty()) {
-        code.append("\n    // --- Relationships (In-Memory Navigation) ---\n")
-        relationships.each { RelationshipDefinition rel ->
-            String rawPropName = Introspector.decapitalize(rel.name)
-            if (fields.any { it.name == rawPropName }) {
-                rawPropName = rawPropName + 'Rel'
-            }
-            String relPropName = sanitizeIdentifier(rawPropName)
-            boolean isMathEntity = rel.relatedEntityName.startsWith('moqui.math.')
-            String targetType = isMathEntity ? rel.relatedEntityName.tokenize('.').last() : 'Object'
-
-            if (rel.type == 'many') {
-                code.append("    List<${targetType}> ${relPropName} = []\n")
-            } else {
-                code.append("    ${targetType} ${relPropName}\n")
-            }
-        }
-    }
-
-    code.append("\n")
-
-    // Default constructor
-    code.append("    ${className}() { }\n\n")
-
-    // Primary key constructor if there is a single PK
-    if (pks.size() == 1) {
-        FieldDefinition pk = pks.first()
-        String pkType = mapFieldType(pk.type)
-        String pkName = sanitizeIdentifier(pk.name)
-        code.append("""    ${className}(${pkType} ${pkName}) {
-        this.${pkName} = Objects.requireNonNull(${pkName}, "${className}.${pkName} cannot be null")
-    }
+    code.append("""class ${className} implements Serializable {
+    private static final long serialVersionUID = 1L
 
 """)
+
+    fields.each { FieldDefinition field ->
+        String fieldType = mapFieldType(field.type)
+        String propName = sanitizeIdentifier(field.name)
+        code.append("    /** ${field.name} */\n")
+        code.append("    ${fieldType} ${propName}\n\n")
     }
 
-    // Map-based constructor for Groovy map coercions
-    code.append("""    ${className}(Map<String, ?> args) {
+    // Default Constructor
+    code.append("    ${className}() {}\n\n")
+
+    // Map Constructor
+    code.append("""    ${className}(Map<String, Object> args) {
         if (args != null) {
 """)
-    fields.each { FieldDefinition f ->
-        String fieldName = sanitizeIdentifier(f.name)
-        String fieldType = mapFieldType(f.type)
-        code.append("            if (args.containsKey('${f.name}')) this.${fieldName} = args.get('${f.name}') as ${fieldType}\n")
-    }
-    relationships.each { RelationshipDefinition rel ->
-        String rawPropName = Introspector.decapitalize(rel.name)
-        if (fields.any { it.name == rawPropName }) rawPropName = rawPropName + 'Rel'
-        String relPropName = sanitizeIdentifier(rawPropName)
-        boolean isMathEntity = rel.relatedEntityName.startsWith('moqui.math.')
-        String targetType = isMathEntity ? rel.relatedEntityName.tokenize('.').last() : 'Object'
-        if (rel.type == 'many') {
-            code.append("            if (args.containsKey('${relPropName}')) this.${relPropName} = args.get('${relPropName}') as List<${targetType}>\n")
-            if (rawPropName != relPropName) {
-                code.append("            else if (args.containsKey('${rawPropName}')) this.${relPropName} = args.get('${rawPropName}') as List<${targetType}>\n")
-            }
+    fields.each { FieldDefinition field ->
+        String propName = sanitizeIdentifier(field.name)
+        String fieldType = mapFieldType(field.type)
+        if (fieldType == 'Long') {
+            code.append("            if (args.containsKey('${field.name}')) this.${propName} = args.get('${field.name}') != null ? ((Number) args.get('${field.name}')).longValue() : null\n")
+        } else if (fieldType == 'BigDecimal') {
+            code.append("            if (args.containsKey('${field.name}')) this.${propName} = args.get('${field.name}') != null ? (args.get('${field.name}') instanceof BigDecimal ? (BigDecimal) args.get('${field.name}') : new BigDecimal(args.get('${field.name}').toString())) : null\n")
+        } else if (fieldType == 'Double') {
+            code.append("            if (args.containsKey('${field.name}')) this.${propName} = args.get('${field.name}') != null ? ((Number) args.get('${field.name}')).doubleValue() : null\n")
+        } else if (fieldType == 'String') {
+            code.append("            if (args.containsKey('${field.name}')) this.${propName} = args.get('${field.name}')?.toString()\n")
         } else {
-            code.append("            if (args.containsKey('${relPropName}')) this.${relPropName} = args.get('${relPropName}') as ${targetType}\n")
-            if (rawPropName != relPropName) {
-                code.append("            else if (args.containsKey('${rawPropName}')) this.${relPropName} = args.get('${rawPropName}') as ${targetType}\n")
-            }
+            code.append("            if (args.containsKey('${field.name}')) this.${propName} = (${fieldType}) args.get('${field.name}')\n")
         }
     }
     code.append("""        }
     }
 
-    /**
-     * Explicit validation method for lifecycle and required constraint checks
-     */
-    void validate() {
 """)
-    requiredFields.each { FieldDefinition f ->
-        String fieldName = sanitizeIdentifier(f.name)
-        code.append("        if (this.${fieldName} == null) throw new IllegalStateException(\"Required property missing: ${className}.${fieldName}\")\n")
-    }
-    code.append("""    }
 
-    /**
-     * Gradle-style closure configurator
-     */
-    ${className} configure(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${className}) Closure<?> action) {
-        if (action == null) return this
-        Closure<?> copy = (Closure<?>) action.rehydrate(this, action.owner, action.thisObject)
-        copy.resolveStrategy = Closure.DELEGATE_FIRST
-        if (copy.maximumNumberOfParameters == 0) copy.call()
-        else copy.call(this)
+    // NamedVariant Constructor
+    code.append("    @NamedVariant\n")
+    code.append("    ${className}(\n")
+    fields.eachWithIndex { FieldDefinition field, int idx ->
+        String fieldType = mapFieldType(field.type)
+        String propName = sanitizeIdentifier(field.name)
+        String comma = (idx < fields.size() - 1) ? ',' : ''
+        code.append("        ${fieldType} ${propName}${comma}\n")
+    }
+    code.append("    ) {\n")
+    fields.each { FieldDefinition field ->
+        String propName = sanitizeIdentifier(field.name)
+        code.append("        this.${propName} = ${propName}\n")
+    }
+    code.append("    }\n\n")
+
+    // Fluent Setters / Builder Methods
+    fields.each { FieldDefinition field ->
+        String fieldType = mapFieldType(field.type)
+        String propName = sanitizeIdentifier(field.name)
+        code.append("""    ${className} ${propName}(${fieldType} value) {
+        this.${propName} = value
         this
     }
-""")
 
-    // Relationship closure builders for Gradle-style DSL
-    relationships.each { RelationshipDefinition rel ->
-        String rawPropName = Introspector.decapitalize(rel.name)
-        if (fields.any { it.name == rawPropName }) rawPropName = rawPropName + 'Rel'
-        String relPropName = sanitizeIdentifier(rawPropName)
-        boolean isMathEntity = rel.relatedEntityName.startsWith('moqui.math.')
-        if (isMathEntity) {
-            String targetType = rel.relatedEntityName.tokenize('.').last()
-            if (rel.type == 'many') {
-                code.append("""
-    ${targetType} ${relPropName}(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${targetType}) Closure<?> action) {
-        ${targetType} item = new ${targetType}()
-        item.configure(action)
-        if (this.${relPropName} == null) this.${relPropName} = []
-        this.${relPropName}.add(item)
-        item
-    }
 """)
-            } else {
-                code.append("""
-    ${targetType} ${relPropName}(@DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = ${targetType}) Closure<?> action) {
-        if (this.${relPropName} == null) this.${relPropName} = new ${targetType}()
-        this.${relPropName}.configure(action)
-        this.${relPropName}
     }
+
+    // Required fields validation helper
+    if (!requiredFields.isEmpty()) {
+        code.append("""    void validate() throws IllegalStateException {
+        List<String> missing = []
 """)
-            }
+        requiredFields.each { FieldDefinition rf ->
+            String propName = sanitizeIdentifier(rf.name)
+            code.append("        if (this.${propName} == null) missing.add('${rf.name}')\n")
+        }
+        code.append("""        if (!missing.isEmpty()) {
+            throw new IllegalStateException("Missing required fields for ${className}: " + missing.join(', '))
         }
     }
+""")
+    }
 
-    code.append("}\n")
+    // toMap() converter
+    code.append("""    Map<String, Object> toMap() {
+        Map<String, Object> map = new LinkedHashMap<>()
+""")
+    fields.each { FieldDefinition field ->
+        String propName = sanitizeIdentifier(field.name)
+        code.append("        if (this.${propName} != null) map.put('${field.name}', this.${propName})\n")
+    }
+    code.append("""        return map
+    }
+}
+""")
 
     classFile.text = code.toString()
-    println "Generated ${className}.groovy in org.moqui.math.model"
+    println "Generated ${className}.groovy in groovy.math.model"
+
+    // 2. Generate Canonical Metamodel Class (e.g. Matrix_, Graph_, etc.)
+    File metaClassFile = new File(metaOutDir, "${className}_.groovy")
+    StringBuilder metaCode = new StringBuilder()
+    metaCode.append("""/*
+ * Canonical Static Metamodel for Moqui Math Entity: ${entity.fullName}
+ * JPA Criteria-style Metamodel Descriptor
+ */
+package groovy.math.metamodel
+
+import groovy.transform.CompileStatic
+import groovy.math.model.${className}
+
+@CompileStatic
+class ${className}_ {
+    public static final String ENTITY_NAME = '${entity.name}'
+    public static final String FULL_NAME = '${entity.fullName}'
+
+""")
+    fields.each { FieldDefinition field ->
+        String fieldType = mapFieldType(field.type)
+        String propName = sanitizeIdentifier(field.name)
+        metaCode.append("    public static final Attribute<${className}, ${fieldType}> ${propName} = new Attribute<>('${field.name}', ${className}.class, ${fieldType}.class, ${field.isPrimaryKey()}, ${field.isRequired()})\n")
+    }
+    metaCode.append("}\n")
+    metaClassFile.text = metaCode.toString()
+    println "Generated ${className}_.groovy in groovy.math.metamodel"
 }
 
-println "Model generation complete (${outDir.listFiles().length} model classes generated)."
+println "Model generation complete (${model.entities.values().count { it.packageName.startsWith('moqui.math') }} model classes and canonical metamodels generated)."

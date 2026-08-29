@@ -3,10 +3,10 @@
  * Grant of Patent License.
  */
 
-import org.moqui.math.dsl.MathDsl
-import org.moqui.math.dsl.MathMeta
-import org.moqui.math.petsctao.PetscTao
-import org.moqui.math.petsctao.PetscTaoResult
+import groovy.math.dsl.MathDsl
+import groovy.math.dsl.MathMeta
+import groovy.math.petsctao.PetscTao
+import groovy.math.petsctao.PetscTaoResult
 
 String schemaPath = System.getenv('MOQUI_MATH_ENTITIES')
 if (!schemaPath) throw new IllegalStateException('MOQUI_MATH_ENTITIES must point to MathEntities.xml')
