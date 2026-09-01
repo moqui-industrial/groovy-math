@@ -58,6 +58,19 @@ struct Plan {
     }
 };
 
+#ifndef GROOVY_MATH_PYTHON_LIBRARY
+#define GROOVY_MATH_PYTHON_LIBRARY "libpython3.so"
+#endif
+
+// Resolves the libpython shared object to pre-load with RTLD_GLOBAL: an
+// operator override (GROOVY_MATH_PYTHON_LIBRARY env var) takes precedence,
+// then the exact path CMake resolved at build time, so the bridge stays
+// portable across machines instead of pointing at one developer's install.
+const char* resolve_python_library_path() {
+    const char* override_path = std::getenv("GROOVY_MATH_PYTHON_LIBRARY");
+    return (override_path && *override_path) ? override_path : GROOVY_MATH_PYTHON_LIBRARY;
+}
+
 std::once_flag opencv_init_flag;
 PyObject* cv2_module = nullptr;
 PyObject* np_module = nullptr;
@@ -73,7 +86,7 @@ std::mutex opencv_execution_mutex;
 void ensure_opencv() {
     std::call_once(opencv_init_flag, [] {
         // Ensure python symbols are available globally
-        dlopen("/home/igor/miniconda3/lib/libpython3.13.so", RTLD_NOW | RTLD_GLOBAL);
+        dlopen(resolve_python_library_path(), RTLD_NOW | RTLD_GLOBAL);
 
         if (!Py_IsInitialized()) {
             Py_Initialize();

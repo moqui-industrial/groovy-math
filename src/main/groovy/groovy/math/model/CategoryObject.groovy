@@ -62,6 +62,8 @@ class CategoryObject implements Serializable {
 
     List<Morphism> incomingMorphisms = new ArrayList<>()
 
+    List<Parameter> parameters = new ArrayList<>()
+
     CategoryObject() {}
 
     CategoryObject(Map<String, Object> args) {
@@ -157,6 +159,11 @@ class CategoryObject implements Serializable {
 
     CategoryObject incomingMorphisms(List<Morphism> list) {
         this.incomingMorphisms = list;
+        return this;
+    }
+
+    CategoryObject parameters(List<Parameter> list) {
+        this.parameters = list;
         return this;
     }
 

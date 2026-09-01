@@ -63,13 +63,19 @@ fields, relationships, primary keys and enumerations. The runtime representation
 is Groovy-native and independent of Moqui Entity Engine persistence.
 
 The compatibility baseline is inspected at Moqui Math commit
-`f5873dd892a8ccae9410161dedbf7ec8317e163f`:
+`c36705c6dd05745aa145d26fbc3cf987bcbfe39d`:
 
-- 72 entity definitions;
+- 89 entity definitions;
 - 4 entity extensions;
 - simple and composite primary keys;
 - one-to-one and one-to-many relationships;
-- 886 enumeration seed records.
+- 954 enumeration seed records.
+
+`MathViewEntities.xml` defines 43 relational SQL views used by Moqui's Entity
+Engine for reporting queries. Groovy Math has no relational execution layer, so
+these views are out of scope by the boundary above and are not mirrored as
+model or metamodel classes; only `MathEntities.xml` is consumed by
+`generateModels`.
 
 Persistence is a future adapter and is not part of object identity or DSL
 execution.

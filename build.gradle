@@ -286,8 +286,36 @@ tasks.register('runJenaGraphSparql', JavaExec) {
     environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
 }
 
+tasks.register('runJenaProductCatalog', JavaExec) {
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'groovy.ui.GroovyMain'
+    args file('examples/run-jena-product-catalog.groovy').absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
+}
+
 tasks.named('check') {
     dependsOn tasks.named('jacocoTestReport')
+}
+
+// jacocoTestReport only aggregates the default `test` task, so packages that
+// are exercised exclusively by the *-native suites (groovy.math dispatcher,
+// libtorch, jax, opencv, memory) always show as 0% covered there even when
+// those suites pass. This task merges every *.exec file the native Test
+// tasks already produce (the jacoco plugin instruments every Test task, not
+// only `test`) into one combined report. It is intentionally not wired into
+// `check`: running it requires the native toolchains (LibTorch, PETSc/TAO,
+// a Python3 with jax/numpy, a Python3 with opencv-python/numpy) that a plain
+// JVM-only build must not require.
+tasks.register('jacocoAllTestReport', JacocoReport) {
+    dependsOn tasks.named('test'), tasks.named('nativeTest'), tasks.named('petscTaoNativeTest'),
+        tasks.named('jaxNativeTest'), tasks.named('openCvNativeTest')
+    executionData.setFrom(fileTree(layout.buildDirectory.dir('jacoco')) { include '*.exec' })
+    sourceSets sourceSets.main
+    reports {
+        xml.required = true
+        html.required = true
+    }
 }
 
 publishing {

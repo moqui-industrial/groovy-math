@@ -20,4 +20,5 @@ class Functor_ {
     public static final Attribute<Functor, String> description = new Attribute<>('description', Functor.class, String.class, false, false)
     public static final Attribute<Functor, String> sourceCategoryId = new Attribute<>('sourceCategoryId', Functor.class, String.class, false, false)
     public static final Attribute<Functor, String> targetCategoryId = new Attribute<>('targetCategoryId', Functor.class, String.class, false, false)
+    public static final Attribute<Functor, String> categoryMorphismId = new Attribute<>('categoryMorphismId', Functor.class, String.class, false, false)
 }

@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
       - name: Test
         env:
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
       - name: Install PETSc development files
         run: sudo apt-get update && sudo apt-get install --yes petsc-dev ninja-build pkg-config
@@ -53,3 +53,53 @@ jobs:
         env:
           MOQUI_MATH_ENTITIES: ${{ github.workspace }}/moqui-math/entity/MathEntities.xml
         run: ./gradlew runPetscTaoEnergyDispatch
+
+  jax-native:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: moqui/moqui-math
+          path: moqui-math
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python embedding headers and JAX
+        run: |
+          sudo apt-get update && sudo apt-get install --yes python3-dev ninja-build
+          pip install numpy jax
+      - name: Build bridge and run native JAX tests
+        env:
+          MOQUI_MATH_ENTITIES: ${{ github.workspace }}/moqui-math/entity/MathEntities.xml
+        run: ./gradlew jaxNativeTest
+
+  opencv-native:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: moqui/moqui-math
+          path: moqui-math
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python embedding headers and OpenCV
+        run: |
+          sudo apt-get update && sudo apt-get install --yes python3-dev ninja-build
+          pip install numpy opencv-python-headless
+      - name: Build bridge and run native OpenCV tests
+        env:
+          MOQUI_MATH_ENTITIES: ${{ github.workspace }}/moqui-math/entity/MathEntities.xml
+        run: ./gradlew openCvNativeTest

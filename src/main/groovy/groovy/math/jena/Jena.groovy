@@ -8,6 +8,7 @@ package groovy.math.jena
 import groovy.transform.CompileStatic
 import org.apache.jena.ontology.OntModel
 import org.apache.jena.ontology.OntModelSpec
+import org.apache.jena.rdf.model.InfModel
 import org.apache.jena.rdf.model.Model
 import groovy.math.dsl.MathMeta
 
@@ -15,13 +16,24 @@ import groovy.math.dsl.MathMeta
 final class Jena {
     private Jena() { }
 
-    static Model toModel(final MathMeta mathMeta, final String graphId) {
-        JenaGraphAdapter.toRdfModel(mathMeta, graphId)
+    static Model toModel(final MathMeta mathMeta, final String graphId,
+                         final String baseNamespace = JenaGraphAdapter.DEFAULT_NS) {
+        JenaGraphAdapter.toRdfModel(mathMeta, graphId, baseNamespace)
     }
 
     static OntModel toOntology(final MathMeta mathMeta, final String graphId,
-                               final OntModelSpec spec = OntModelSpec.OWL_MEM_MICRO_RULE_INF) {
-        JenaGraphAdapter.toOntModel(mathMeta, graphId, spec)
+                               final OntModelSpec spec = OntModelSpec.OWL_MEM_MICRO_RULE_INF,
+                               final String baseNamespace = JenaGraphAdapter.DEFAULT_NS) {
+        JenaGraphAdapter.toOntModel(mathMeta, graphId, spec, baseNamespace)
+    }
+
+    static InfModel toInfModel(final Model model, final String rulesString) {
+        JenaGraphAdapter.toInfModel(model, rulesString)
+    }
+
+    static InfModel toInfModel(final MathMeta mathMeta, final String graphId, final String rulesString,
+                               final String baseNamespace = JenaGraphAdapter.DEFAULT_NS) {
+        JenaGraphAdapter.toInfModel(mathMeta, graphId, rulesString, baseNamespace)
     }
 
     static List<Map<String, String>> sparql(final Model model, final String queryString) {

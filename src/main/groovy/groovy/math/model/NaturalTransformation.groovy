@@ -34,6 +34,9 @@ class NaturalTransformation implements Serializable {
     /** targetFunctorId */
     String targetFunctorId
 
+    /** categoryMorphismId */
+    String categoryMorphismId
+
     /** description */
     String description
 
@@ -42,6 +45,8 @@ class NaturalTransformation implements Serializable {
     Functor sourceFunctor
 
     Functor targetFunctor
+
+    Morphism categoryMorphism
 
     NaturalTransformation() {}
 
@@ -52,6 +57,7 @@ class NaturalTransformation implements Serializable {
             if (args.containsKey('naturalTransformationTypeEnumId')) this.naturalTransformationTypeEnumId = args.get('naturalTransformationTypeEnumId')?.toString()
             if (args.containsKey('sourceFunctorId')) this.sourceFunctorId = args.get('sourceFunctorId')?.toString()
             if (args.containsKey('targetFunctorId')) this.targetFunctorId = args.get('targetFunctorId')?.toString()
+            if (args.containsKey('categoryMorphismId')) this.categoryMorphismId = args.get('categoryMorphismId')?.toString()
             if (args.containsKey('description')) this.description = args.get('description')?.toString()
         }
     }
@@ -81,6 +87,11 @@ class NaturalTransformation implements Serializable {
         return this;
     }
 
+    NaturalTransformation categoryMorphismId(String value) {
+        this.categoryMorphismId = value
+        return this;
+    }
+
     NaturalTransformation description(String value) {
         this.description = value
         return this;
@@ -101,6 +112,11 @@ class NaturalTransformation implements Serializable {
         return this;
     }
 
+    NaturalTransformation categoryMorphism(Morphism item) {
+        this.categoryMorphism = item;
+        return this;
+    }
+
     Map<String, Object> toMap() {
         Map<String, Object> map = new LinkedHashMap<>();
         if (this.naturalTransformationId != null) map.put('naturalTransformationId', this.naturalTransformationId);
@@ -108,6 +124,7 @@ class NaturalTransformation implements Serializable {
         if (this.naturalTransformationTypeEnumId != null) map.put('naturalTransformationTypeEnumId', this.naturalTransformationTypeEnumId);
         if (this.sourceFunctorId != null) map.put('sourceFunctorId', this.sourceFunctorId);
         if (this.targetFunctorId != null) map.put('targetFunctorId', this.targetFunctorId);
+        if (this.categoryMorphismId != null) map.put('categoryMorphismId', this.categoryMorphismId);
         if (this.description != null) map.put('description', this.description);
         return map;
     }

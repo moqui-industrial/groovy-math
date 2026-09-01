@@ -94,4 +94,62 @@ class JenaGraphAdapterTest {
         assertTrue(types.contains('http://moqui.org/math/graph#Mammal'))
         assertTrue(types.contains('http://moqui.org/math/graph#Animal'))
     }
+
+    @Test
+    void testJenaRuleInference() {
+        String schemaPath = System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
+        File schemaFile = new File(schemaPath)
+
+        MathMeta mathMeta = MathDsl.math(MoquiSchemaInspector.inspect(schemaFile)) {
+            Graph('PricingGraph', name: 'Product Pricing Graph') {
+                GraphVertex('Class_Product', label: 'Product')
+                GraphVertex('CAT_DEMO', label: 'Demo Category')
+
+                GraphVertex('P_100', label: 'Premium Item')
+                GraphVertex('Price_100', label: 'Price 300.0') {
+                    Parameter('PriceVal_1', parameterDefId: 'price', numericValue: 300.0)
+                }
+
+                GraphVertex('P_200', label: 'Standard Item')
+                GraphVertex('Price_200', label: 'Price 50.0') {
+                    Parameter('PriceVal_2', parameterDefId: 'price', numericValue: 50.0)
+                }
+
+                GraphEdge('T1', fromVertexId: 'P_100', toVertexId: 'Class_Product', label: 'type')
+                GraphEdge('T2', fromVertexId: 'P_200', toVertexId: 'Class_Product', label: 'type')
+                GraphEdge('C1', fromVertexId: 'P_100', toVertexId: 'CAT_DEMO', label: 'hasCategory')
+                GraphEdge('C2', fromVertexId: 'P_200', toVertexId: 'CAT_DEMO', label: 'hasCategory')
+                GraphEdge('S1', fromVertexId: 'P_100', toVertexId: 'Price_100', label: 'priceSpecification')
+                GraphEdge('S2', fromVertexId: 'P_200', toVertexId: 'Price_200', label: 'priceSpecification')
+            }
+        }
+
+        String rule = '''
+        [HighEndRule:
+            (?p http://www.w3.org/1999/02/22-rdf-syntax-ns#type http://moqui.org/math/graph#Class_Product)
+            (?p http://moqui.org/math/property#hasCategory http://moqui.org/math/graph#CAT_DEMO)
+            (?p http://moqui.org/math/property#priceSpecification ?spec)
+            (?spec http://moqui.org/math/parameter#price ?price)
+            greaterThan(?price, 250.0)
+            -> (?p http://moqui.org/math/property#marketingSegment 'HighEnd')
+        ]
+        '''
+
+        org.apache.jena.rdf.model.InfModel infModel = Jena.toInfModel(mathMeta, 'PricingGraph', rule)
+        assertNotNull(infModel)
+
+        String sparql = '''
+            PREFIX mp: <http://moqui.org/math/property#>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+            SELECT ?label ?segment WHERE {
+                ?p mp:marketingSegment ?segment .
+                ?p rdfs:label ?label .
+            }
+        '''
+        List<Map<String, String>> results = Jena.sparql(infModel, sparql)
+        assertEquals(1, results.size())
+        assertEquals('Premium Item', results[0].label)
+        assertEquals('HighEnd', results[0].segment)
+    }
 }

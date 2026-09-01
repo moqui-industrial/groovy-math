@@ -33,17 +33,21 @@ termination reason when it cannot solve the supplied problem.
 The bridge is intentionally narrow:
 
 ```text
-MathMeta -> PetscTaoProvider -> PetscTaoPlan -> JNI -> PETSc Vec/Mat + TAO BQPIP
+MathMeta -> PetscTaoProvider -> PetscTaoPlan -> Panama (java.lang.foreign) -> PETSc Vec/Mat + TAO BQPIP
 ```
 
-The JVM sends contiguous `double[]` values only while constructing the native
-plan. TAO owns its solver objects during a solve, and the Java plan owns the
-native plan lifecycle through `AutoCloseable`.
+`PetscTaoBackend` (`createBoundedQuadraticPlan`, `solve`, `destroy`) is
+implemented by `PetscTaoPanama`, which resolves the native symbols through
+`Linker.nativeLinker()` / `SymbolLookup` and passes `double[]` payloads through
+off-heap `MemorySegment`s built with an `Arena` — there is no JNI bridge for
+this provider. The JVM sends contiguous values only while constructing the
+native plan. TAO owns its solver objects during a solve, and the Java plan
+owns the native plan lifecycle through `AutoCloseable`.
 
 This initial embedded implementation uses `PETSC_COMM_SELF`. It is a real TAO
 execution but it is deliberately single-process. Calls into PETSc are serialized
-inside the JNI library because an embedded JVM must not assume that an arbitrary
-PETSc/MPI build is thread-safe.
+inside the native library because an embedded JVM must not assume that an
+arbitrary PETSc/MPI build is thread-safe.
 
 A distributed implementation should preserve `PetscTaoProvider` and replace
 `PetscTaoBackend` with a launcher or remote executor started under `mpiexec`.
@@ -51,14 +55,16 @@ That executor can reconstruct distributed `Vec` and `Mat` objects on
 `PETSC_COMM_WORLD`; the Groovy DSL does not change. Running collective MPI work
 directly from unrelated JVM threads is outside the contract of this backend.
 
-PETSc is initialized once and is not finalized by the JNI library. Finalizing it
-would invalidate PETSc for other components in the same JVM and PETSc/MPI cannot
-generally be initialized again safely.
+PETSc is initialized once and is not finalized by the native library. Finalizing
+it would invalidate PETSc for other components in the same JVM and PETSc/MPI
+cannot generally be initialized again safely.
 
 ## Build and run
 
 Install a real-scalar PETSc development package with TAO, plus CMake, Ninja,
-`pkg-config`, and JDK 17. The build resolves PETSc through its `PETSc.pc` file.
+`pkg-config`, and JDK 21+ with `--enable-preview` (already wired into
+`build.gradle`) for the Foreign Function & Memory API. The build resolves
+PETSc through its `PETSc.pc` file.
 
 ```shell
 MOQUI_MATH_ENTITIES=/path/to/moqui-math/entity/MathEntities.xml \
@@ -76,7 +82,7 @@ silently reduced to real values.
 
 | Backend | Parallel calls from Groovy | Native execution |
 |---|---|---|
-| Embedded JNI (current) | Safe, but globally serialized | One process on `PETSC_COMM_SELF` |
+| Embedded Panama (current) | Safe, but globally serialized | One process on `PETSC_COMM_SELF` |
 | Separate MPI executor (future) | Independent jobs may run concurrently | Collective work on `PETSC_COMM_WORLD` |
 
 The global lock is in the native library, not in an individual plan. Two JVM

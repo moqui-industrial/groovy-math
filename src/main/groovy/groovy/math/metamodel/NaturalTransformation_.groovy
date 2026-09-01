@@ -17,5 +17,6 @@ class NaturalTransformation_ {
     public static final Attribute<NaturalTransformation, String> naturalTransformationTypeEnumId = new Attribute<>('naturalTransformationTypeEnumId', NaturalTransformation.class, String.class, false, false)
     public static final Attribute<NaturalTransformation, String> sourceFunctorId = new Attribute<>('sourceFunctorId', NaturalTransformation.class, String.class, false, false)
     public static final Attribute<NaturalTransformation, String> targetFunctorId = new Attribute<>('targetFunctorId', NaturalTransformation.class, String.class, false, false)
+    public static final Attribute<NaturalTransformation, String> categoryMorphismId = new Attribute<>('categoryMorphismId', NaturalTransformation.class, String.class, false, false)
     public static final Attribute<NaturalTransformation, String> description = new Attribute<>('description', NaturalTransformation.class, String.class, false, false)
 }

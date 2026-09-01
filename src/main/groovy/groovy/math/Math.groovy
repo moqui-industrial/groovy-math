@@ -30,19 +30,19 @@ final class Math {
         String solvingMethod = model.get('solvingMethodEnumId') as String
         String modelType = model.get('modelTypeEnumId') as String
 
-        // Check for explicit computer vision operations
+        // Check for computer vision operations, so a model can dispatch to OpenCv
+        // even when its declared modelType/solvingMethod does not say so explicitly.
+        // This looks only at the declared TransformationType enum, never at names:
+        // matching on a transformation's free-text name would silently misroute any
+        // model whose author happened to name a step "blur" or "gaussianSomething".
         boolean hasVisionOps = false
         for (ModelValue data : mathMeta.entity('MathModelData')) {
             if (data.get('mathModelId') == mathModelId && data.get('transformationId') != null) {
                 ModelValue tf = mathMeta.entity('Transformation').findByName(data.get('transformationId') as String)
-                if (tf != null) {
-                    String tfType = (tf.get('transformationTypeEnumId') ?: '') as String
-                    String tfName = (tf.get('name') ?: '') as String
-                    if (tfType in ['TtGaussianBlur', 'TtSobel', 'TtCanny', 'TtWarpAffine', 'TtWarpPerspective', 'TtFilter2D'] ||
-                        tfName.toLowerCase().contains('blur') || tfName.toLowerCase().contains('sobel') || tfName.toLowerCase().contains('gaussian')) {
-                        hasVisionOps = true
-                        break
-                    }
+                String tfType = tf != null ? (tf.get('transformationTypeEnumId') ?: '') as String : ''
+                if (tfType in ['TtGaussianBlur', 'TtSobel', 'TtCanny', 'TtWarpAffine', 'TtWarpPerspective', 'TtFilter2D']) {
+                    hasVisionOps = true
+                    break
                 }
             }
         }

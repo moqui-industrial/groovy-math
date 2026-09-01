@@ -53,34 +53,52 @@ LibTorchResult product = PyTorch.execute(mathMeta, 'MatrixProduct') {
 
 ## Native boundary
 
-This provider uses a narrow JNI bridge because Java 17 is the current baseline.
-The C++ side owns all `at::Tensor` parameters and the immutable operation list.
-Java owns an opaque handle through `LibTorchPlan`, whose read/write lock permits
-concurrent execution while making `close()` exclusive. Execution uses
-`c10::InferenceMode`.
+`LibTorchBackend` is a narrow Java interface (`createPlan`, `addAffine`,
+`addMatrixProduct`, `addRelu`, `seal`, `execute`, `executeDirect`, `destroy`,
+thread configuration) with two interchangeable native implementations built
+from the same `src/main/cpp/libtorch_jni.cpp` / `libtorch_panama.cpp`
+translation units into one shared library:
 
-Two input boundaries are available:
+- **`LibTorchPanama`** (`groovy.math.libtorch.LibTorchPanama`, Java) is the
+  default used by `LibTorchProvider` and requires Java 21+ for the Foreign
+  Function & Memory API (`java.lang.foreign`, still a preview feature on 21,
+  hence `--enable-preview` in `build.gradle`). It dispatches through
+  `Linker.nativeLinker()` with zero-copy `MemorySegment` views, bypassing JNI
+  array marshalling entirely.
+- **`LibTorchNative`** (`groovy.math.libtorch.LibTorchNative`, Groovy) is the
+  legacy JNI bridge, kept alongside Panama so `LibTorchParallelBenchmark` /
+  `LibTorchComputeBenchmark` can measure one against the other; it is not the
+  provider's default backend.
+
+Both share the same plan model on the C++ side: it owns all `at::Tensor`
+parameters and the immutable operation list, while Java owns an opaque handle
+through `LibTorchPlan`, whose read/write lock permits concurrent execution
+while making `close()` exclusive. Execution uses `c10::InferenceMode`.
+
+Two input boundaries are available on both backends:
 
 - `float[]` copies Java input into native memory and native output back to Java;
 - direct `ByteBuffer` lets LibTorch view the input in place and writes the
   result into reusable off-heap output storage with one native copy, avoiding
-  JNI array marshalling and per-call allocation.
+  per-call allocation (and, for `LibTorchNative`, JNI array marshalling).
 
 ## Build and verification
 
-The normal JVM build does not require LibTorch. Native tasks require JDK 17,
-CMake, Ninja and an unpacked CPU or accelerator LibTorch distribution:
+The normal JVM build does not require LibTorch. Native tasks require JDK 21+
+with `--enable-preview` (already wired into `build.gradle`), CMake, Ninja and
+an unpacked CPU or accelerator LibTorch distribution:
 
 ```shell
-export JAVA_HOME=/path/to/jdk-17
+export JAVA_HOME=/path/to/jdk-21
 export LIBTORCH_HOME=/path/to/libtorch
 ./gradlew nativeTest
 ./gradlew benchmarkLibTorch
 ./gradlew benchmarkLibTorchCompute
 ```
 
-Set `CMAKE_COMMAND` if CMake is not on `PATH`. `nativeTest` verifies array and
-direct-buffer results plus 64 concurrent calls on one plan.
+Set `CMAKE_COMMAND` if CMake is not on `PATH`. `nativeTest` builds both the
+JNI and Panama translation units into one library and verifies array and
+direct-buffer results plus 64 concurrent calls on one plan, for both backends.
 
 ## Parallelism
 

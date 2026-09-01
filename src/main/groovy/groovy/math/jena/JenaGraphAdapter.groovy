@@ -13,11 +13,15 @@ import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QuerySolution
 import org.apache.jena.query.ResultSet
+import org.apache.jena.rdf.model.InfModel
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.Property
 import org.apache.jena.rdf.model.RDFNode
 import org.apache.jena.rdf.model.Resource
+import org.apache.jena.reasoner.Reasoner
+import org.apache.jena.reasoner.rulesys.GenericRuleReasoner
+import org.apache.jena.reasoner.rulesys.Rule
 import org.apache.jena.vocabulary.OWL
 import org.apache.jena.vocabulary.RDF
 import org.apache.jena.vocabulary.RDFS
@@ -74,10 +78,16 @@ class JenaGraphAdapter {
                 if (param.get('graphId') == graphId) {
                     String vertexId = param.get('graphVertexId') as String
                     String defId = param.get('parameterDefId') as String ?: 'value'
-                    Object val = param.get('textValue') ?: param.get('numericValue')
-                    if (vertexId && vertexResources.containsKey(vertexId) && val != null) {
-                        Property paramProp = model.createProperty(DEFAULT_PARAM_NS, defId)
-                        vertexResources.get(vertexId).addProperty(paramProp, val.toString())
+                    Object numVal = param.get('numericValue')
+                    Object textVal = param.get('textValue')
+
+                    if (vertexId && vertexResources.containsKey(vertexId)) {
+                        Property paramProp = resolveProperty(model, defId, DEFAULT_PARAM_NS)
+                        if (numVal instanceof Number) {
+                            vertexResources.get(vertexId).addLiteral(paramProp, ((Number) numVal).doubleValue())
+                        } else if (textVal != null) {
+                            vertexResources.get(vertexId).addProperty(paramProp, textVal.toString())
+                        }
                     }
                 }
             }
@@ -98,7 +108,6 @@ class JenaGraphAdapter {
 
                 // Optional edge weight
                 if (edge.get('weight') != null) {
-                    // Reification or edge property statement
                     Property weightProp = model.createProperty(DEFAULT_PROP_NS, 'weight')
                     fromRes.addLiteral(weightProp, edge.get('weight'))
                 }
@@ -117,6 +126,24 @@ class JenaGraphAdapter {
         Model baseModel = toRdfModel(mathMeta, graphId, baseNamespace)
         OntModel ontModel = ModelFactory.createOntologyModel(spec, baseModel)
         ontModel
+    }
+
+    /**
+     * Creates an Inference Model with custom Jena forward/backward chaining business rules.
+     */
+    static InfModel toInfModel(final Model model, final String rulesString) {
+        List<Rule> rules = Rule.parseRules(rulesString)
+        Reasoner reasoner = new GenericRuleReasoner(rules)
+        ModelFactory.createInfModel(reasoner, model)
+    }
+
+    /**
+     * Converts a Moqui Graph into an Inference Model with custom business rules.
+     */
+    static InfModel toInfModel(final MathMeta mathMeta, final String graphId, final String rulesString,
+                               final String baseNamespace = DEFAULT_NS) {
+        Model baseModel = toRdfModel(mathMeta, graphId, baseNamespace)
+        toInfModel(baseModel, rulesString)
     }
 
     /**
@@ -150,6 +177,15 @@ class JenaGraphAdapter {
         StringWriter writer = new StringWriter()
         model.write(writer, format)
         writer.toString()
+    }
+
+    private static Property resolveProperty(final Model model, final String propName, final String defaultNs) {
+        String trimmed = propName.trim()
+        if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+            return model.createProperty(trimmed)
+        } else {
+            return model.createProperty(defaultNs, trimmed)
+        }
     }
 
     private static Property resolvePredicate(final Model model, final String label) {

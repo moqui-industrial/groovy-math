@@ -48,6 +48,14 @@ class Category implements Serializable {
 
     List<Morphism> morphisms = new ArrayList<>()
 
+    List<MorphismEquation> equations = new ArrayList<>()
+
+    List<CategoryConstruction> constructions = new ArrayList<>()
+
+    List<UniversalConstruction> universalConstructions = new ArrayList<>()
+
+    List<ExponentialObject> exponentials = new ArrayList<>()
+
     Category() {}
 
     Category(Map<String, Object> args) {
@@ -114,6 +122,26 @@ class Category implements Serializable {
 
     Category morphisms(List<Morphism> list) {
         this.morphisms = list;
+        return this;
+    }
+
+    Category equations(List<MorphismEquation> list) {
+        this.equations = list;
+        return this;
+    }
+
+    Category constructions(List<CategoryConstruction> list) {
+        this.constructions = list;
+        return this;
+    }
+
+    Category universalConstructions(List<UniversalConstruction> list) {
+        this.universalConstructions = list;
+        return this;
+    }
+
+    Category exponentials(List<ExponentialObject> list) {
+        this.exponentials = list;
         return this;
     }
 

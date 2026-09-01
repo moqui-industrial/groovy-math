@@ -43,11 +43,16 @@ class Functor implements Serializable {
     /** targetCategoryId */
     String targetCategoryId
 
+    /** categoryMorphismId */
+    String categoryMorphismId
+
     Functor parent
 
     Category sourceCategory
 
     Category targetCategory
+
+    Morphism categoryMorphism
 
     List<FunctorObjectMapping> objMap = new ArrayList<>()
 
@@ -65,6 +70,7 @@ class Functor implements Serializable {
             if (args.containsKey('description')) this.description = args.get('description')?.toString()
             if (args.containsKey('sourceCategoryId')) this.sourceCategoryId = args.get('sourceCategoryId')?.toString()
             if (args.containsKey('targetCategoryId')) this.targetCategoryId = args.get('targetCategoryId')?.toString()
+            if (args.containsKey('categoryMorphismId')) this.categoryMorphismId = args.get('categoryMorphismId')?.toString()
         }
     }
 
@@ -108,6 +114,11 @@ class Functor implements Serializable {
         return this;
     }
 
+    Functor categoryMorphismId(String value) {
+        this.categoryMorphismId = value
+        return this;
+    }
+
     Functor parent(Functor item) {
         this.parent = item;
         return this;
@@ -120,6 +131,11 @@ class Functor implements Serializable {
 
     Functor targetCategory(Category item) {
         this.targetCategory = item;
+        return this;
+    }
+
+    Functor categoryMorphism(Morphism item) {
+        this.categoryMorphism = item;
         return this;
     }
 
@@ -143,6 +159,7 @@ class Functor implements Serializable {
         if (this.description != null) map.put('description', this.description);
         if (this.sourceCategoryId != null) map.put('sourceCategoryId', this.sourceCategoryId);
         if (this.targetCategoryId != null) map.put('targetCategoryId', this.targetCategoryId);
+        if (this.categoryMorphismId != null) map.put('categoryMorphismId', this.categoryMorphismId);
         return map;
     }
 }

@@ -127,18 +127,39 @@ Declarations in `examples/` are cleanly decoupled into **declarative model files
 | [`examples/energy-dispatch.groovy`](examples/energy-dispatch.groovy) | [`examples/run-petsctao-energy-dispatch.groovy`](examples/run-petsctao-energy-dispatch.groovy) | **PETSc / TAO BQPIP Panama** |
 | [`examples/production-plan.groovy`](examples/production-plan.groovy) | [`examples/run-ortools-production-plan.groovy`](examples/run-ortools-production-plan.groovy) | **Google OR-Tools GLOP** |
 | [`examples/jena-knowledge-graph.groovy`](examples/jena-knowledge-graph.groovy) | [`examples/run-jena-graph-sparql.groovy`](examples/run-jena-graph-sparql.groovy) | **Apache Jena RDF / OWL / SPARQL** |
+| [`examples/product-catalog-graph.groovy`](examples/product-catalog-graph.groovy) | [`examples/run-jena-product-catalog.groovy`](examples/run-jena-product-catalog.groovy) | **Apache Jena Rules Reasoner & SPARQL** |
 
 ---
 
 ## Building and Verification
 
 ### Prerequisites
-* Java 21+ with Panama Foreign Function & Memory API enabled.
-* C++ toolchain (GCC/Clang) and CMake (for native backends).
+* Java 21+ with Panama Foreign Function & Memory API enabled (`--enable-preview`,
+  already wired into `build.gradle`).
+* C++ toolchain (GCC/Clang), CMake and Ninja for the native backends, plus per
+  backend:
+  * **LibTorch** (`nativeTest`): an unpacked LibTorch distribution; point
+    `LIBTORCH_HOME` at it.
+  * **PETSc/TAO** (`petscTaoNativeTest`): a real-scalar PETSc build with TAO,
+    discoverable through `pkg-config` (e.g. Debian/Ubuntu `petsc-dev`), and MPI.
+  * **JAX** and **OpenCV** (`jaxNativeTest`, `openCvNativeTest`): a Python 3
+    with development headers plus `numpy`/`jax` or `numpy`/`opencv-python`
+    installed; both bridges embed that interpreter through Panama. CMake finds
+    `python3` on `PATH` by default — set `GROOVY_MATH_PYTHON3_ROOT` to point at
+    a specific interpreter (e.g. a dedicated conda/venv) instead.
+
+Only the base `check` task is required for everyday JVM development; each
+native task above builds its own bridge on demand and is otherwise skipped.
 
 ### Running All Tests & Pipeline Examples
 ```bash
 ./gradlew check nativeTest petscTaoNativeTest jaxNativeTest openCvNativeTest \
           runJaxPipeline runOpenCvPipeline runOrToolsProductionPlan \
-          runPetscTaoEnergyDispatch runJenaGraphSparql
+          runPetscTaoEnergyDispatch runJenaGraphSparql runJenaProductCatalog
 ```
+
+`check` only measures coverage from the non-native `test` task, so packages
+exercised solely by the native suites (the dispatcher, LibTorch, JAX, OpenCV,
+native memory) read as uncovered there even when green. Run
+`./gradlew jacocoAllTestReport` after the command above for one merged
+coverage report across every suite.
