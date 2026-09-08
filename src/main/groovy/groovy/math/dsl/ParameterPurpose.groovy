@@ -15,7 +15,21 @@
 package groovy.math.dsl
 
 enum ParameterPurpose implements DslEnumValue {
-    MathModel('PpMathModel')
+    MathModel('PpMathModel'),
+    Physical('PpPhysical'),
+    FluidProperty('PpFluidProperty'),
+    BoundaryCondition('PpBoundaryCondition'),
+    SolverControl('PpSolverControl'),
+    NumericalScheme('PpNumericalScheme'),
+    Mesh('PpMesh'),
+    Control('PpControl'),
+    MlHyperparameter('PpMlHyperparameter'),
+    LearningRate('PpLearningRate'),
+    WeightDecay('PpWeightDecay'),
+    BatchSize('PpBatchSize'),
+    Epochs('PpEpochs'),
+    Momentum('PpMomentum'),
+    DropoutRate('PpDropoutRate')
 
     final String id
 

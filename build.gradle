@@ -59,17 +59,19 @@ tasks.withType(JavaExec).configureEach {
 
 tasks.named('test') {
     useJUnitPlatform()
-    useJUnitPlatform { excludeTags 'libtorch-native', 'petsctao-native', 'jax-native', 'opencv-native' }
+    useJUnitPlatform { excludeTags 'libtorch-native', 'petsctao-native', 'jax-native', 'opencv-native', 'openfoam-native' }
 }
 
 def nativeBuildDirectory = layout.buildDirectory.dir('native')
 def petscTaoBuildDirectory = layout.buildDirectory.dir('native-petsctao')
 def jaxBuildDirectory = layout.buildDirectory.dir('native-jax')
 def openCvBuildDirectory = layout.buildDirectory.dir('native-opencv')
+def openFoamBuildDirectory = layout.buildDirectory.dir('native-openfoam')
 def libTorchSourceDirectory = layout.projectDirectory.dir('src/main/cpp')
 def petscTaoSourceDirectory = layout.projectDirectory.dir('src/main/cpp/petsctao')
 def jaxSourceDirectory = layout.projectDirectory.dir('src/main/cpp/jax')
 def openCvSourceDirectory = layout.projectDirectory.dir('src/main/cpp/opencv')
+def openFoamSourceDirectory = layout.projectDirectory.dir('src/main/cpp/openfoam')
 
 tasks.register('configureLibTorchNative', Exec) {
     inputs.dir(libTorchSourceDirectory)
@@ -214,6 +216,38 @@ tasks.register('openCvNativeTest', Test) {
     environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
 }
 
+tasks.register('configureOpenFoamNative', Exec) {
+    inputs.dir(openFoamSourceDirectory)
+    outputs.file(openFoamBuildDirectory.map { it.file('build.ninja') })
+    doFirst {
+        String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
+        commandLine cmake, '-S', openFoamSourceDirectory.asFile.absolutePath,
+            '-B', openFoamBuildDirectory.get().asFile.absolutePath, '-G', 'Ninja',
+            '-DCMAKE_BUILD_TYPE=Release'
+    }
+}
+
+tasks.register('buildOpenFoamNative', Exec) {
+    dependsOn tasks.named('configureOpenFoamNative')
+    inputs.dir(openFoamSourceDirectory)
+    inputs.file(openFoamBuildDirectory.map { it.file('build.ninja') })
+    outputs.file(openFoamBuildDirectory.map { it.file('libgroovy_math_openfoam.so') })
+    doFirst {
+        String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
+        commandLine cmake, '--build', openFoamBuildDirectory.get().asFile.absolutePath, '--parallel'
+    }
+}
+
+tasks.register('openFoamNativeTest', Test) {
+    dependsOn tasks.named('buildOpenFoamNative')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'openfoam-native' }
+    systemProperty 'groovy.math.openfoam.library',
+        openFoamBuildDirectory.get().file('libgroovy_math_openfoam.so').asFile.absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
+}
+
 tasks.register('benchmarkLibTorch', JavaExec) {
     dependsOn tasks.named('buildLibTorchNative'), tasks.named('testClasses')
     classpath = sourceSets.test.runtimeClasspath
@@ -257,6 +291,21 @@ tasks.register('runJaxPipeline', JavaExec) {
     environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
 }
 
+tasks.register('dlParityTest', Test) {
+    dependsOn tasks.named('buildLibTorchNative'), tasks.named('buildJaxNative')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'libtorch-native', 'jax-native' }
+    filter {
+        includeTestsMatching 'groovy.math.dl.DeepLearningParityTest'
+    }
+    systemProperty 'groovy.math.libtorch.library',
+        nativeBuildDirectory.get().file('libgroovy_math_libtorch.so').asFile.absolutePath
+    systemProperty 'groovy.math.jax.library',
+        jaxBuildDirectory.get().file('libgroovy_math_jax.so').asFile.absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
+}
+
 tasks.register('runOpenCvPipeline', JavaExec) {
     dependsOn tasks.named('buildOpenCvNative'), tasks.named('testClasses')
     classpath = sourceSets.main.runtimeClasspath + sourceSets.test.runtimeClasspath
@@ -291,6 +340,16 @@ tasks.register('runJenaProductCatalog', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'groovy.ui.GroovyMain'
     args file('examples/run-jena-product-catalog.groovy').absolutePath
+    environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
+}
+
+tasks.register('runOpenFoamCavity', JavaExec) {
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'groovy.ui.GroovyMain'
+    args file('examples/run-openfoam-cavity.groovy').absolutePath
+    systemProperty 'groovy.math.openfoam.library',
+        openFoamBuildDirectory.get().file('libgroovy_math_openfoam.so').asFile.absolutePath
     environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
 }
 

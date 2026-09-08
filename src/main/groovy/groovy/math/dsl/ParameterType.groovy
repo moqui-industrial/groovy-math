@@ -15,7 +15,12 @@
 package groovy.math.dsl
 
 enum ParameterType implements DslEnumValue {
-    TextShort('PtTextShort')
+    TextShort('PtTextShort'),
+    NumberDecimal('PtNumberDecimal'),
+    NumberInteger('PtNumberInteger'),
+    Enumeration('PtEnumeration'),
+    Vector('PtVector'),
+    Matrix('PtMatrix')
 
     final String id
 

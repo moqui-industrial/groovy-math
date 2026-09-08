@@ -20,17 +20,39 @@ public final class LibTorchPanama implements LibTorchBackend {
 
     private final Linker linker;
     private final SymbolLookup symbols;
+
     private final MethodHandle createPlanHandle;
     private final MethodHandle destroyHandle;
     private final MethodHandle outputWidthHandle;
     private final MethodHandle sealHandle;
+    private final MethodHandle setTrainingHandle;
+
     private final MethodHandle addAffineHandle;
     private final MethodHandle addReluHandle;
+    private final MethodHandle addSigmoidHandle;
+    private final MethodHandle addGeluHandle;
+    private final MethodHandle addSiluHandle;
+    private final MethodHandle addTanhHandle;
+    private final MethodHandle addLeakyReluHandle;
+    private final MethodHandle addEluHandle;
     private final MethodHandle addSoftmaxHandle;
+    private final MethodHandle addLogSoftmaxHandle;
+    private final MethodHandle addLayerNormHandle;
+    private final MethodHandle addRMSNormHandle;
     private final MethodHandle addMatrixProductHandle;
     private final MethodHandle addAttentionMaskHandle;
+    private final MethodHandle addScaledDotProductAttentionHandle;
+    private final MethodHandle addBinaryOpHandle;
+    private final MethodHandle addUnaryMathHandle;
+    private final MethodHandle addReductionHandle;
+    private final MethodHandle addLossHandle;
+
     private final MethodHandle executeHandle;
+    private final MethodHandle backwardHandle;
+    private final MethodHandle stepOptimizerHandle;
+    private final MethodHandle zeroGradHandle;
     private final MethodHandle matmulHandle;
+    private final MethodHandle tensorOpHandle;
     private final MethodHandle configureThreadsHandle;
     private final MethodHandle intraOpThreadsHandle;
     private final MethodHandle interOpThreadsHandle;
@@ -41,47 +63,80 @@ public final class LibTorchPanama implements LibTorchBackend {
 
         this.createPlanHandle = find("torch_panama_create_plan",
             FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT));
-
         this.destroyHandle = find("torch_panama_destroy",
             FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG));
-
         this.outputWidthHandle = find("torch_panama_output_width",
             FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG));
-
         this.sealHandle = find("torch_panama_seal",
             FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
+        this.setTrainingHandle = findOptional("torch_panama_set_training",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT));
 
         this.addAffineHandle = find("torch_panama_add_affine",
             FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
                 ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
-
         this.addReluHandle = find("torch_panama_add_relu",
             FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
-
+        this.addSigmoidHandle = findOptional("torch_panama_add_sigmoid",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
+        this.addGeluHandle = findOptional("torch_panama_add_gelu",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
+        this.addSiluHandle = findOptional("torch_panama_add_silu",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
+        this.addTanhHandle = findOptional("torch_panama_add_tanh",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
+        this.addLeakyReluHandle = findOptional("torch_panama_add_leaky_relu",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_FLOAT));
+        this.addEluHandle = findOptional("torch_panama_add_elu",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_FLOAT));
         this.addSoftmaxHandle = find("torch_panama_add_softmax",
             FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG));
-
+        this.addLogSoftmaxHandle = findOptional("torch_panama_add_log_softmax",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG));
+        this.addLayerNormHandle = findOptional("torch_panama_add_layer_norm",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_FLOAT));
+        this.addRMSNormHandle = findOptional("torch_panama_add_rms_norm",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_FLOAT));
         this.addMatrixProductHandle = find("torch_panama_add_matrix_product",
             FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
                 ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
-
         this.addAttentionMaskHandle = find("torch_panama_add_attention_mask",
             FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
                 ValueLayout.JAVA_LONG, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+        this.addScaledDotProductAttentionHandle = findOptional("torch_panama_add_scaled_dot_product_attention",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_FLOAT));
+
+        this.addBinaryOpHandle = findOptional("torch_panama_add_binary_op",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
+        this.addUnaryMathHandle = findOptional("torch_panama_add_unary_math",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_FLOAT));
+        this.addReductionHandle = findOptional("torch_panama_add_reduction",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT));
+        this.addLossHandle = findOptional("torch_panama_add_loss",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
 
         this.executeHandle = find("torch_panama_execute",
             FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+        this.backwardHandle = findOptional("torch_panama_backward",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT));
+        this.stepOptimizerHandle = findOptional("torch_panama_step_optimizer",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT));
+        this.zeroGradHandle = findOptional("torch_panama_zero_grad",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG));
 
         this.matmulHandle = find("torch_panama_matmul",
             FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.JAVA_LONG,
                 ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+        this.tensorOpHandle = findOptional("torch_panama_tensor_op",
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_FLOAT));
 
         this.configureThreadsHandle = findOptional("torch_panama_configure_threads",
             FunctionDescriptor.ofVoid(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
-
         this.intraOpThreadsHandle = findOptional("torch_panama_intra_op_threads",
             FunctionDescriptor.of(ValueLayout.JAVA_INT));
-
         this.interOpThreadsHandle = findOptional("torch_panama_inter_op_threads",
             FunctionDescriptor.of(ValueLayout.JAVA_INT));
     }
@@ -98,32 +153,26 @@ public final class LibTorchPanama implements LibTorchBackend {
         return SymbolLookup.loaderLookup();
     }
 
-    private MethodHandle find(String symbolName, FunctionDescriptor descriptor) {
-        MemorySegment symbol = symbols.find(symbolName).orElseThrow(() ->
-            new IllegalStateException("Native symbol not found: " + symbolName));
-        return linker.downcallHandle(symbol, descriptor);
+    private MethodHandle find(String name, FunctionDescriptor descriptor) {
+        return symbols.find(name)
+            .map(addr -> linker.downcallHandle(addr, descriptor))
+            .orElseThrow(() -> new UnsatisfiedLinkError("Symbol not found: " + name));
     }
 
-    private MethodHandle findOptional(String symbolName, FunctionDescriptor descriptor) {
-        return symbols.find(symbolName).map(s -> linker.downcallHandle(s, descriptor)).orElse(null);
+    private MethodHandle findOptional(String name, FunctionDescriptor descriptor) {
+        return symbols.find(name)
+            .map(addr -> linker.downcallHandle(addr, descriptor))
+            .orElse(null);
     }
 
     public static MemorySegment allocateFloats(Arena arena, float[] values) {
-        MemorySegment seg = arena.allocate((long) values.length * Float.BYTES);
-        MemorySegment.copy(MemorySegment.ofArray(values), ValueLayout.JAVA_FLOAT, 0L, seg, ValueLayout.JAVA_FLOAT, 0L, values.length);
+        MemorySegment seg = arena.allocate((long) values.length * Float.BYTES, ValueLayout.JAVA_FLOAT.byteAlignment());
+        MemorySegment.copy(MemorySegment.ofArray(values), 0, seg, 0, (long) values.length * Float.BYTES);
         return seg;
     }
 
-    public static MemorySegment allocateFloatBuffer(Arena arena, long floatCount) {
-        return arena.allocate(floatCount * Float.BYTES);
-    }
-
-    public int outputWidth(long handle) {
-        try {
-            return (int) outputWidthHandle.invokeExact(handle);
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
-        }
+    public static MemorySegment allocateFloatBuffer(Arena arena, long elementCount) {
+        return arena.allocate(elementCount * Float.BYTES, ValueLayout.JAVA_FLOAT.byteAlignment());
     }
 
     @Override
@@ -144,10 +193,27 @@ public final class LibTorchPanama implements LibTorchBackend {
         }
     }
 
+    public int outputWidth(long handle) {
+        try {
+            return (int) outputWidthHandle.invokeExact(handle);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
     @Override
     public void seal(long handle, int outputSlot, int outputWidth) {
         try {
             sealHandle.invokeExact(handle, outputSlot, outputWidth);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void setTraining(long handle, boolean isTraining) {
+        try {
+            if (setTrainingHandle != null) setTrainingHandle.invokeExact(handle, isTraining ? 1 : 0);
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
@@ -174,9 +240,99 @@ public final class LibTorchPanama implements LibTorchBackend {
         }
     }
 
+    @Override
+    public void addSigmoid(long handle, int inputSlot, int outputSlot) {
+        try {
+            if (addSigmoidHandle != null) addSigmoidHandle.invokeExact(handle, inputSlot, outputSlot);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void addGelu(long handle, int inputSlot, int outputSlot) {
+        try {
+            if (addGeluHandle != null) addGeluHandle.invokeExact(handle, inputSlot, outputSlot);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void addSilu(long handle, int inputSlot, int outputSlot) {
+        try {
+            if (addSiluHandle != null) addSiluHandle.invokeExact(handle, inputSlot, outputSlot);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void addTanh(long handle, int inputSlot, int outputSlot) {
+        try {
+            if (addTanhHandle != null) addTanhHandle.invokeExact(handle, inputSlot, outputSlot);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void addLeakyRelu(long handle, int inputSlot, int outputSlot, float negativeSlope) {
+        try {
+            if (addLeakyReluHandle != null) addLeakyReluHandle.invokeExact(handle, inputSlot, outputSlot, negativeSlope);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void addElu(long handle, int inputSlot, int outputSlot, float alpha) {
+        try {
+            if (addEluHandle != null) addEluHandle.invokeExact(handle, inputSlot, outputSlot, alpha);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
     public void addSoftmax(long handle, int inputSlot, int outputSlot, long dim) {
         try {
             addSoftmaxHandle.invokeExact(handle, inputSlot, outputSlot, dim);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void addLogSoftmax(long handle, int inputSlot, int outputSlot, long dim) {
+        try {
+            if (addLogSoftmaxHandle != null) addLogSoftmaxHandle.invokeExact(handle, inputSlot, outputSlot, dim);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void addLayerNorm(long handle, int inputSlot, int outputSlot, int normalizedWidth,
+                             float[] weight, float[] bias, float eps) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment wSeg = weight != null ? allocateFloats(arena, weight) : MemorySegment.NULL;
+            MemorySegment bSeg = bias != null ? allocateFloats(arena, bias) : MemorySegment.NULL;
+            if (addLayerNormHandle != null) {
+                addLayerNormHandle.invokeExact(handle, inputSlot, outputSlot, normalizedWidth, wSeg, bSeg, eps);
+            }
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void addRMSNorm(long handle, int inputSlot, int outputSlot, int normalizedWidth, float[] weight, float eps) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment wSeg = weight != null ? allocateFloats(arena, weight) : MemorySegment.NULL;
+            if (addRMSNormHandle != null) {
+                addRMSNormHandle.invokeExact(handle, inputSlot, outputSlot, normalizedWidth, wSeg, eps);
+            }
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
@@ -193,10 +349,100 @@ public final class LibTorchPanama implements LibTorchBackend {
         }
     }
 
+    @Override
     public void addAttentionMask(long handle, int inputSlot, int outputSlot, long rows, long cols, float[] maskData) {
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment maskSeg = allocateFloats(arena, maskData);
             addAttentionMaskHandle.invokeExact(handle, inputSlot, outputSlot, rows, cols, maskSeg);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void addScaledDotProductAttention(long handle, int querySlot, int keySlot, int valueSlot, int outputSlot, float scale) {
+        try {
+            if (addScaledDotProductAttentionHandle != null) {
+                addScaledDotProductAttentionHandle.invokeExact(handle, querySlot, keySlot, valueSlot, outputSlot, scale);
+            }
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void addBinaryOp(long handle, int opType, int inputSlotA, int inputSlotB, int outputSlot) {
+        try {
+            if (addBinaryOpHandle != null) addBinaryOpHandle.invokeExact(handle, opType, inputSlotA, inputSlotB, outputSlot);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void addUnaryMath(long handle, int opType, int inputSlot, int outputSlot, float param) {
+        try {
+            if (addUnaryMathHandle != null) addUnaryMathHandle.invokeExact(handle, opType, inputSlot, outputSlot, param);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void addReduction(long handle, int redType, int inputSlot, int outputSlot, long dim, boolean keepDim) {
+        try {
+            if (addReductionHandle != null) addReductionHandle.invokeExact(handle, redType, inputSlot, outputSlot, dim, keepDim ? 1 : 0);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void addLoss(long handle, int lossType, int predSlot, int targetSlot, int outputSlot) {
+        try {
+            if (addLossHandle != null) addLossHandle.invokeExact(handle, lossType, predSlot, targetSlot, outputSlot);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void backward(long handle, int lossSlot) {
+        try {
+            if (backwardHandle != null) backwardHandle.invokeExact(handle, lossSlot);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void stepOptimizer(long handle, int optType, float lr, float weightDecay, float momentum) {
+        try {
+            if (stepOptimizerHandle != null) stepOptimizerHandle.invokeExact(handle, optType, lr, weightDecay, momentum);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void zeroGrad(long handle) {
+        try {
+            if (zeroGradHandle != null) zeroGradHandle.invokeExact(handle);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    @Override
+    public void tensorOp(int opId, float[] input, float[] output, float param) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment inSeg = allocateFloats(arena, input);
+            MemorySegment outSeg = allocateFloatBuffer(arena, output.length);
+            if (tensorOpHandle != null) {
+                tensorOpHandle.invokeExact(opId, inSeg, (long) input.length, outSeg, param);
+                float[] res = outSeg.toArray(ValueLayout.JAVA_FLOAT);
+                System.arraycopy(res, 0, output, 0, output.length);
+            }
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }

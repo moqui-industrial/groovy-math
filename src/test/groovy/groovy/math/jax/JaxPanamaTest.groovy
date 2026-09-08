@@ -142,4 +142,76 @@ class JaxPanamaTest {
         assert torchResult.values.toList() == jaxResult.values.toList()
         assert jaxResult.values.toList() == [58f, 64f, 139f, 154f]
     }
+
+    @Test
+    void testAdvancedActivationsViaJax() {
+        JaxPanama panama = JaxPanama.INSTANCE
+
+        long planHandle = panama.createPlan(2)
+        assert planHandle != 0L
+
+        try {
+            // slot 0 (in) -> slot 1 (GELU) -> slot 2 (SiLU) -> slot 3 (Tanh)
+            panama.addGelu(planHandle, 0, 1)
+            panama.addSilu(planHandle, 1, 2)
+            panama.addTanh(planHandle, 2, 3)
+            panama.seal(planHandle, 3, 2)
+
+            float[] input = [0.0f, 1.0f] as float[]
+            float[] output = panama.execute(planHandle, input, 1)
+
+            assert Math.abs(output[0]) < 1e-5f
+            assert output[1] > 0.0f && output[1] < 1.0f
+        } finally {
+            panama.destroy(planHandle)
+        }
+    }
+
+    @Test
+    void testLayerNormAndRMSNormViaJax() {
+        JaxPanama panama = JaxPanama.INSTANCE
+
+        long planHandle = panama.createPlan(4)
+        assert planHandle != 0L
+
+        try {
+            panama.addLayerNorm(planHandle, 0, 1, 4, null, null, 1e-5f)
+            panama.seal(planHandle, 1, 4)
+
+            float[] input = [1.0f, 2.0f, 3.0f, 4.0f] as float[]
+            float[] output = panama.execute(planHandle, input, 1)
+
+            double mean = (output[0] + output[1] + output[2] + output[3]) / 4.0
+            assert Math.abs(mean) < 1e-5
+
+            double variance = 0.0
+            for (int i = 0; i < 4; i++) {
+                double diff = output[i] - mean
+                variance += diff * diff
+            }
+            variance /= 4.0
+            assert Math.abs(variance - 1.0) < 1e-3
+        } finally {
+            panama.destroy(planHandle)
+        }
+    }
+
+    @Test
+    void testDirectTensorOpsViaJax() {
+        JaxPanama panama = JaxPanama.INSTANCE
+
+        float[] input = [-2.0f, 0.0f, 2.0f] as float[]
+        float[] output = new float[3]
+
+        // Op 1: GELU
+        panama.tensorOp(1, input, output, 0.0f)
+        assert Math.abs(output[1]) < 1e-5f // GELU(0) = 0
+        assert output[2] > 1.9f // GELU(2) ~ 1.95
+
+        // Op 3: Tanh
+        panama.tensorOp(3, input, output, 0.0f)
+        assert Math.abs(output[1]) < 1e-5f // Tanh(0) = 0
+        assert output[0] < -0.9f // Tanh(-2) ~ -0.964
+        assert output[2] > 0.9f  // Tanh(2) ~ +0.964
+    }
 }

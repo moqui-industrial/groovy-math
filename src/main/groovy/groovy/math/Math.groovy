@@ -13,6 +13,7 @@ import groovy.math.libtorch.PyTorch
 import groovy.math.opencv.OpenCv
 import groovy.math.petsctao.PetscTaoProvider
 import groovy.math.ortools.OrToolsProvider
+import groovy.math.openfoam.OpenFoam
 
 @CompileStatic
 final class Math {
@@ -63,6 +64,12 @@ final class Math {
         } else if (solvingMethod == 'MmsmPetscTao' || modelType == 'MmtQp') {
             PetscTaoProvider provider = new PetscTaoProvider(mathModelId)
             return provider.run(mathMeta, execution.inputs)
+        } else if (solvingMethod in ['MmsmOpenFoam', 'MmsmOpenFoamIcoFoam', 'MmsmOpenFoamSimpleFoam'] || modelType == 'MmtCFD') {
+            return OpenFoam.execute(mathMeta, mathModelId) {
+                for (Map.Entry<String, Object> entry : execution.inputs) {
+                    input entry.key, entry.value
+                }
+            }
         } else if (solvingMethod == 'MmsmOrTools' || modelType in ['MmtLp', 'MmtMilp']) {
             OrToolsProvider provider = new OrToolsProvider(mathModelId)
             return provider.run(mathMeta, execution.inputs)

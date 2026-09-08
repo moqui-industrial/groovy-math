@@ -116,4 +116,100 @@ class LibTorchPanamaTest {
             panama.destroy(planHandle)
         }
     }
+
+    @Test
+    void testAdvancedActivations() {
+        LibTorchPanama panama = LibTorchPanama.INSTANCE
+
+        long planHandle = panama.createPlan(2)
+        assert planHandle != 0L
+
+        try {
+            // slot 0 (in) -> slot 1 (GELU) -> slot 2 (SiLU) -> slot 3 (Tanh)
+            panama.addGelu(planHandle, 0, 1)
+            panama.addSilu(planHandle, 1, 2)
+            panama.addTanh(planHandle, 2, 3)
+            panama.seal(planHandle, 3, 2)
+
+            float[] input = [0.0f, 1.0f] as float[]
+            float[] output = panama.execute(planHandle, input, 1)
+
+            // GELU(0) = 0, SiLU(0) = 0, Tanh(0) = 0
+            assert Math.abs(output[0]) < 1e-5f
+            // Output for 1.0 should be positive and bounded by tanh in (0, 1)
+            assert output[1] > 0.0f && output[1] < 1.0f
+        } finally {
+            panama.destroy(planHandle)
+        }
+    }
+
+    @Test
+    void testLayerNormAndRMSNorm() {
+        LibTorchPanama panama = LibTorchPanama.INSTANCE
+
+        long planHandle = panama.createPlan(4)
+        assert planHandle != 0L
+
+        try {
+            // slot 0 (in) -> slot 1 (LayerNorm width 4)
+            panama.addLayerNorm(planHandle, 0, 1, 4, null, null, 1e-5f)
+            panama.seal(planHandle, 1, 4)
+
+            // input with mean 2.5
+            float[] input = [1.0f, 2.0f, 3.0f, 4.0f] as float[]
+            float[] output = panama.execute(planHandle, input, 1)
+
+            // Normalized output mean should be ~0.0
+            double mean = (output[0] + output[1] + output[2] + output[3]) / 4.0
+            assert Math.abs(mean) < 1e-5
+
+            // Variance should be ~1.0
+            double variance = 0.0
+            for (int i = 0; i < 4; i++) {
+                double diff = output[i] - mean
+                variance += diff * diff
+            }
+            variance /= 4.0
+            assert Math.abs(variance - 1.0) < 1e-3
+        } finally {
+            panama.destroy(planHandle)
+        }
+    }
+
+    @Test
+    void testTrainingBackwardAndAdamWStep() {
+        LibTorchPanama panama = LibTorchPanama.INSTANCE
+
+        long planHandle = panama.createPlan(2)
+        assert planHandle != 0L
+
+        try {
+            panama.setTraining(planHandle, true)
+
+            float[] initWeights = [1.0f, 0.0f, 0.0f, 1.0f] as float[]
+            float[] initBias = [0.0f, 0.0f] as float[]
+            panama.addAffine(planHandle, 0, 1, 2, 2, initWeights, initBias)
+            panama.seal(planHandle, 1, 2)
+
+            float[] input = [2.0f, 3.0f] as float[]
+            float[] outBefore = panama.execute(planHandle, input, 1)
+            assert outBefore[0] == 2.0f
+            assert outBefore[1] == 3.0f
+
+            panama.backward(planHandle, 1)
+
+            // Step AdamW optimizer with lr = 0.1
+            int adamwType = 2
+            panama.stepOptimizer(planHandle, adamwType, 0.1f, 0.01f, 0.9f)
+            panama.zeroGrad(planHandle)
+
+            // Forward after optimizer step
+            float[] outAfter = panama.execute(planHandle, input, 1)
+
+            // Weights must have updated in direction opposite to gradient
+            assert outAfter[0] != outBefore[0] || outAfter[1] != outBefore[1]
+        } finally {
+            panama.destroy(planHandle)
+        }
+    }
 }

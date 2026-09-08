@@ -140,12 +140,96 @@ final class LibTorchProvider implements MathProvider<LibTorchPlan, LibTorchResul
                         outputWidth = affineOutputWidth
                         break
                     case 'TtTensorReLu':
-                        ModelValue sourceOperand = role(operationOperands, 'TotSingle', 0)
-                        String sourceId = requiredTensorId(sourceOperand, transformationId)
-                        Integer sourceSlot = slots.get(sourceId)
-                        if (sourceSlot == null) throw new IllegalStateException("Tensor '${sourceId}' is not available before '${transformationId}'")
-                        backend.addRelu(handle, sourceSlot, resultSlot)
-                        outputWidth = objectWidth(tensors.get(resultId))
+                    case 'TtTensorSigmoid':
+                    case 'TtTensorGelu':
+                    case 'TtTensorSilu':
+                    case 'TtTensorTanh':
+                    case 'TtTensorLeakyReLu':
+                    case 'TtTensorElu':
+                    case 'TtTensorSoftmax':
+                    case 'TtTensorLogSoftmax':
+                    case 'TtTensorExp':
+                    case 'TtTensorLog':
+                    case 'TtTensorSqrt':
+                    case 'TtTensorPow':
+                    case 'TtTensorSum':
+                    case 'TtTensorMean':
+                        ModelValue srcOperand = role(operationOperands, 'TotSingle', 0) ?: operationOperands[0]
+                        String srcId = requiredTensorId(srcOperand, transformationId)
+                        Integer srcSlot = slots.get(srcId)
+                        if (srcSlot == null) throw new IllegalStateException("Tensor '${srcId}' is not available before '${transformationId}'")
+                        String opEnum = transformation.get('transformationTypeEnumId') as String
+                        switch (opEnum) {
+                            case 'TtTensorReLu': backend.addRelu(handle, srcSlot, resultSlot); break
+                            case 'TtTensorSigmoid': backend.addSigmoid(handle, srcSlot, resultSlot); break
+                            case 'TtTensorGelu': backend.addGelu(handle, srcSlot, resultSlot); break
+                            case 'TtTensorSilu': backend.addSilu(handle, srcSlot, resultSlot); break
+                            case 'TtTensorTanh': backend.addTanh(handle, srcSlot, resultSlot); break
+                            case 'TtTensorLeakyReLu': backend.addLeakyRelu(handle, srcSlot, resultSlot, 0.01f); break
+                            case 'TtTensorElu': backend.addElu(handle, srcSlot, resultSlot, 1.0f); break
+                            case 'TtTensorSoftmax': backend.addSoftmax(handle, srcSlot, resultSlot, -1L); break
+                            case 'TtTensorLogSoftmax': backend.addLogSoftmax(handle, srcSlot, resultSlot, -1L); break
+                            case 'TtTensorExp': backend.addUnaryMath(handle, 0, srcSlot, resultSlot, 0.0f); break
+                            case 'TtTensorLog': backend.addUnaryMath(handle, 1, srcSlot, resultSlot, 0.0f); break
+                            case 'TtTensorSqrt': backend.addUnaryMath(handle, 2, srcSlot, resultSlot, 0.0f); break
+                            case 'TtTensorPow': backend.addUnaryMath(handle, 3, srcSlot, resultSlot, 2.0f); break
+                            case 'TtTensorSum': backend.addReduction(handle, 0, srcSlot, resultSlot, -1L, true); break
+                            case 'TtTensorMean': backend.addReduction(handle, 1, srcSlot, resultSlot, -1L, true); break
+                        }
+                        outputWidth = tensors.get(resultId) != null ? objectWidth(tensors.get(resultId)) : outputWidth
+                        break
+                    case 'TtLayerNorm':
+                    case 'TtRMSNorm':
+                        ModelValue normSrc = role(operationOperands, 'TotSingle', 0) ?: operationOperands[0]
+                        String normId = requiredTensorId(normSrc, transformationId)
+                        Integer normSlot = slots.get(normId)
+                        if (normSlot == null) throw new IllegalStateException("Tensor '${normId}' is not available before '${transformationId}'")
+                        int normW = tensors.get(resultId) != null ? objectWidth(tensors.get(resultId)) : outputWidth
+                        if (transformation.get('transformationTypeEnumId') == 'TtLayerNorm') {
+                            backend.addLayerNorm(handle, normSlot, resultSlot, normW, null, null, 1e-5f)
+                        } else {
+                            backend.addRMSNorm(handle, normSlot, resultSlot, normW, null, 1e-5f)
+                        }
+                        outputWidth = normW
+                        break
+                    case 'TtAttentionMask':
+                        ModelValue maskSrc = role(operationOperands, 'TotSingle', 0) ?: operationOperands[0]
+                        ModelValue maskOp = role(operationOperands, 'TotBiasTensor', 1) ?: operationOperands[1]
+                        String mSrcId = requiredTensorId(maskSrc, transformationId)
+                        Integer mSlot = slots.get(mSrcId)
+                        if (mSlot == null) throw new IllegalStateException("Tensor '${mSrcId}' is not available")
+                        ModelValue maskTensor = requiredTensor(tensors, maskOp, transformationId)
+                        List<Integer> mShape = shape(maskTensor)
+                        float[] mData = elements(maskTensor, mShape[0] * mShape[1])
+                        backend.addAttentionMask(handle, mSlot, resultSlot, mShape[0], mShape[1], mData)
+                        outputWidth = mShape[1]
+                        break
+                    case 'TtScaledDotProductAttention':
+                        Integer qSlot = slots.get(requiredTensorId(operationOperands[0], transformationId))
+                        Integer kSlot = slots.get(requiredTensorId(operationOperands[1], transformationId))
+                        Integer vSlot = slots.get(requiredTensorId(operationOperands[2], transformationId))
+                        backend.addScaledDotProductAttention(handle, qSlot, kSlot, vSlot, resultSlot, 1.0f)
+                        outputWidth = tensors.get(resultId) != null ? objectWidth(tensors.get(resultId)) : outputWidth
+                        break
+                    case 'TtTensorAdd':
+                    case 'TtTensorSub':
+                    case 'TtTensorMul':
+                    case 'TtTensorDiv':
+                    case 'TtLossMse':
+                    case 'TtLossCrossEntropy':
+                        Integer slotA = slots.get(requiredTensorId(operationOperands[0], transformationId))
+                        Integer slotB = slots.get(requiredTensorId(operationOperands[1], transformationId))
+                        if (slotA == null || slotB == null) throw new IllegalStateException("Operands for binary op not found")
+                        String bType = transformation.get('transformationTypeEnumId') as String
+                        switch (bType) {
+                            case 'TtTensorAdd': backend.addBinaryOp(handle, 0, slotA, slotB, resultSlot); break
+                            case 'TtTensorSub': backend.addBinaryOp(handle, 1, slotA, slotB, resultSlot); break
+                            case 'TtTensorMul': backend.addBinaryOp(handle, 2, slotA, slotB, resultSlot); break
+                            case 'TtTensorDiv': backend.addBinaryOp(handle, 3, slotA, slotB, resultSlot); break
+                            case 'TtLossMse': backend.addLoss(handle, 0, slotA, slotB, resultSlot); break
+                            case 'TtLossCrossEntropy': backend.addLoss(handle, 1, slotA, slotB, resultSlot); break
+                        }
+                        outputWidth = tensors.get(resultId) != null ? objectWidth(tensors.get(resultId)) : outputWidth
                         break
                     case 'TtMatrixProduct':
                         ModelValue leftOperand = role(operationOperands, 'TotLeftMatrix', 0)

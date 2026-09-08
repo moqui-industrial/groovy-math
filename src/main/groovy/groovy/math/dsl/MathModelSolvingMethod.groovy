@@ -10,9 +10,14 @@ enum MathModelSolvingMethod implements DslEnumValue {
     InteriorPoint('MmsmInteriorPoint'),
     OpenCv('MmsmOpenCv'),
     Jax('MmsmJax'),
+    JaxJit('MmsmJaxJit'),
     LibTorch('MmsmLibTorch'),
+    LibTorchTraining('MmsmLibTorchTraining'),
     PetscTao('MmsmPetscTao'),
-    OrTools('MmsmOrTools')
+    OrTools('MmsmOrTools'),
+    OpenFoam('MmsmOpenFoam'),
+    OpenFoamIcoFoam('MmsmOpenFoamIcoFoam'),
+    OpenFoamSimpleFoam('MmsmOpenFoamSimpleFoam')
 
     final String id
 

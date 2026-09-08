@@ -10,7 +10,8 @@ enum MathModelType implements DslEnumValue {
     DlFeedforward('MmtDlFeedforward'),
     LinearProgram('MmtLp'),
     QuadraticProgram('MmtQp'),
-    ComputerVision('MmtComputerVision')
+    ComputerVision('MmtComputerVision'),
+    CFD('MmtCFD')
 
     final String id
 
