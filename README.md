@@ -10,7 +10,7 @@ Groovy Math is a declarative, in-memory mathematical model and domain-specific l
 
 ## Purpose and Architectural Positioning
 
-### The Challenge in Enterprise Data Science and AI
+### The Challenge in Enterprise Data Science, AI & Engineering
 The Python ecosystem (NumPy, PyTorch, JAX, Scikit-learn, HuggingFace) is the undisputed industry standard for **exploratory research, statistical experimentation, and rapid ad-hoc prototyping**. Its vast open-source library collection and interactive notebook workflows empower data scientists to explore ideas with unmatched speed.
 
 However, moving mathematical models from exploratory notebooks into **mission-critical enterprise production, industrial automation, and regulated environments** presents distinct architectural challenges:
@@ -21,26 +21,14 @@ However, moving mathematical models from exploratory notebooks into **mission-cr
 ### How Groovy Math Solves This
 Groovy Math does not aim to replace Python's role in exploratory research. Instead, it provides the **enterprise production and governance bridge**:
 
-1. **Model-Driven & Declarative**: The mathematical formulation (tensors, matrices, graph topologies, categorical morphisms, optimization constraints, computer vision pipelines) is declared as **structured, typed metadata (`MathMeta`)** rather than arbitrary procedural code.
+1. **Model-Driven & Declarative**: The mathematical formulation (tensors, matrices, discrete state-space controls, OpenFOAM CFD meshes, graph topologies, categorical morphisms, optimization constraints) is declared as **structured, typed metadata (`MathMeta`)** rather than arbitrary procedural code.
 2. **PLM for Mathematical Models (The Model as a Product)**: Inheriting the philosophy of `moqui-math`, every model, parameter, graph vertex, and transformation has a defined lifecycle, change history, and evidence trail that can be audited, validated, and persisted into enterprise ledgers.
-3. **Multi-Engine Neutrality**: The same declared model can be lowered to different computational backends (**PyTorch/LibTorch, Google JAX/OpenXLA, OpenCV, PETSc/TAO, Google OR-Tools, or Apache Jena**) without rewriting business logic.
+   - Large tensor payloads are referenced versioned via `TensorContent` (SafeTensors, NPY, Zarr, Arrow IPC).
+   - Discrete state-space matrices ($A, B, C, D$) and state/control vectors ($x, u$) are stored structured in `TensorElement`.
+3. **Multi-Engine Neutrality**: The same declared model can be lowered to different computational backends (**PyTorch/LibTorch, Google JAX/OpenXLA, OpenFOAM CFD, OpenCV, PETSc/TAO, Google OR-Tools, or Apache Jena**) without rewriting business logic.
 4. **Zero-Overhead Java 21 Foreign Function & Memory API (Project Panama)**: Bypasses JNI and Python GIL bottlenecks by utilizing zero-copy off-heap native memory segments (`MemorySegment`) and direct C ABI dispatch.
-
----
-
-## Core Principles (from Moqui Math)
-
-* **Discrete & Finite Metamodel**: One unified relational foundation that cleanly represents:
-  * **Set-Theoretic Structures**: Finite enumerations, records, components, and parameter definitions.
-  * **Category Theory**: `CategoryObject`, `Morphism` ($f: A \to B$ contract), `Functor`, and `NaturalTransformation`.
-  * **Type Theory**: Type judgments, typing contexts, and mathematical term classifications.
-* **Math–Device Duality**: Mathematical intent is decoupled from the execution hardware (CPU, GPU, PLC, edge accelerator).
-* **Exact Realization, Numerical Approximation, and Proof**:
-  * A `Morphism` defines the abstract specification.
-  * A `Transformation` defines the exact algebraic/relational realization.
-  * An `ApproximatedFunction` or `ParametricPath` defines the numerical discretization.
-  * A `MathModelRun` captures the empirical execution metrics and measured error against tolerances.
-* **Neuro-Symbolic Convergence**: Unifies connectionist tensor computation with formal semantic knowledge graphs (RDF, OWL ontologies, and SPARQL 1.1 reasoning via Apache Jena).
+5. **Zero-Crash Guard-Rail (`TensorValidator`)**: Prevents native Segmentation Faults (`SIGSEGV`) by verifying rank, shape, strides, and buffer byte allocations in Java *before* dispatching across the FFM boundary.
+6. **Concurrent Multi-Core Engine Pooling (`PanamaEnginePool`)**: Lock-free, multi-threaded native session management using `AutoCloseable` (`try-with-resources`).
 
 ---
 
@@ -53,64 +41,18 @@ Groovy Math DSL (Dynamic Seed or Type-Safe Fluent)
           MathMeta (Typed In-Memory Metamodel)
                     |
                     v
-            MathProvider SPI
+     [Guard-Rail Validator: TensorValidator]
                     |
-  +-----------------+-----------------+-----------------+-----------------+
-  |                 |                 |                 |                 |
-  v                 v                 v                 v                 v
-LibTorch (C++)   JAX / OpenXLA    OpenCV (C++)     PETSc / TAO      Google OR-Tools
-(Tensors/Math)   (Panama XLA)    (Vision/Panama) (Quadratic/PDE)   (Linear/GLOP)
-                                      |
-                                      +-- Apache Jena (RDF/OWL/SPARQL)
-```
-
----
-
-## DSL Styles: Dynamic & Type-Safe Fluent API
-
-Groovy Math provides two complementary DSL paradigms:
-
-### 1. Dynamic Seed-Style DSL
-Mirrors Moqui seed-data records, using relationship-driven nested blocks and Gradle-style object lifecycles:
-
-```groovy
-MathModelDef('MatrixAlgebra', modelTypeEnum: MathModelType.LinearAlgebra) {
-    MathModel('MatrixProduct', statusId: 'MathModelDraft') {
-        data('LeftMatrixData', dataTypeEnum: MathModelDataType.Matrix, matrixId: 'A') {
-            Matrix('A', rows: 2, cols: 3, purposeEnum: MatrixPurpose.Original)
-        }
-        data('ProductStep', dataTypeEnum: MathModelDataType.Transformation, transformationId: 'MultiplyAB') {
-            Transformation('MultiplyAB', transformationTypeEnum: TransformationType.MatrixProduct, resultMatrixId: 'C') {
-                operands(operandIndex: 0, operandTypeEnum: TransformationOperandType.LeftMatrix, operandMatrixId: 'A')
-                operands(operandIndex: 1, operandTypeEnum: TransformationOperandType.RightMatrix, operandMatrixId: 'B')
-            }
-        }
-    }
-}
-```
-
-### 2. Type-Safe Fluent API (JPA Criteria Metamodel Style)
-Provides full compile-time static type checking (`@CompileStatic`), IDE autocompletion, static attributes (`Matrix_`, `Graph_`, `GraphVertex_`), and object handles (`EntityRef<T>`):
-
-```groovy
-MathMeta mathMeta = MathDsl.fluent(schemaFile) {
-    graph('ResearchLabGraph') {
-        name 'AI Research Institute Graph'
-
-        // Strongly-typed vertices stored in EntityRef handles
-        def alice = vertex('Alice') {
-            label 'Alice Cooper'
-            parameter('jobTitle', 'Principal AI Scientist')
-        }
-        def bob = vertex('Bob') { label 'Bob Martin' }
-        def aiDept = vertex('AI_Department') { label 'Neuro-Symbolic Lab' }
-
-        // Connect edges type-safely via EntityRef (zero string IDs)
-        connect(alice, aiDept, 'leads')
-        connect(bob, aiDept, 'memberOf')
-        connect(alice, bob, 'supervises')
-    }
-}
+                    v
+     [Concurrent Pool: PanamaEnginePool]
+                    |
+  +-----------------+-----------------+-----------------+-----------------+-----------------+
+  |                 |                 |                 |                 |                 |
+  v                 v                 v                 v                 v                 v
+LibTorch (C++)   JAX / OpenXLA    OpenFOAM (C++)   OpenCV (C++)     PETSc / TAO      Google OR-Tools
+(Deep Learning)  (Panama XLA)     (FVM CFD Solver) (Vision/Panama) (Quadratic/PDE)   (Linear/GLOP)
+                                                                          |
+                                                                          +-- Apache Jena (RDF/OWL/SPARQL)
 ```
 
 ---
@@ -121,6 +63,7 @@ Declarations in `examples/` are cleanly decoupled into **declarative model files
 
 | Model File | Execution Runner | Backend Engine |
 | :--- | :--- | :--- |
+| [`examples/openfoam-cavity.groovy`](examples/openfoam-cavity.groovy) | [`examples/run-openfoam-cavity.groovy`](examples/run-openfoam-cavity.groovy) | **OpenFOAM Finite Volume Method (FVM) CFD** |
 | [`examples/matrix-product.groovy`](examples/matrix-product.groovy) | [`examples/run-pytorch-matrix-product.groovy`](examples/run-pytorch-matrix-product.groovy) | **LibTorch Panama C++** |
 | [`examples/matrix-product.groovy`](examples/matrix-product.groovy) | [`examples/run-jax-pipeline.groovy`](examples/run-jax-pipeline.groovy) | **LibTorch vs Google JAX Panama** |
 | [`examples/opencv-vision-pipeline.groovy`](examples/opencv-vision-pipeline.groovy) | [`examples/run-opencv-pipeline.groovy`](examples/run-opencv-pipeline.groovy) | **OpenCV Panama C++** |
@@ -131,35 +74,140 @@ Declarations in `examples/` are cleanly decoupled into **declarative model files
 
 ---
 
-## Building and Verification
+## Getting Started: Installation and Testing Guide
 
-### Prerequisites
-* Java 21+ with Panama Foreign Function & Memory API enabled (`--enable-preview`,
-  already wired into `build.gradle`).
-* C++ toolchain (GCC/Clang), CMake and Ninja for the native backends, plus per
-  backend:
-  * **LibTorch** (`nativeTest`): an unpacked LibTorch distribution; point
-    `LIBTORCH_HOME` at it.
-  * **PETSc/TAO** (`petscTaoNativeTest`): a real-scalar PETSc build with TAO,
-    discoverable through `pkg-config` (e.g. Debian/Ubuntu `petsc-dev`), and MPI.
-  * **JAX** and **OpenCV** (`jaxNativeTest`, `openCvNativeTest`): a Python 3
-    with development headers plus `numpy`/`jax` or `numpy`/`opencv-python`
-    installed; both bridges embed that interpreter through Panama. CMake finds
-    `python3` on `PATH` by default — set `GROOVY_MATH_PYTHON3_ROOT` to point at
-    a specific interpreter (e.g. a dedicated conda/venv) instead.
+This guide provides simple, step-by-step instructions so that any Java or Groovy developer can immediately build, test, and run the project.
 
-Only the base `check` task is required for everyday JVM development; each
-native task above builds its own bridge on demand and is otherwise skipped.
+### 1. System Requirements
 
-### Running All Tests & Pipeline Examples
+* **Java Development Kit (JDK)**: Java 21 or newer (OpenJDK, Temurin, Corretto, Azul, etc.).
+  Verify with:
+  ```bash
+  java -version
+  ```
+* **Operating System**: Linux (x86_64, aarch64), macOS (Apple Silicon / Intel), or Windows (x86_64).
+* **Git**: To clone the repository.
+
+---
+
+### 2. Pure JVM Mode (Zero C++ / Zero Native Compilers Needed)
+
+If you only want to work with the Groovy DSL, metamodels, linear programming (OR-Tools), knowledge graphs (Apache Jena), and the Guard-Rail contract validation, **you do not need any C++ compiler, CMake, or Python installed**.
+
+Run the standard JVM test suite:
 ```bash
-./gradlew check nativeTest petscTaoNativeTest jaxNativeTest openCvNativeTest \
-          runJaxPipeline runOpenCvPipeline runOrToolsProductionPlan \
-          runPetscTaoEnergyDispatch runJenaGraphSparql runJenaProductCatalog
+./gradlew test
+```
+Or run the full JVM validation and checkstyle/coverage verification:
+```bash
+./gradlew check
 ```
 
-`check` only measures coverage from the non-native `test` task, so packages
-exercised solely by the native suites (the dispatcher, LibTorch, JAX, OpenCV,
-native memory) read as uncovered there even when green. Run
-`./gradlew jacocoAllTestReport` after the command above for one merged
-coverage report across every suite.
+---
+
+### 3. Native Engines Mode (LibTorch, JAX, OpenFOAM)
+
+Groovy Math includes high-performance C++ engines dispatched via Java 21 Panama FFM.
+
+#### Step 3.1: Build Native Bridges (Optional on First Setup)
+If you are developing or modifying the C++ bridge code:
+* Ensure `cmake` and `ninja` are installed (e.g. `sudo apt install cmake ninja-build` on Ubuntu/Debian).
+* To build the native OpenFOAM FVM CFD bridge:
+  ```bash
+  ./gradlew buildOpenFoamNative
+  ```
+* To build the native LibTorch bridge (requires LibTorch C++ distribution, set via `export LIBTORCH_HOME=/path/to/libtorch`):
+  ```bash
+  ./gradlew buildLibTorchNative
+  ```
+* To build the native JAX bridge (uses Python 3 + JAX + NumPy):
+  ```bash
+  ./gradlew buildJaxNative
+  ```
+
+#### Step 3.2: Setting up Isolated Python Virtual Environment for JAX (Optional)
+Following the `moqui-jep` pattern, an isolated virtual environment can be created automatically:
+```bash
+./gradlew setupPythonVenv
+./gradlew installPythonRequirements
+```
+
+---
+
+### 4. Running Individual Test Suites
+
+You can execute targeted test tasks depending on the component you want to verify:
+
+| Command | Description | What it Tests |
+| :--- | :--- | :--- |
+| `./gradlew test` | **Pure JVM Suite** | DSL, Metamodels, OR-Tools, Jena RDF/OWL, `TensorValidatorTest` |
+| `./gradlew openFoamNativeTest` | **CFD Simulation** | OpenFOAM FVM Navier-Stokes solver, mesh grading, cavity flow |
+| `./gradlew nativeTest` | **LibTorch Engine** | LibTorch 2.7.1 FFM, GEMM, LayerNorm, RMSNorm, AdamW, Backward Autograd |
+| `./gradlew jaxNativeTest` | **JAX Engine** | JAX / NumPy FFM, XLA JIT dispatch, cross-entropy loss |
+| `./gradlew dlParityTest` | **Numerical Parity** | Strict numerical parity between LibTorch C++ and JAX C++ ($\Delta < 10^{-4}$) |
+| `./gradlew test --tests "groovy.math.pool.ConcurrentEnginePoolTest"` | **Multi-Core Concurrency** | 16 parallel threads running concurrent native inference through the engine pool |
+
+---
+
+### 5. Running the Complete Verification in One Command
+
+To run the entire end-to-end regression across all backends:
+```bash
+./gradlew check nativeTest jaxNativeTest openFoamNativeTest dlParityTest
+```
+
+---
+
+### 6. Executing Pipeline Examples
+
+Run real-world demonstration pipelines directly from the command line:
+
+* **Simulate Lid-Driven Cavity CFD Flow (OpenFOAM)**:
+  ```bash
+  ./gradlew runOpenFoamCavity
+  ```
+* **Run Deep Learning Vision Pipeline (OpenCV)**:
+  ```bash
+  ./gradlew runOpenCvPipeline
+  ```
+* **Run Industrial Linear Programming Production Optimization (Google OR-Tools)**:
+  ```bash
+  ./gradlew runOrToolsProductionPlan
+  ```
+* **Run Quadratic Energy Dispatch Optimization (PETSc / TAO)**:
+  ```bash
+  ./gradlew runPetscTaoEnergyDispatch
+  ```
+* **Query Semantic Knowledge Graphs via SPARQL 1.1 (Apache Jena)**:
+  ```bash
+  ./gradlew runJenaGraphSparql
+  ./gradlew runJenaProductCatalog
+  ```
+
+---
+
+### 7. Packaging for Production Distribution
+
+To generate the self-contained library JAR containing all pre-compiled native engines (`.so` libraries bundled under `native/`):
+```bash
+./gradlew jar
+```
+The resulting artifact is created in:
+```text
+build/libs/groovy-math-0.1.0-SNAPSHOT.jar
+```
+Downstream applications (such as **Moqui Framework**, Spring Boot, or Quarkus) can simply declare a dependency on this JAR: `NativeLibraryLoader` will automatically extract and load the native libraries at runtime without any manual setup on the target machine.
+
+---
+
+### 8. Troubleshooting Tips
+
+* **Preview Features Warning**: Groovy Math uses Java 21 Foreign Function & Memory API. `--enable-preview` is already configured in `build.gradle` for compilation, testing, and execution tasks.
+* **Gradle Daemon / File Locks**: When developing inside IDEs (like VS Code or IntelliJ), background indexing can occasionally lock Gradle files. Pass `--no-daemon` if you need to run in completely isolated environments:
+  ```bash
+  ./gradlew --no-daemon check
+  ```
+* **LibTorch Location**: If running `nativeTest` on a custom LibTorch installation, set the environment variable:
+  ```bash
+  export LIBTORCH_HOME=/path/to/libtorch
+  ```

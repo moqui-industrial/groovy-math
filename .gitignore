@@ -7,3 +7,6 @@ out/
 .project
 .settings/
 bin/
+runtime/
+__pycache__/
+*.pyc

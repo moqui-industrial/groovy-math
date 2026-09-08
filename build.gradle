@@ -385,6 +385,34 @@ publishing {
     }
 }
 
+tasks.register('packageNativeLibs', Copy) {
+    into layout.buildDirectory.dir("resources/main/native/linux-x86_64")
+    from(nativeBuildDirectory) { include '*.so', '*.dylib', '*.dll' }
+    from(jaxBuildDirectory) { include '*.so', '*.dylib', '*.dll' }
+    from(openFoamBuildDirectory) { include '*.so', '*.dylib', '*.dll' }
+}
+tasks.named('jar').configure {
+    dependsOn 'packageNativeLibs'
+}
+
+def pythonVenvDir = file("${projectDir}/runtime/python_venv")
+
+tasks.register('setupPythonVenv', Exec) {
+    group = 'Python'
+    description = 'Sets up an isolated Python virtual environment for JAX runtime'
+    outputs.dir(pythonVenvDir)
+    commandLine 'python3', '-m', 'venv', pythonVenvDir.absolutePath
+}
+
+tasks.register('installPythonRequirements', Exec) {
+    group = 'Python'
+    description = 'Installs requirements in the isolated Python virtual environment'
+    dependsOn tasks.named('setupPythonVenv')
+    def isWin = org.gradle.internal.os.OperatingSystem.current().isWindows()
+    def pipExe = isWin ? new File(pythonVenvDir, "Scripts/pip.exe") : new File(pythonVenvDir, "bin/pip")
+    commandLine pipExe.absolutePath, 'install', '-r', file('requirements.txt').absolutePath
+}
+
 tasks.register('generateModels', Exec) {
     commandLine 'python3', file('scripts/generate_models.py').absolutePath
     environment 'MOQUI_MATH_ENTITIES', System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'

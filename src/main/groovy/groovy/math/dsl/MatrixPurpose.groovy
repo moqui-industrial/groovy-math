@@ -15,7 +15,20 @@
 package groovy.math.dsl
 
 enum MatrixPurpose implements DslEnumValue {
-    Original('MpOriginal')
+    Original('MpOriginal'),
+    Approximate('MpApproximate'),
+    Block('MpBlock'),
+    SvdU('MpSvdU'),
+    SvdSigma('MpSvdSigma'),
+    SvdV('MpSvdV'),
+    LuL('MpLuL'),
+    LuU('MpLuU'),
+    State('MpState'),
+    Input('MpInput'),
+    Output('MpOutput'),
+    Feedforward('MpFeedforward'),
+    FeedbackGain('MpFeedbackGain'),
+    ObserverGain('MpObserverGain')
 
     final String id
 

@@ -124,8 +124,6 @@ PyObject* log_softmax_func = nullptr;
 PyObject* leaky_relu_func = nullptr;
 PyObject* elu_func = nullptr;
 
-std::mutex jax_execution_mutex;
-
 void ensure_jax() {
     std::call_once(jax_init_flag, [] {
         dlopen(resolve_python_library_path(), RTLD_NOW | RTLD_GLOBAL);
@@ -504,7 +502,6 @@ void jax_panama_add_loss(int64_t handle, int32_t loss_type, int32_t pred_slot, i
 
 void jax_panama_execute(int64_t handle, const float* input, int32_t batch_size, float* output) {
     ensure_jax();
-    std::lock_guard<std::mutex> lock(jax_execution_mutex);
     PyGILState_STATE gstate = PyGILState_Ensure();
 
     Plan& target = plan(handle);
@@ -799,7 +796,6 @@ void jax_panama_matmul(const float* a, int64_t a_rows, int64_t a_cols,
                        const float* b, int64_t b_rows, int64_t b_cols,
                        float* out) {
     ensure_jax();
-    std::lock_guard<std::mutex> lock(jax_execution_mutex);
     PyGILState_STATE gstate = PyGILState_Ensure();
 
     PyObject* py_a = wrap_2d_array(a, static_cast<npy_intp>(a_rows), static_cast<npy_intp>(a_cols));
@@ -818,7 +814,6 @@ void jax_panama_matmul(const float* a, int64_t a_rows, int64_t a_cols,
 
 void jax_panama_tensor_op(int32_t op_id, const float* a, int64_t size, float* out, float param) {
     ensure_jax();
-    std::lock_guard<std::mutex> lock(jax_execution_mutex);
     PyGILState_STATE gstate = PyGILState_Ensure();
 
     PyObject* py_a = wrap_1d_array(a, static_cast<npy_intp>(size));

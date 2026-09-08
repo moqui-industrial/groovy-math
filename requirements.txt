@@ -1,0 +1,3 @@
+# Requirements for isolated Groovy-Math Python / JAX runtime
+numpy>=1.26.0
+jax>=0.4.30

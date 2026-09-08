@@ -150,6 +150,10 @@ public final class LibTorchPanama implements LibTorchBackend {
         if (defaultBuildLib.exists()) {
             return SymbolLookup.libraryLookup(defaultBuildLib.toPath(), Arena.global());
         }
+        try {
+            groovy.math.nativeutil.NativeLibraryLoader.loadLibrary("groovy_math_libtorch");
+        } catch (Throwable ignored) {
+        }
         return SymbolLookup.loaderLookup();
     }
 
