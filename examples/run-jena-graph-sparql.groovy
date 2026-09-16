@@ -3,26 +3,23 @@
  * Grant of Patent License.
  */
 
-import groovy.math.dsl.MathDsl
-import groovy.math.dsl.MathMeta
-import groovy.math.jena.Jena
+import org.moqui.math.dsl.MathDsl
+import org.moqui.math.dsl.MathMeta
+import org.moqui.math.jena.Jena
 import org.apache.jena.ontology.OntModel
 import org.apache.jena.rdf.model.Model
 
-String schemaPath = System.getenv('MOQUI_MATH_ENTITIES') ?:
-    '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
-File schemaFile = new File(schemaPath)
 File dslFile = new File('examples/jena-knowledge-graph.groovy')
 
 println '==================================================================='
 println ' Moqui-Math: Knowledge Graph & Apache Jena Interoperability'
 println ' Semantic Web (RDF / OWL / SPARQL) over Neutral Graph Metamodel'
 println '==================================================================='
-println "Schema : ${schemaFile.absolutePath}"
+println 'Schema : embedded moqui-math'
 println "Model  : ${dslFile.name}"
 
 // 1. Evaluate the external DSL Model File
-MathMeta mathMeta = MathDsl.evaluate(schemaFile, dslFile)
+MathMeta mathMeta = MathDsl.evaluate(dslFile)
 
 // 2. Lower Moqui Graph to Apache Jena RDF Model
 Model rdfModel = Jena.toModel(mathMeta, 'ResearchLabGraph')

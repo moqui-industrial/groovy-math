@@ -15,9 +15,11 @@ MathModelDef('LinearProductionPlanning',
     modelName: 'Linear production planning',
     description: 'Maximize production margin under machine-capacity constraints') {
 
+    pipeline('SolveStep', stepSeqId: '01', sequenceNum: 1, stepName: 'SimplexSolve',
+        solvingMethodEnum: MathModelSolvingMethod.Simplex)
+
     MathModel('ProductionPlan',
         modelAlias: 'production_plan',
-        solvingMethodEnum: MathModelSolvingMethod.Simplex,
         sourceEnum: MathModelSource.Manual,
         description: 'Choose Standard and Premium production quantities',
         statusId: 'MathModelDraft') {

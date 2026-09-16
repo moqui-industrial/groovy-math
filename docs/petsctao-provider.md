@@ -62,7 +62,7 @@ cannot generally be initialized again safely.
 ## Build and run
 
 Install a real-scalar PETSc development package with TAO, plus CMake, Ninja,
-`pkg-config`, and JDK 21+ with `--enable-preview` (already wired into
+`pkg-config`, and JDK 25+ (already wired into
 `build.gradle`) for the Foreign Function & Memory API. The build resolves
 PETSc through its `PETSc.pc` file.
 

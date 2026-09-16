@@ -3,13 +3,13 @@
  * Grant of Patent License.
  */
 
-import groovy.math.dsl.MathModelType
-import groovy.math.dsl.MathModelSolvingMethod
-import groovy.math.dsl.MeshType
-import groovy.math.dsl.MeshPurpose
-import groovy.math.dsl.MeshAdaptationType
-import groovy.math.dsl.ParameterPurpose
-import groovy.math.dsl.ParameterType
+import org.moqui.math.dsl.MathModelType
+import org.moqui.math.dsl.MathModelSolvingMethod
+import org.moqui.math.dsl.MeshType
+import org.moqui.math.dsl.MeshPurpose
+import org.moqui.math.dsl.MeshAdaptationType
+import org.moqui.math.dsl.ParameterPurpose
+import org.moqui.math.dsl.ParameterType
 
 // =========================================================================
 // OpenFOAM Standard Tutorial: Lid-Driven Cavity Flow (icoFoam / simpleFoam)
@@ -108,10 +108,12 @@ MeshGroup('frontAndBack', meshId: 'CavityMesh', groupName: 'frontAndBack', descr
 MathModelDef('IncompressibleCavityFlow', modelTypeEnum: MathModelType.CFD) {
     description 'Standard OpenFOAM Lid-Driven Cavity benchmark for laminar incompressible flow'
 
+    pipeline('IcoFoamStep', stepSeqId: '01', sequenceNum: 1, stepName: 'IcoFoamSolve',
+        solvingMethodEnum: MathModelSolvingMethod.OpenFoamIcoFoam)
+
     MathModel('CavityIcoFoam',
         meshId: 'CavityMesh',
-        statusId: 'MathModelDraft',
-        solvingMethodEnum: MathModelSolvingMethod.OpenFoamIcoFoam) {
+        statusId: 'MathModelDraft') {
         description 'Transient laminar incompressible solver instance for cavity'
 
         // Bind physical & numerical parameters

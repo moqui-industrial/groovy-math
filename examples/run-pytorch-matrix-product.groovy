@@ -3,16 +3,13 @@
  * Grant of Patent License.
  */
 
-import groovy.math.dsl.MathDsl
-import groovy.math.dsl.MathMeta
-import groovy.math.libtorch.LibTorchResult
-import groovy.math.libtorch.PyTorch
+import org.moqui.math.dsl.MathDsl
+import org.moqui.math.dsl.MathMeta
+import org.moqui.math.libtorch.LibTorchResult
+import org.moqui.math.libtorch.PyTorch
 
-String schemaPath = System.getenv('MOQUI_MATH_ENTITIES')
-if (!schemaPath) throw new IllegalStateException('MOQUI_MATH_ENTITIES must point to MathEntities.xml')
-File schema = new File(schemaPath)
 File declaration = new File('examples/matrix-product.groovy')
-MathMeta mathMeta = MathDsl.evaluate(schema, declaration)
+MathMeta mathMeta = MathDsl.evaluate(declaration)
 
 LibTorchResult product = PyTorch.execute(mathMeta, 'MatrixProduct') {
     threads intraOp: 1, interOp: 1

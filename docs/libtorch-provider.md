@@ -59,13 +59,13 @@ thread configuration) with two interchangeable native implementations built
 from the same `src/main/cpp/libtorch_jni.cpp` / `libtorch_panama.cpp`
 translation units into one shared library:
 
-- **`LibTorchPanama`** (`groovy.math.libtorch.LibTorchPanama`, Java) is the
-  default used by `LibTorchProvider` and requires Java 21+ for the Foreign
-  Function & Memory API (`java.lang.foreign`, still a preview feature on 21,
-  hence `--enable-preview` in `build.gradle`). It dispatches through
+- **`LibTorchPanama`** (`org.moqui.math.libtorch.LibTorchPanama`, Java) is the
+  default used by `LibTorchProvider`. It needs Java 22 or newer, where the Foreign
+  Function & Memory API (`java.lang.foreign`) is final rather than a preview
+  feature as it was on 21; the build targets Java 25 LTS. It dispatches through
   `Linker.nativeLinker()` with zero-copy `MemorySegment` views, bypassing JNI
   array marshalling entirely.
-- **`LibTorchNative`** (`groovy.math.libtorch.LibTorchNative`, Groovy) is the
+- **`LibTorchNative`** (`org.moqui.math.libtorch.LibTorchNative`, Groovy) is the
   legacy JNI bridge, kept alongside Panama so `LibTorchParallelBenchmark` /
   `LibTorchComputeBenchmark` can measure one against the other; it is not the
   provider's default backend.
@@ -84,8 +84,8 @@ Two input boundaries are available on both backends:
 
 ## Build and verification
 
-The normal JVM build does not require LibTorch. Native tasks require JDK 21+
-with `--enable-preview` (already wired into `build.gradle`), CMake, Ninja and
+The normal JVM build does not require LibTorch. Native tasks require JDK 25+
+(already wired into `build.gradle`), CMake, Ninja and
 an unpacked CPU or accelerator LibTorch distribution:
 
 ```shell

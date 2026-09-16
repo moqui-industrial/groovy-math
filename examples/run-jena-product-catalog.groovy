@@ -3,26 +3,23 @@
  * Grant of Patent License.
  */
 
-import groovy.math.dsl.MathDsl
-import groovy.math.dsl.MathMeta
-import groovy.math.jena.Jena
+import org.moqui.math.dsl.MathDsl
+import org.moqui.math.dsl.MathMeta
+import org.moqui.math.jena.Jena
 import org.apache.jena.rdf.model.InfModel
 import org.apache.jena.rdf.model.Model
 
-String schemaPath = System.getenv('MOQUI_MATH_ENTITIES') ?:
-    '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
-File schemaFile = new File(schemaPath)
 File dslFile = new File('examples/product-catalog-graph.groovy')
 
 println '==================================================================='
 println ' Moqui-Math: E-Commerce Product Catalog & Pricing Rules via Apache Jena'
 println ' Semantic Web (RDF / Jena Rules Reasoner / SPARQL) over Moqui Graph'
 println '==================================================================='
-println "Schema : ${schemaFile.absolutePath}"
+println 'Schema : embedded moqui-math'
 println "Model  : ${dslFile.name}"
 
 // 1. Evaluate declarative Moqui Math Graph DSL
-MathMeta mathMeta = MathDsl.evaluate(schemaFile, dslFile)
+MathMeta mathMeta = MathDsl.evaluate(dslFile)
 
 // 2. Lower Moqui Graph to Apache Jena RDF Model
 Model rdfModel = Jena.toModel(mathMeta, 'ProductCatalogGraph')

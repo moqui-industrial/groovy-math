@@ -3,22 +3,16 @@
  * Grant of Patent License.
  */
 
-import groovy.math.dsl.MathDsl
-import groovy.math.dsl.MathMeta
-import groovy.math.petsctao.PetscTao
-import groovy.math.petsctao.PetscTaoPlan
-import groovy.math.petsctao.PetscTaoProvider
-import groovy.math.petsctao.PetscTaoResult
+import org.moqui.math.dsl.MathDsl
+import org.moqui.math.dsl.MathMeta
+import org.moqui.math.petsctao.PetscTao
+import org.moqui.math.petsctao.PetscTaoPlan
+import org.moqui.math.petsctao.PetscTaoProvider
+import org.moqui.math.petsctao.PetscTaoResult
 
 import java.util.concurrent.CompletableFuture
 
-String schemaPath = System.getenv('MOQUI_MATH_ENTITIES')
-if (!schemaPath) {
-    throw new IllegalStateException('MOQUI_MATH_ENTITIES must point to MathEntities.xml')
-}
-
 MathMeta mathMeta = MathDsl.evaluate(
-    new File(schemaPath),
     new File(System.getProperty('user.dir'), 'examples/energy-dispatch.groovy')
 )
 

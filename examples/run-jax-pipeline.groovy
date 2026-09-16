@@ -3,24 +3,22 @@
  * Grant of Patent License.
  */
 
-import groovy.math.dsl.MathDsl
-import groovy.math.dsl.MathMeta
-import groovy.math.jax.Jax
-import groovy.math.libtorch.LibTorchResult
-import groovy.math.libtorch.PyTorch
+import org.moqui.math.dsl.MathDsl
+import org.moqui.math.dsl.MathMeta
+import org.moqui.math.jax.Jax
+import org.moqui.math.libtorch.LibTorchResult
+import org.moqui.math.libtorch.PyTorch
 
 // 1. Locate schema and model DSL
-String schemaPath = System.getenv('MOQUI_MATH_ENTITIES') ?: '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
-File schemaFile = new File(schemaPath)
 File dslFile = new File(System.getProperty('user.dir'), 'examples/matrix-product.groovy')
 
 println "==================================================================="
 println " Moqui-Math: Dual Backend Execution Pipeline (LibTorch vs Google JAX)"
 println "==================================================================="
-println "Schema : ${schemaFile.absolutePath}"
+println 'Schema : embedded moqui-math'
 println "Model  : ${dslFile.name}"
 
-MathMeta mathMeta = MathDsl.evaluate(schemaFile, dslFile)
+MathMeta mathMeta = MathDsl.evaluate(dslFile)
 
 def inputMatrixA = [[1, 2, 3], [4, 5, 6]]
 

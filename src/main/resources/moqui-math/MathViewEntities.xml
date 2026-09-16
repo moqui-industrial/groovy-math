@@ -1,0 +1,941 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
+
+    <!-- ========================================================= -->
+    <!-- moqui.math -->
+    <!-- ========================================================= -->
+
+    <!-- ========== Parameter ========== -->
+    <view-entity entity-name="ParameterDetail" package="moqui.math">
+        <member-entity entity-alias="PDEF" entity-name="moqui.math.ParameterDef"/>
+        <member-entity entity-alias="PAR" entity-name="moqui.math.Parameter" join-from-alias="PDEF">
+            <key-map field-name="parameterDefId"/></member-entity>
+
+        <alias-all entity-alias="PDEF"/>
+        <alias-all entity-alias="PAR"><exclude field="parameterDefId"/></alias-all>
+    </view-entity>
+    <view-entity entity-name="ParameterLogDetail" package="moqui.math">
+        <member-entity entity-alias="PLOG" entity-name="moqui.math.ParameterLog"/>
+        <member-entity entity-alias="PAR" entity-name="moqui.math.Parameter" join-from-alias="PLOG">
+            <key-map field-name="parameterId"/></member-entity>
+        <member-entity entity-alias="PDEF" entity-name="moqui.math.ParameterDef" join-from-alias="PAR">
+            <key-map field-name="parameterDefId"/></member-entity>
+
+        <alias-all entity-alias="PLOG"/>
+        <alias-all entity-alias="PAR"><exclude field="parameterId"/><exclude field="sequenceNum"/>
+            <exclude field="numericValue"/><exclude field="symbolicValue"/>
+            <exclude field="parameterEnumId"/></alias-all>
+        <alias entity-alias="PAR" name="parameterSequenceNum" field="sequenceNum"/>
+        <alias-all entity-alias="PDEF"><exclude field="parameterDefId"/></alias-all>
+    </view-entity>
+
+    <!-- ========== Vector ========== -->
+    <view-entity entity-name="VectorAndComponent" package="moqui.math">
+        <member-entity entity-alias="V" entity-name="moqui.math.Vector"/>
+        <member-entity entity-alias="VC" entity-name="moqui.math.VectorComponent" join-from-alias="V">
+            <key-map field-name="vectorId"/></member-entity>
+
+        <alias-all entity-alias="V"/>
+        <alias-all entity-alias="VC"><exclude field="vectorId"/></alias-all>
+    </view-entity>
+
+    <!-- ========== Matrix ========== -->
+    <!-- NOTE: This view is the basis for obtaining many notable matrices, essential in algebraic calculations.
+         This view allows you to translate algebraic operations into relational database operations.
+         Example entity find:
+            <entity-find entity-name="MatrixAndComponent" list="mcList" cache="true">
+                <econdition Replace this ... />
+            </entity-find> 
+        
+         Notable matrices obtained with entity conditions:
+
+            1- ColumnMatrix - Extract a single column (col) of a matrix as a derived vector.
+                   <set field="col" value="3"/>
+                   ...
+                   <econdition field-name="colIndex" operator="equals" from="col"/>
+
+            2- RowMatrix - Extract a single row (row) of a matrix as a derived vector.
+                   <set field="row" from="4"/>
+                   ...         
+                   <econdition field-name="rowIndex" operator="equals" from="row"/>
+
+            3- MatrixUpperTriangular - Upper triangular view of a matrix.
+               Parameter k is the diagonal offset; k equal 0 means main diagonal, k greater than 0 keeps
+               elements above the k-th super-diagonal, k less than 0 includes some elements below.
+                   <set field="k" value="1" default-value="0"/>
+                   ...
+                   <econdition field-name="diffIndex" operator="less-equals" from="k"/>
+
+            4- MatrixLowerTriangular - Lower triangular view of a matrix.
+               Parameter k is the diagonal offset; k equal 0 means main diagonal, k greater than 0 keeps
+               elements below the k-th super-diagonal, k less than 0 includes some elements above.
+                   <set field="k" value="1" default-value="0"/>
+                   ...
+                   <econdition field-name="diffIndex" operator="greater-equals" from="k"/>
+
+            5- MatrixDiagonal - Main or offset diagonal (k equal 0 main, k greater than 0 super, k less than 0 sub).
+                   <set field="k" value="1" default-value="0"/>
+                   ...
+                   <econdition field-name="diffIndex" operator="equals" from="k"/>
+
+            6- MatrixAntidiagonal - Anti-diagonal elements (i + j = n-1-k).
+               Callers can pass antiSum = cols - 1 - k
+                   <set field="antiSum" from="mat.cols - 1 - k" default-value="0"/>
+                   ...
+                   <econdition field-name="sumIndex" operator="equals" from="antiSum"/>
+
+            7- MatrixBand - Elements within a band (row - col) belonging to [-l, u] (defaults l = u = 0 ⇒ main diag).
+                   <set field="l" value="3" default-value="0"/>
+                   <set field="u" value="2" default-value="0"/>
+                   ...
+                   <econditions>
+                       <econdition field-name="diffIndex" operator="greater-equals" from="l"/>
+                       <econdition field-name="diffIndex" operator="less-equals" from="u"/>
+                   </econditions>
+ 
+            8- MatrixBlockSlice - Rectangular sub-matrix slice (row range, col range).
+                   <set field="rowLo" value=""..."/>
+                   <set field="rowHi" value="..."/>
+                   <set field="colLo" value="..."/>
+                   <set field="colHi" value="..."/>
+                   ...
+                   <econditions>
+                       <econditions>
+                           <econdition field-name="rowIndex" operator="greater-equals" from="rowLo"/>
+                           <econdition field-name="rowIndex" operator="less-equals" from="rowHi"/>
+                       </econditions>
+                       <econditions>
+                           <econdition field-name="colIndex" operator="greater-equals" from="colLo"/>
+                           <econdition field-name="colIndex" operator="less-equals" from="colHi"/>
+                       </econditions>
+                   </econditions>
+    -->
+    <view-entity entity-name="MatrixAndComponent" package="moqui.math">
+        <member-entity entity-alias="M" entity-name="moqui.math.Matrix"/>
+        <member-entity entity-alias="MC" entity-name="moqui.math.MatrixComponent" join-from-alias="M">
+            <key-map field-name="matrixId"/></member-entity>
+
+        <alias-all entity-alias="M"/>
+        <alias-all entity-alias="MC"><exclude field="matrixId"/></alias-all>
+        <complex-alias field="diffIndex">
+            <complex-alias-field entity-alias="MC" field-name="rowIndex"/>
+            <complex-alias-field operator="-" entity-alias="MC" field="colIndex"/>
+        </complex-alias>
+        <complex-alias field="sumIndex">
+            <complex-alias-field entity-alias="MC" field-name="rowIndex"/>
+            <complex-alias-field operator="+" entity-alias="MC" field="colIndex"/>
+        </complex-alias>
+    </view-entity>
+    <view-entity entity-name="MatrixAdjoint" package="moqui.math">
+        <description>View that presents the conjugate transpose of a matrix.
+            Row/column indices are swapped and the imaginary part is negated (complex conjugation).</description>
+        <member-entity entity-alias="M" entity-name="moqui.math.Matrix"/>
+        <member-entity entity-alias="MC" entity-name="moqui.math.MatrixComponent" join-from-alias="M">
+            <key-map field-name="matrixId"/></member-entity>
+
+        <alias-all entity-alias="M"/>
+        <alias-all entity-alias="MC"><exclude field="matrixId"/><exclude field="rowIndex"/>
+            <exclude field="colIndex"/></alias-all>
+        <alias entity-alias="MC" name="rowIndex" field="colIndex"/>
+        <alias entity-alias="MC" name="colIndex" field="rowIndex"/>
+        <alias name="imaginaryConjValue" type="number-decimal">
+            <complex-alias expression="-MC.imaginaryValue"/>
+        </alias>
+    </view-entity> 
+    <view-entity entity-name="MatrixTrace" package="moqui.math">
+        <description>Calculates the trace of a square matrix (sum of main diagonal elements).</description>
+        <member-entity entity-alias="M"  entity-name="moqui.math.Matrix"/>
+        <member-entity entity-alias="MC"  entity-name="moqui.math.MatrixComponent" join-from-alias="M">
+            <key-map field-name="matrixId"/></member-entity>
+
+        <alias-all entity-alias="M"/>
+        <alias-all entity-alias="MC"><exclude field="matrixId"/></alias-all>
+        <alias entity-alias="MC" name="traceValue" function="sum" field="realValue"/>
+
+        <entity-condition>
+            <econdition field-name="rowIndex" operator="equals" from-field="colIndex"/>
+        </entity-condition>
+    </view-entity>
+    <view-entity entity-name="MatrixTranspose" package="moqui.math">
+        <description>Provides a transposed view of MatrixComponent records by swapping row and column indices.</description>
+        <member-entity entity-alias="M"  entity-name="moqui.math.Matrix"/>
+        <member-entity entity-alias="MC"  entity-name="moqui.math.MatrixComponent" join-from-alias="M">
+            <key-map field-name="matrixId"/></member-entity>
+    
+        <alias-all entity-alias="M"/>
+        <alias-all entity-alias="MC"><exclude field="matrixId"/>
+            <exclude field="rowIndex"/><exclude field="colIndex"/></alias-all>
+        <alias entity-alias="MC" name="rowIndex" field="colIndex"/> 
+        <alias entity-alias="MC" name="colIndex" field="rowIndex"/> 
+    </view-entity>
+    <view-entity entity-name="MatrixVectorize" package="moqui.math">
+        <description>Flatten matrix into row-major 1-D vector (row-major index).</description>
+        <member-entity entity-alias="M" entity-name="moqui.math.Matrix"/>
+        <member-entity entity-alias="MC" entity-name="moqui.math.MatrixComponent" join-from-alias="M">
+            <key-map field-name="matrixId"/></member-entity>
+
+        <alias-all entity-alias="M"/>
+        <alias-all entity-alias="MC"><exclude field="matrixId"/></alias-all>
+        <alias name="dimensionIndex" type="number-integer">
+            <complex-alias expression="MC.rowIndex * M.cols + MC.colIndex"/>
+        </alias>
+    </view-entity>
+    <view-entity entity-name="MatrixReciprocal" package="moqui.math">
+        <description>Element-wise reciprocal.</description>
+        <member-entity entity-alias="M" entity-name="moqui.math.Matrix"/>
+        <member-entity entity-alias="MC" entity-name="moqui.math.MatrixComponent" join-from-alias="M">
+            <key-map field-name="matrixId"/></member-entity>
+
+        <alias-all entity-alias="M"/>
+        <alias-all entity-alias="MC"><exclude field="matrixId"/></alias-all>
+        <alias name="den" type="number-decimal">
+            <complex-alias expression="(MC.realValue * MC.realValue) + (MC.imaginaryValue * MC.imaginaryValue)"/>
+        </alias>
+        <alias name="recipRealValue" type="number-decimal">
+            <case><when expression="den &lt;&gt; 0">
+                <complex-alias expression="MC.realValue / den"/>
+            </when><else><complex-alias expression="0"/></else></case>
+        </alias>
+        <alias name="recipImaginaryValue" type="number-decimal">
+            <case><when expression="den &lt;&gt; 0">
+                <complex-alias expression="-MC.imaginaryValue / den"/>
+            </when><else><complex-alias expression="0"/></else></case>
+        </alias>
+    </view-entity>
+    <view-entity entity-name="MatrixFlipUpDown" package="moqui.math">
+        <description>Flip matrix upside-down (reverse rows).</description>
+        <member-entity entity-alias="M" entity-name="moqui.math.Matrix"/>
+        <member-entity entity-alias="MC" entity-name="moqui.math.MatrixComponent" join-from-alias="M">
+            <key-map field-name="matrixId"/></member-entity>
+
+        <alias-all entity-alias="M"/>
+        <alias-all entity-alias="MC"><exclude field="matrixId"/></alias-all>
+        <alias name="flipRowIndex" type="number-integer">
+            <complex-alias expression="M.rows - MC.rowIndex - 1"/>
+        </alias>
+    </view-entity>
+    <view-entity entity-name="MatrixFlipLeftRight" package="moqui.math">
+        <description>Flip matrix left-right (reverse columns).</description>
+        <member-entity entity-alias="M" entity-name="moqui.math.Matrix"/>
+        <member-entity entity-alias="MC" entity-name="moqui.math.MatrixComponent" join-from-alias="M">
+            <key-map field-name="matrixId"/></member-entity>
+
+        <alias-all entity-alias="M"/>
+        <alias-all entity-alias="MC"><exclude field="matrixId"/></alias-all>
+        <alias name="flipColIndex" type="number-integer">
+            <complex-alias expression="M.cols - MC.colIndex - 1"/>
+        </alias>
+    </view-entity>
+    <view-entity entity-name="MatrixRotate90" package="moqui.math">
+        <description>Rotate matrix by 90° k times (k = 0..3).</description>
+        <member-entity entity-alias="M" entity-name="moqui.math.Matrix"/>
+        <member-entity entity-alias="MC" entity-name="moqui.math.MatrixComponent" join-from-alias="M">
+            <key-map field-name="matrixId"/></member-entity>
+
+        <alias-all entity-alias="M"/>
+        <alias-all entity-alias="MC"><exclude field="matrixId"/></alias-all>
+        <alias name="rotRow" type="number-integer"><case>
+            <when expression="${k} == 0"><complex-alias expression="MC.rowIndex"/></when>
+            <when expression="${k} == 1"><complex-alias expression="MC.colIndex"/></when>
+            <when expression="${k} == 2"><complex-alias expression="M.rows - 1 - MC.rowIndex"/></when>
+            <else><complex-alias expression="M.cols - 1 - MC.colIndex"/></else>
+        </case></alias>
+        <alias name="rotCol" type="number-integer"><case>
+            <when expression="${k} == 0"><complex-alias expression="MC.colIndex"/></when>
+            <when expression="${k} == 1"><complex-alias expression="M.rows - 1 - MC.rowIndex"/></when>
+            <when expression="${k} == 2"><complex-alias expression="M.cols - 1 - MC.colIndex"/></when>
+            <else><complex-alias expression="MC.rowIndex"/></else>
+        </case></alias>
+    </view-entity>
+
+    <!-- ========== Tensor ========== --> 
+    <view-entity entity-name="TensorAndElement" package="moqui.math">
+        <member-entity entity-alias="T" entity-name="moqui.math.Tensor"/>
+        <member-entity entity-alias="TE" entity-name="moqui.math.TensorElement" join-from-alias="T">
+            <key-map field-name="tensorId"/></member-entity>
+
+        <alias-all entity-alias="T"/>
+        <alias-all entity-alias="TE"><exclude field="tensorId"/></alias-all>
+    </view-entity>
+    <!-- Tensor views for translating algebraic operations into relational database or SQL operations. -->
+    <!-- Tensor -> Mode-k unfoldings + vectorisation, to be able to use standard linear algebra operations that are designed for 2D matrices on tensors. -->
+    <!-- Mode-0 unfolding -->
+    <view-entity entity-name="TensorMode0Unfold" package="moqui.math">
+        <description>Mode-0 matricisation of a tensor (row-major).</description>
+        <member-entity entity-alias="T" entity-name="moqui.math.Tensor"/>
+        <member-entity entity-alias="TE" entity-name="moqui.math.TensorElement" join-from-alias="T">
+            <key-map field-name="tensorId"/></member-entity>
+        <member-entity entity-alias="TA0" entity-name="moqui.math.TensorAxis" join-from-alias="T">
+            <key-map field-name="tensorId"/>
+            <entity-condition>
+                <econdition field-name="axisIndex" operator="equals" value="0"/>
+            </entity-condition>
+        </member-entity>
+    
+        <alias-all entity-alias="T"/>
+        <alias-all entity-alias="TE"><exclude field="tensorId"/><exclude field="linearIndex"/></alias-all>
+        <alias name="rowIndex" type="number-integer">
+            <complex-alias expression="TE.linearIndex / TA0.axisStride"/>
+        </alias>
+        <alias name="colIndex" type="number-integer">
+            <complex-alias expression="TE.linearIndex % TA0.axisStride"/>
+        </alias>
+    </view-entity>
+    <!-- Mode-1 unfolding -->
+    <view-entity entity-name="TensorMode1Unfold" package="moqui.math">
+        <description>Mode-1 matricisation of a tensor (row-major).</description>
+        <member-entity entity-alias="T" entity-name="moqui.math.Tensor"/>
+        <member-entity entity-alias="TE" entity-name="moqui.math.TensorElement" join-from-alias="T">
+            <key-map field-name="tensorId"/></member-entity>
+        <member-entity entity-alias="TA1" entity-name="moqui.math.TensorAxis" join-from-alias="T">
+            <key-map field-name="tensorId"/>
+            <entity-condition>
+                <econdition field-name="axisIndex" operator="equals" value="1"/>
+            </entity-condition>
+        </member-entity>
+        <member-entity entity-alias="TA0" entity-name="moqui.math.TensorAxis" join-from-alias="T">
+            <key-map field-name="tensorId"/>
+            <entity-condition>
+                <econdition field-name="axisIndex" operator="equals" value="0"/>
+            </entity-condition>
+        </member-entity>
+
+        <alias-all entity-alias="T"/>
+        <alias-all entity-alias="TE"><exclude field="tensorId"/><exclude field="linearIndex"/></alias-all>
+        <alias name="rowIndex" type="number-integer">
+            <complex-alias expression="TE.linearIndex % TA0.axisStride / TA1.axisStride"/>
+        </alias>
+        <alias name="colIndex" type="number-integer">
+            <complex-alias expression="TE.linearIndex / TA0.axisStride * TA1.axisStride + TE.linearIndex % TA1.axisStride"/>
+        </alias>
+    </view-entity>
+    <!-- Full vectorisation -->
+    <view-entity entity-name="TensorVectorize" package="moqui.math">
+        <description>Flattens any n-dimensional tensor into a 1-D vector (row-major).</description>
+        <member-entity entity-alias="T" entity-name="moqui.math.Tensor"/>
+        <member-entity entity-alias="TE" entity-name="moqui.math.TensorElement" join-from-alias="T">
+            <key-map field-name="tensorId"/></member-entity>
+
+        <alias-all entity-alias="T"/>
+        <alias-all entity-alias="TE"><exclude field="tensorId"/><exclude field="linearIndex"/></alias-all>
+        <alias name="dimensionIndex" entity-alias="TE" field="linearIndex"/>
+    </view-entity>
+    <view-entity entity-name="TensorReciprocal" package="moqui.math">
+        <description>Element-wise reciprocal of a tensor.  
+            Real case : yᵢ = 1 / xᵢ  
+            Complex : 1 / (a+bi) = a / (a²+b²)- b / (a²+b²)i
+        </description>
+        <member-entity entity-alias="T" entity-name="moqui.math.Tensor"/>
+        <member-entity entity-alias="TE" entity-name="moqui.math.TensorElement" join-from-alias="T">
+            <key-map field-name="tensorId"/></member-entity>
+          
+        <alias-all entity-alias="T"/>
+        <alias-all entity-alias="TE"><exclude field="tensorId"/></alias-all>
+        <alias name="den" type="number-decimal">
+            <complex-alias expression="(TE.realValue * TE.realValue) + (TE.imaginaryValue * TE.imaginaryValue)"/>
+        </alias>
+        <alias name="recipRealValue" type="number-decimal">
+            <case><when expression="den &lt;&gt; 0">
+                <complex-alias expression="TE.realValue / den"/>
+            </when><else><complex-alias expression="0"/></else></case>
+        </alias>
+        <alias name="recipImagValue" type="number-decimal">
+            <case><when expression="den &lt;&gt; 0">
+                <complex-alias expression="-TE.imaginaryValue / den"/>
+            </when><else><complex-alias expression="0"/></else></case>
+        </alias>
+    </view-entity>
+    <view-entity entity-name="TensorFlipUpDown" package="moqui.math">
+        <description>Flip tensor along axis 0 (batch/row axis).</description>
+        <member-entity entity-alias="T" entity-name="moqui.math.Tensor"/>
+        <member-entity entity-alias="TE" entity-name="moqui.math.TensorElement" join-from-alias="T">
+            <key-map field-name="tensorId"/></member-entity>
+        <member-entity entity-alias="TA0" entity-name="moqui.math.TensorAxis" sub-select="true" join-from-alias="T">
+            <key-map field-name="tensorId"/>
+            <entity-condition>
+                <econdition field-name="axisIndex" operator="equals" value="0"/>
+            </entity-condition>
+        </member-entity>
+
+        <alias-all entity-alias="T"/>
+        <alias-all entity-alias="TE"><exclude field="tensorId"/></alias-all>
+        <alias name="flipLinear" type="number-integer">
+            <complex-alias expression="((TA0.axisSize - 1) - (TE.linearIndex / TA0.axisStride))
+                * TA0.axisStride + (TE.linearIndex % TA0.axisStride)"/>
+        </alias>
+    </view-entity>
+    <view-entity entity-name="TensorFlipLeftRight" package="moqui.math">
+        <description>Flip tensor along axis 1 (column/width axis).</description>
+        <member-entity entity-alias="T" entity-name="moqui.math.Tensor"/>
+        <member-entity entity-alias="TE" entity-name="moqui.math.TensorElement" join-from-alias="T">
+            <key-map field-name="tensorId"/></member-entity>
+        <member-entity entity-alias="TA0" entity-name="moqui.math.TensorAxis" join-from-alias="T">
+            <key-map field-name="tensorId"/>
+            <econdition field-name="axisIndex" operator="equals" value="0"/>
+        </member-entity>
+        <member-entity entity-alias="TA1" entity-name="moqui.math.TensorAxis" join-from-alias="T">
+            <key-map field-name="tensorId"/>
+            <econdition field-name="axisIndex" operator="equals" value="1"/>
+        </member-entity>
+
+        <alias-all entity-alias="T"/>
+        <alias-all entity-alias="TE"><exclude field="tensorId"/></alias-all>
+        <alias name="prefixLinearIndex" type="number-integer">
+            <complex-alias expression="TE.linearIndex / TA0.axisStride * TA0.axisStride"/>
+        </alias>
+        <alias name="originalAxis1Index" type="number-integer">
+            <complex-alias expression="(TE.linearIndex % TA0.axisStride) / TA1.axisStride"/>
+        </alias>
+        <alias name="newAxis1Index" type="number-integer">
+            <complex-alias expression="(TA1.axisSize - 1) - originalAxis1Index"/>
+        </alias>
+        <alias name="suffixLinearIndex" type="number-integer">
+            <complex-alias expression="TE.linearIndex % TA1.axisStride"/>
+        </alias>
+        <alias name="flipLinear" type="number-integer">
+            <complex-alias expression="prefixLinearIndex + newAxis1Index * TA1.axisStride + suffixLinearIndex"/>
+        </alias>
+    </view-entity>
+
+    <!-- ========== Approximated Function ========== -->
+    <view-entity entity-name="ApproximatedFunctionAndSample" package="moqui.math" cache="true">
+        <member-entity entity-alias="AF" entity-name="moqui.math.ApproximatedFunction"/>
+        <member-entity entity-alias="AFS" entity-name="moqui.math.ApproximatedFunctionSample" join-from-alias="AF">
+            <key-map field-name="approximatedFunctionId"/></member-entity>
+        <alias-all entity-alias="AF"/>
+        <alias-all entity-alias="AFS"><exclude field="approximatedFunctionId"/></alias-all>
+    </view-entity>
+
+    <!-- ========== Math Model Def Pipeline ========== -->
+    <view-entity entity-name="MathModelDefPipelineDetail" package="moqui.math" cache="true">
+        <member-entity entity-alias="MMDP" entity-name="moqui.math.MathModelDefPipeline"/>
+        <member-entity entity-alias="MMD" entity-name="moqui.math.MathModelDef" join-from-alias="MMDP">
+            <key-map field-name="mathModelDefId"/></member-entity>
+        <member-entity entity-alias="TR" entity-name="moqui.math.Transformation" join-from-alias="MMDP" join-optional="true">
+            <key-map field-name="transformationId"/></member-entity>
+        <member-entity entity-alias="AF" entity-name="moqui.math.ApproximatedFunction" join-from-alias="MMDP" join-optional="true">
+            <key-map field-name="approximatedFunctionId"/></member-entity>
+        <alias-all entity-alias="MMDP"/>
+        <alias entity-alias="MMD" name="modelName"/>
+        <alias entity-alias="MMD" name="modelTypeEnumId"/>
+        <alias entity-alias="TR" name="transformationName"/>
+        <alias entity-alias="AF" name="functionName"/>
+    </view-entity>
+
+    <!-- ========== Graph ========== -->
+    <view-entity entity-name="GraphEdgeEndpoint" package="moqui.math" cache="true">
+        <description>View combining a graph edge and its vertices.</description>
+        <member-entity entity-alias="GE" entity-name="moqui.math.GraphEdge"/>
+        <member-entity entity-alias="GV1" entity-name="moqui.math.GraphVertex" join-from-alias="GE">
+            <key-map field-name="graphId"/>
+            <key-map field-name="fromVertexId" related="graphVertexId"/>
+        </member-entity>
+        <member-entity entity-alias="GV2" entity-name="moqui.math.GraphVertex" join-from-alias="GE">
+            <key-map field-name="graphId"/>
+            <key-map field-name="toVertexId" related="graphVertexId"/>
+        </member-entity>
+        <alias-all entity-alias="GE"/>
+        <alias-all entity-alias="GV1" prefix="from"><exclude field="graphId"/></alias-all>
+        <alias-all entity-alias="GV2" prefix="to"><exclude field="graphId"/></alias-all>
+    </view-entity>
+
+    <!-- ========== Category Theory ========== -->
+    <view-entity entity-name="MorphismDetail" package="moqui.math.ct" cache="true">
+        <description>Generic morphism view with categorical endpoints, executable binding, and optional composition metadata.
+            It is independent from Graph, StatusFlow, and any concrete execution engine.</description>
+        <member-entity entity-alias="M" entity-name="moqui.math.ct.Morphism"/>
+        <member-entity entity-alias="CAT" entity-name="moqui.math.ct.Category" join-from-alias="M">
+            <key-map field-name="categoryId"/></member-entity>
+        <member-entity entity-alias="SRC" entity-name="moqui.math.ct.CategoryObject" join-from-alias="M">
+            <key-map field-name="sourceObjectId" related="categoryObjectId"/></member-entity>
+        <member-entity entity-alias="TGT" entity-name="moqui.math.ct.CategoryObject" join-from-alias="M">
+            <key-map field-name="targetObjectId" related="categoryObjectId"/></member-entity>
+        <member-entity entity-alias="MT" entity-name="moqui.basic.Enumeration" join-from-alias="M" join-optional="true">
+            <key-map field-name="morphismTypeEnumId" related="enumId"/></member-entity>
+        <member-entity entity-alias="MC" entity-name="moqui.math.ct.MorphismComposition" join-from-alias="M" join-optional="true">
+            <key-map field-name="morphismId"/></member-entity>
+        <member-entity entity-alias="MCT" entity-name="moqui.basic.Enumeration" join-from-alias="MC" join-optional="true">
+            <key-map field-name="compositionTypeEnumId" related="enumId"/></member-entity>
+
+        <alias entity-alias="M" name="morphismId"/>
+        <alias entity-alias="M" name="parentMorphismId"/>
+        <alias entity-alias="M" name="categoryId"/>
+        <alias entity-alias="M" name="morphismTypeEnumId"/>
+        <alias entity-alias="M" name="sourceObjectId"/>
+        <alias entity-alias="M" name="targetObjectId"/>
+        <alias entity-alias="M" name="morphismName"/>
+        <alias entity-alias="M" name="morphismSymbol"/>
+        <alias entity-alias="M" name="description"/>
+        <alias entity-alias="M" name="transformationId"/>
+        <alias entity-alias="M" name="serviceName"/>
+        <alias entity-alias="CAT" name="categoryName"/>
+        <alias entity-alias="SRC" name="sourceObjectName" field="objectName"/>
+        <alias entity-alias="SRC" name="sourceObjectSymbol" field="objectSymbol"/>
+        <alias entity-alias="TGT" name="targetObjectName" field="objectName"/>
+        <alias entity-alias="TGT" name="targetObjectSymbol" field="objectSymbol"/>
+        <alias entity-alias="MT" name="morphismTypeDescription" field="description"/>
+        <alias entity-alias="MC" name="compositionMorphismId" field="morphismId"/>
+        <alias entity-alias="MC" name="compositionTypeEnumId"/>
+        <alias entity-alias="MCT" name="compositionTypeDescription" field="description"/>
+    </view-entity>
+
+    <view-entity entity-name="MorphismCompositionComponentDetail" package="moqui.math.ct" cache="true">
+        <description>Ordered, flattened factorization of a composite morphism. One row represents one component;
+            componentMorphismId may identify either an atomic morphism or another MorphismComposition.</description>
+        <member-entity entity-alias="MC" entity-name="moqui.math.ct.MorphismComposition"/>
+        <member-entity entity-alias="CMP" entity-name="moqui.math.ct.Morphism" join-from-alias="MC">
+            <key-map field-name="morphismId"/></member-entity>
+        <member-entity entity-alias="MCC" entity-name="moqui.math.ct.MorphismCompositionComponent" join-from-alias="MC">
+            <key-map field-name="morphismId"/></member-entity>
+        <member-entity entity-alias="CM" entity-name="moqui.math.ct.Morphism" join-from-alias="MCC">
+            <key-map field-name="componentMorphismId" related="morphismId"/></member-entity>
+        <member-entity entity-alias="MCT" entity-name="moqui.basic.Enumeration" join-from-alias="MC" join-optional="true">
+            <key-map field-name="compositionTypeEnumId" related="enumId"/></member-entity>
+        <member-entity entity-alias="CSRC" entity-name="moqui.math.ct.CategoryObject" join-from-alias="CM">
+            <key-map field-name="sourceObjectId" related="categoryObjectId"/></member-entity>
+        <member-entity entity-alias="CTGT" entity-name="moqui.math.ct.CategoryObject" join-from-alias="CM">
+            <key-map field-name="targetObjectId" related="categoryObjectId"/></member-entity>
+
+        <alias entity-alias="MC" name="compositeMorphismId" field="morphismId"/>
+        <alias entity-alias="MC" name="compositionTypeEnumId"/>
+        <alias entity-alias="MCT" name="compositionTypeDescription" field="description"/>
+        <alias entity-alias="CMP" name="categoryId"/>
+        <alias entity-alias="CMP" name="compositeSourceObjectId" field="sourceObjectId"/>
+        <alias entity-alias="CMP" name="compositeTargetObjectId" field="targetObjectId"/>
+        <alias entity-alias="CMP" name="compositeMorphismName" field="morphismName"/>
+        <alias entity-alias="CMP" name="compositeServiceName" field="serviceName"/>
+
+        <alias entity-alias="MCC" name="componentMorphismId"/>
+        <alias entity-alias="MCC" name="sequenceNum"/>
+        <alias entity-alias="MCC" name="componentDescription" field="description"/>
+        <alias entity-alias="CM" name="componentMorphismTypeEnumId" field="morphismTypeEnumId"/>
+        <alias entity-alias="CM" name="componentSourceObjectId" field="sourceObjectId"/>
+        <alias entity-alias="CM" name="componentTargetObjectId" field="targetObjectId"/>
+        <alias entity-alias="CM" name="componentMorphismName" field="morphismName"/>
+        <alias entity-alias="CM" name="componentMorphismSymbol" field="morphismSymbol"/>
+        <alias entity-alias="CM" name="componentMorphismDescription" field="description"/>
+        <alias entity-alias="CM" name="componentServiceName" field="serviceName"/>
+        <alias entity-alias="CSRC" name="componentSourceObjectName" field="objectName"/>
+        <alias entity-alias="CTGT" name="componentTargetObjectName" field="objectName"/>
+
+        <entity-condition><order-by field-name="sequenceNum"/></entity-condition>
+    </view-entity>
+
+    <view-entity entity-name="MorphismParameterBindingDetail" package="moqui.math.ct" cache="true">
+        <description>Explicit service-parameter binding used only when same-name pipeline-context convention is insufficient.</description>
+        <member-entity entity-alias="B" entity-name="moqui.math.ct.MorphismParameterBinding"/>
+        <member-entity entity-alias="M" entity-name="moqui.math.ct.Morphism" join-from-alias="B">
+            <key-map field-name="morphismId"/></member-entity>
+        <member-entity entity-alias="SM" entity-name="moqui.math.ct.Morphism" join-from-alias="B" join-optional="true">
+            <key-map field-name="sourceMorphismId" related="morphismId"/></member-entity>
+
+        <alias-all entity-alias="B"/>
+        <alias entity-alias="M" name="serviceName"/>
+        <alias entity-alias="M" name="morphismName"/>
+        <alias entity-alias="SM" name="sourceServiceName" field="serviceName"/>
+        <alias entity-alias="SM" name="sourceMorphismName" field="morphismName"/>
+    </view-entity>
+
+    <!-- ========== Category Underlying Graph ========== -->
+    <view-entity entity-name="CategoryUnderlyingGraph" package="moqui.math" cache="true">
+        <description>Header view for the underlying graph U(C) of a category C.</description>
+        <member-entity entity-alias="GC" entity-name="moqui.math.GraphCategory"/>
+        <member-entity entity-alias="G" entity-name="moqui.math.Graph" join-from-alias="GC">
+            <key-map field-name="graphId"/></member-entity>
+        <member-entity entity-alias="C" entity-name="moqui.math.ct.Category" join-from-alias="GC">
+            <key-map field-name="categoryId"/></member-entity>
+        <member-entity entity-alias="PURP" entity-name="moqui.basic.Enumeration" join-from-alias="GC">
+            <key-map field-name="purposeEnumId" related="enumId"/></member-entity>
+
+        <alias entity-alias="GC" name="graphCategoryId"/>
+        <alias entity-alias="GC" name="purposeEnumId"/>
+        <alias entity-alias="PURP" name="purposeDescription" field="description"/>
+
+        <alias entity-alias="C" name="categoryId"/>
+        <alias entity-alias="C" name="parentCategoryId"/>
+        <alias entity-alias="C" name="categoryTypeEnumId"/>
+        <alias entity-alias="C" name="categoryName"/>
+        <alias entity-alias="C" name="categoryDescription" field="description"/>
+
+        <alias entity-alias="G" name="graphId"/>
+        <alias entity-alias="G" name="parentGraphId"/>
+        <alias entity-alias="G" name="graphTypeEnumId"/>
+        <alias entity-alias="G" name="graphName" field="name"/>
+        <alias entity-alias="G" name="graphDescription" field="description"/>
+        <alias entity-alias="G" name="isWeighted"/>
+    </view-entity>
+
+    <view-entity entity-name="UnderlyingGraphObject" package="moqui.math" cache="true">
+        <description>Object component of U(C): one CategoryObject and its corresponding GraphVertex.</description>
+        <member-entity entity-alias="GC" entity-name="moqui.math.GraphCategory"/>
+        <member-entity entity-alias="MAP" entity-name="moqui.math.GraphVertexCategoryObject" join-from-alias="GC">
+            <key-map field-name="graphCategoryId"/></member-entity>
+        <member-entity entity-alias="GV" entity-name="moqui.math.GraphVertex" join-from-alias="MAP">
+            <key-map field-name="graphVertexId"/></member-entity>
+        <member-entity entity-alias="CO" entity-name="moqui.math.ct.CategoryObject" join-from-alias="MAP">
+            <key-map field-name="categoryObjectId"/></member-entity>
+
+        <alias entity-alias="GC" name="graphCategoryId"/>
+        <alias entity-alias="GC" name="graphId"/>
+        <alias entity-alias="GC" name="categoryId"/>
+        <alias entity-alias="GC" name="purposeEnumId"/>
+        <alias entity-alias="MAP" name="graphVertexCategoryObjectId"/>
+
+        <alias entity-alias="CO" name="categoryObjectId"/>
+        <alias entity-alias="CO" name="parentObjectId"/>
+        <alias entity-alias="CO" name="objectTypeEnumId"/>
+        <alias entity-alias="CO" name="objectEntityName"/>
+        <alias entity-alias="CO" name="objectPkPrimaryValue"/>
+        <alias entity-alias="CO" name="objectPkSecondaryValue"/>
+        <alias entity-alias="CO" name="objectPkRestCombinedValue"/>
+        <alias entity-alias="CO" name="objectName"/>
+        <alias entity-alias="CO" name="objectSymbol"/>
+        <alias entity-alias="CO" name="objectDescription" field="description"/>
+
+        <alias entity-alias="GV" name="graphVertexId"/>
+        <alias entity-alias="GV" name="vertexLabel" field="label"/>
+        <alias entity-alias="GV" name="degree"/>
+        <alias entity-alias="GV" name="positionVectorId"/>
+    </view-entity>
+
+    <view-entity entity-name="UnderlyingGraphMorphism" package="moqui.math" cache="true">
+        <description>Arrow component of U(C): one Morphism and its corresponding directed GraphEdge.</description>
+        <member-entity entity-alias="GC" entity-name="moqui.math.GraphCategory"/>
+        <member-entity entity-alias="MAP" entity-name="moqui.math.GraphEdgeMorphism" join-from-alias="GC">
+            <key-map field-name="graphCategoryId"/></member-entity>
+        <member-entity entity-alias="GE" entity-name="moqui.math.GraphEdge" join-from-alias="MAP">
+            <key-map field-name="graphEdgeId"/></member-entity>
+        <member-entity entity-alias="M" entity-name="moqui.math.ct.Morphism" join-from-alias="MAP">
+            <key-map field-name="morphismId"/></member-entity>
+        <member-entity entity-alias="SRC" entity-name="moqui.math.ct.CategoryObject" join-from-alias="M">
+            <key-map field-name="sourceObjectId" related="categoryObjectId"/></member-entity>
+        <member-entity entity-alias="TGT" entity-name="moqui.math.ct.CategoryObject" join-from-alias="M">
+            <key-map field-name="targetObjectId" related="categoryObjectId"/></member-entity>
+
+        <alias entity-alias="GC" name="graphCategoryId"/>
+        <alias entity-alias="GC" name="graphId"/>
+        <alias entity-alias="GC" name="categoryId"/>
+        <alias entity-alias="GC" name="purposeEnumId"/>
+        <alias entity-alias="MAP" name="graphEdgeMorphismId"/>
+
+        <alias entity-alias="M" name="morphismId"/>
+        <alias entity-alias="M" name="parentMorphismId"/>
+        <alias entity-alias="M" name="morphismTypeEnumId"/>
+        <alias entity-alias="M" name="sourceObjectId"/>
+        <alias entity-alias="M" name="targetObjectId"/>
+        <alias entity-alias="M" name="morphismName"/>
+        <alias entity-alias="M" name="morphismSymbol"/>
+        <alias entity-alias="M" name="transformationId"/>
+        <alias entity-alias="M" name="serviceName"/>
+        <alias entity-alias="SRC" name="sourceObjectName" field="objectName"/>
+        <alias entity-alias="SRC" name="sourceObjectSymbol" field="objectSymbol"/>
+        <alias entity-alias="TGT" name="targetObjectName" field="objectName"/>
+        <alias entity-alias="TGT" name="targetObjectSymbol" field="objectSymbol"/>
+
+        <alias entity-alias="GE" name="graphEdgeId"/>
+        <alias entity-alias="GE" name="fromVertexId"/>
+        <alias entity-alias="GE" name="toVertexId"/>
+        <alias entity-alias="GE" name="edgeTypeEnumId"/>
+        <alias entity-alias="GE" name="edgeLabel" field="label"/>
+        <alias entity-alias="GE" name="isDirected"/>
+        <alias entity-alias="GE" name="isLoop"/>
+    </view-entity>
+
+    <!-- ========== Mesh ========== -->
+    <view-entity entity-name="MeshKCellAndVertex" package="moqui.math">
+        <member-entity entity-alias="MKC" entity-name="moqui.math.MeshKCell"/>
+        <member-entity entity-alias="MKCV" entity-name="moqui.math.MeshKCellVertex" join-from-alias="MKC">
+            <key-map field-name="meshKCellId"/></member-entity>
+        <member-entity entity-alias="GV" entity-name="moqui.math.GraphVertex" join-from-alias="MKCV">
+            <key-map field-name="graphVertexId"/></member-entity>
+
+        <alias-all entity-alias="MKC"/>
+        <alias-all entity-alias="GV" prefix="graph"/>
+    </view-entity>
+    <view-entity entity-name="MeshKCellAndEdge" package="moqui.math">
+        <member-entity entity-alias="MKC" entity-name="moqui.math.MeshKCell"/>
+        <member-entity entity-alias="MKCE" entity-name="moqui.math.MeshKCellEdge" join-from-alias="MKC">
+            <key-map field-name="meshKCellId"/></member-entity>
+        <member-entity entity-alias="GE" entity-name="moqui.math.GraphEdge" join-from-alias="MKCE">
+            <key-map field-name="graphEdgeId"/></member-entity>
+
+        <alias-all entity-alias="MKC"/>
+        <alias-all entity-alias="GE" prefix="graph"/>
+    </view-entity>
+
+    <!-- ========== Parametric Path ========== -->
+    <view-entity entity-name="ParametricPathAndPoint" package="moqui.math" cache="true">
+        <member-entity entity-alias="PP" entity-name="moqui.math.ParametricPath"/>
+        <member-entity entity-alias="PPP" entity-name="moqui.math.ParametricPathPoint" join-from-alias="PP">
+            <key-map field-name="approximatedFunctionId"/></member-entity>
+        <alias-all entity-alias="PP"/>
+        <alias-all entity-alias="PPP"><exclude field="approximatedFunctionId"/></alias-all>
+    </view-entity>
+
+    <!-- ========== Trajectory ========== -->
+    <view-entity entity-name="TrajectoryAndPoint" package="moqui.math" cache="true">
+        <member-entity entity-alias="TRJ" entity-name="moqui.math.Trajectory"/>
+        <member-entity entity-alias="PT" entity-name="moqui.math.TrajectoryPoint" join-from-alias="TRJ">
+            <key-map field-name="approximatedFunctionId"/></member-entity>
+        <alias-all entity-alias="TRJ"/>
+        <alias-all entity-alias="PT"><exclude field="approximatedFunctionId"/></alias-all>
+    </view-entity>
+
+    <!-- Flat view of trajectory point position components for PLC dispatch.
+         Each row represents one dimension of one point: dimensionIndex 0-5 maps to
+         SMC_POS_REF.v[0..5] (X, Y, Z mm + A, B, C deg for Cartesian; J1-J6 deg for ACS).
+
+         Join path:
+           Trajectory (TRJ) → ParametricPath (PP)       [compositionMethodEnumId = trajectory blending default]
+           TRJ → TrajectoryPoint (PT)                   [isBreakPoint, blendingEnumId = per-point override]
+           PT  → ApproximatedFunctionSample (AFS)       [sequenceNum, sampleVectorId]
+           AFS → ParametricPathPoint (PPP)              [tolerance = blendingMode]
+           AFS → Vector (V)                             [position vector]
+           V   → VectorComponent (VC)                   [dimensionIndex, realValue = axis value]
+
+         Gateway blending translation:
+           PP.compositionMethodEnumId (PpcmPlc*) → Trajectory.bufferMode + transitionMode
+           PT.blendingEnumId          (PpcmPlc*) → TrajectoryPoint.hasBlendingOverride + bufferMode + transitionMode
+           PPP.tolerance                         → TrajectoryPoint.blendingMode (0 = trajectory default) -->
+    <view-entity entity-name="TrajectoryPointComponent" package="moqui.math" cache="true">
+        <member-entity entity-alias="TRJ" entity-name="moqui.math.Trajectory"/>
+        <member-entity entity-alias="PP" entity-name="moqui.math.ParametricPath" join-from-alias="TRJ">
+            <key-map field-name="approximatedFunctionId"/></member-entity>
+        <member-entity entity-alias="PT" entity-name="moqui.math.TrajectoryPoint" join-from-alias="TRJ">
+            <key-map field-name="approximatedFunctionId"/></member-entity>
+        <member-entity entity-alias="AFS" entity-name="moqui.math.ApproximatedFunctionSample" join-from-alias="PT">
+            <key-map field-name="approximatedFunctionId"/>
+            <key-map field-name="approximatedFunctionSampleId"/></member-entity>
+        <member-entity entity-alias="PPP" entity-name="moqui.math.ParametricPathPoint" join-from-alias="AFS">
+            <key-map field-name="approximatedFunctionId"/>
+            <key-map field-name="approximatedFunctionSampleId"/></member-entity>
+        <member-entity entity-alias="V" entity-name="moqui.math.Vector" join-from-alias="AFS">
+            <key-map field-name="sampleVectorId" related="vectorId"/></member-entity>
+        <member-entity entity-alias="VC" entity-name="moqui.math.VectorComponent" join-from-alias="V">
+            <key-map field-name="vectorId"/></member-entity>
+
+        <!-- Trajectory identification -->
+        <alias entity-alias="TRJ" name="trajectoryId" field="approximatedFunctionId"/>
+        <alias entity-alias="TRJ" name="actuationTypeEnumId"/>
+        <alias entity-alias="TRJ" name="controlMethodEnumId"/>
+        <!-- Trajectory-level blending default → Trajectory.bufferMode + transitionMode in ST struct -->
+        <alias entity-alias="PP" name="compositionMethodEnumId"/>
+        <!-- Point identity and timing -->
+        <alias entity-alias="PT" name="approximatedFunctionSampleId"/>
+        <alias entity-alias="PT" name="pointTimeOffsetMillis"/>
+        <alias entity-alias="PT" name="isBreakPoint"/>
+        <!-- Per-point blending override → TrajectoryPoint.hasBlendingOverride + bufferMode + transitionMode -->
+        <alias entity-alias="PT" name="blendingEnumId"/>
+        <!-- Point sequence order from the function sample -->
+        <alias entity-alias="AFS" name="sequenceNum"/>
+        <alias entity-alias="AFS" name="sampleCode"/>
+        <!-- Per-point blend radius / parameter → TrajectoryPoint.blendingMode -->
+        <alias entity-alias="PPP" name="blendingMode" field="tolerance"/>
+        <!-- Position vector -->
+        <alias entity-alias="V" name="positionVectorId" field="vectorId"/>
+        <alias entity-alias="V" name="coordinateSystemId"/>
+        <!-- Vector component: dimensionIndex 0-5, realValue is the axis value -->
+        <alias entity-alias="VC" name="vectorComponentId"/>
+        <alias entity-alias="VC" name="dimensionIndex"/>
+        <alias entity-alias="VC" name="realValue"/>
+        <alias entity-alias="VC" name="imaginaryValue"/>
+        <alias entity-alias="VC" name="symbolicValue"/>
+    </view-entity>
+    <!-- ========== Advanced Category Theory ========== -->
+    <view-entity entity-name="MorphismEquationDetail" package="moqui.math.ct" cache="true">
+        <description>Parallel paths related by one equation in a finite categorical presentation.</description>
+        <member-entity entity-alias="E" entity-name="moqui.math.ct.MorphismEquation"/>
+        <member-entity entity-alias="C" entity-name="moqui.math.ct.Category" join-from-alias="E">
+            <key-map field-name="categoryId"/></member-entity>
+        <member-entity entity-alias="L" entity-name="moqui.math.ct.Morphism" join-from-alias="E">
+            <key-map field-name="leftMorphismId" related="morphismId"/></member-entity>
+        <member-entity entity-alias="R" entity-name="moqui.math.ct.Morphism" join-from-alias="E">
+            <key-map field-name="rightMorphismId" related="morphismId"/></member-entity>
+        <alias-all entity-alias="E"/>
+        <alias entity-alias="C" name="categoryName"/>
+        <alias entity-alias="L" name="leftMorphismName" field="morphismName"/>
+        <alias entity-alias="L" name="leftSourceObjectId" field="sourceObjectId"/>
+        <alias entity-alias="L" name="leftTargetObjectId" field="targetObjectId"/>
+        <alias entity-alias="R" name="rightMorphismName" field="morphismName"/>
+        <alias entity-alias="R" name="rightSourceObjectId" field="sourceObjectId"/>
+        <alias entity-alias="R" name="rightTargetObjectId" field="targetObjectId"/>
+    </view-entity>
+
+    <view-entity entity-name="CategoryConstructionOperandDetail" package="moqui.math.ct" cache="true">
+        <description>One Category construction and one of its ordered operands.</description>
+        <member-entity entity-alias="CC" entity-name="moqui.math.ct.CategoryConstruction"/>
+        <member-entity entity-alias="RC" entity-name="moqui.math.ct.Category" join-from-alias="CC">
+            <key-map field-name="resultCategoryId" related="categoryId"/></member-entity>
+        <member-entity entity-alias="CT" entity-name="moqui.basic.Enumeration" join-from-alias="CC">
+            <key-map field-name="constructionTypeEnumId" related="enumId"/></member-entity>
+        <member-entity entity-alias="OP" entity-name="moqui.math.ct.CategoryConstructionOperand" join-from-alias="CC" join-optional="true">
+            <key-map field-name="categoryConstructionId"/></member-entity>
+        <member-entity entity-alias="OC" entity-name="moqui.math.ct.Category" join-from-alias="OP" join-optional="true">
+            <key-map field-name="operandCategoryId" related="categoryId"/></member-entity>
+        <member-entity entity-alias="OO" entity-name="moqui.math.ct.CategoryObject" join-from-alias="OP" join-optional="true">
+            <key-map field-name="operandObjectId" related="categoryObjectId"/></member-entity>
+        <member-entity entity-alias="OM" entity-name="moqui.math.ct.Morphism" join-from-alias="OP" join-optional="true">
+            <key-map field-name="operandMorphismId" related="morphismId"/></member-entity>
+        <member-entity entity-alias="OF" entity-name="moqui.math.ct.Functor" join-from-alias="OP" join-optional="true">
+            <key-map field-name="operandFunctorId" related="functorId"/></member-entity>
+        <alias-all entity-alias="CC"/>
+        <alias entity-alias="RC" name="resultCategoryName" field="categoryName"/>
+        <alias entity-alias="CT" name="constructionTypeDescription" field="description"/>
+        <alias entity-alias="OP" name="sequenceNum"/>
+        <alias entity-alias="OP" name="operandCategoryId"/>
+        <alias entity-alias="OP" name="operandObjectId"/>
+        <alias entity-alias="OP" name="operandMorphismId"/>
+        <alias entity-alias="OP" name="operandFunctorId"/>
+        <alias entity-alias="OP" name="operandGraphId"/>
+        <alias entity-alias="OC" name="operandCategoryName" field="categoryName"/>
+        <alias entity-alias="OO" name="operandObjectName" field="objectName"/>
+        <alias entity-alias="OM" name="operandMorphismName" field="morphismName"/>
+        <alias entity-alias="OF" name="operandFunctorName" field="functorName"/>
+        <entity-condition><order-by field-name="sequenceNum"/></entity-condition>
+    </view-entity>
+
+    <view-entity entity-name="UniversalConstructionDetail" package="moqui.math.ct" cache="true">
+        <member-entity entity-alias="UC" entity-name="moqui.math.ct.UniversalConstruction"/>
+        <member-entity entity-alias="C" entity-name="moqui.math.ct.Category" join-from-alias="UC">
+            <key-map field-name="categoryId"/></member-entity>
+        <member-entity entity-alias="T" entity-name="moqui.basic.Enumeration" join-from-alias="UC">
+            <key-map field-name="constructionTypeEnumId" related="enumId"/></member-entity>
+        <member-entity entity-alias="D" entity-name="moqui.math.ct.Functor" join-from-alias="UC" join-optional="true">
+            <key-map field-name="diagramFunctorId" related="functorId"/></member-entity>
+        <member-entity entity-alias="O" entity-name="moqui.math.ct.CategoryObject" join-from-alias="UC">
+            <key-map field-name="universalObjectId" related="categoryObjectId"/></member-entity>
+        <alias-all entity-alias="UC"/>
+        <alias entity-alias="C" name="categoryName"/>
+        <alias entity-alias="T" name="constructionTypeDescription" field="description"/>
+        <alias entity-alias="D" name="diagramFunctorName" field="functorName"/>
+        <alias entity-alias="O" name="universalObjectName" field="objectName"/>
+    </view-entity>
+
+    <view-entity entity-name="ExponentialObjectDetail" package="moqui.math.ct" cache="true">
+        <member-entity entity-alias="E" entity-name="moqui.math.ct.ExponentialObject"/>
+        <member-entity entity-alias="A" entity-name="moqui.math.ct.CategoryObject" join-from-alias="E">
+            <key-map field-name="argumentObjectId" related="categoryObjectId"/></member-entity>
+        <member-entity entity-alias="B" entity-name="moqui.math.ct.CategoryObject" join-from-alias="E">
+            <key-map field-name="valueObjectId" related="categoryObjectId"/></member-entity>
+        <member-entity entity-alias="X" entity-name="moqui.math.ct.CategoryObject" join-from-alias="E">
+            <key-map field-name="exponentialObjectId" related="categoryObjectId"/></member-entity>
+        <member-entity entity-alias="EV" entity-name="moqui.math.ct.Morphism" join-from-alias="E">
+            <key-map field-name="evaluationMorphismId" related="morphismId"/></member-entity>
+        <alias-all entity-alias="E"/>
+        <alias entity-alias="A" name="argumentObjectName" field="objectName"/>
+        <alias entity-alias="B" name="valueObjectName" field="objectName"/>
+        <alias entity-alias="X" name="exponentialObjectName" field="objectName"/>
+        <alias entity-alias="EV" name="evaluationMorphismName" field="morphismName"/>
+    </view-entity>
+
+    <view-entity entity-name="AdjunctionDetail" package="moqui.math.ct" cache="true">
+        <member-entity entity-alias="A" entity-name="moqui.math.ct.Adjunction"/>
+        <member-entity entity-alias="L" entity-name="moqui.math.ct.Functor" join-from-alias="A">
+            <key-map field-name="leftFunctorId" related="functorId"/></member-entity>
+        <member-entity entity-alias="R" entity-name="moqui.math.ct.Functor" join-from-alias="A">
+            <key-map field-name="rightFunctorId" related="functorId"/></member-entity>
+        <alias-all entity-alias="A"/>
+        <alias entity-alias="L" name="leftFunctorName" field="functorName"/>
+        <alias entity-alias="R" name="rightFunctorName" field="functorName"/>
+    </view-entity>
+
+    <view-entity entity-name="FunctorRepresentationDetail" package="moqui.math.ct" cache="true">
+        <member-entity entity-alias="FR" entity-name="moqui.math.ct.FunctorRepresentation"/>
+        <member-entity entity-alias="F" entity-name="moqui.math.ct.Functor" join-from-alias="FR">
+            <key-map field-name="functorId"/></member-entity>
+        <member-entity entity-alias="O" entity-name="moqui.math.ct.CategoryObject" join-from-alias="FR">
+            <key-map field-name="representingObjectId" related="categoryObjectId"/></member-entity>
+        <member-entity entity-alias="H" entity-name="moqui.math.ct.Functor" join-from-alias="FR">
+            <key-map field-name="homFunctorId" related="functorId"/></member-entity>
+        <alias-all entity-alias="FR"/>
+        <alias entity-alias="F" name="functorName"/>
+        <alias entity-alias="O" name="representingObjectName" field="objectName"/>
+        <alias entity-alias="H" name="homFunctorName" field="functorName"/>
+    </view-entity>
+
+    <view-entity entity-name="MonadDetail" package="moqui.math.ct" cache="true">
+        <member-entity entity-alias="M" entity-name="moqui.math.ct.Monad"/>
+        <member-entity entity-alias="C" entity-name="moqui.math.ct.Category" join-from-alias="M">
+            <key-map field-name="categoryId"/></member-entity>
+        <member-entity entity-alias="F" entity-name="moqui.math.ct.Functor" join-from-alias="M">
+            <key-map field-name="endofunctorId" related="functorId"/></member-entity>
+        <alias-all entity-alias="M"/>
+        <alias entity-alias="C" name="categoryName"/>
+        <alias entity-alias="F" name="endofunctorName" field="functorName"/>
+    </view-entity>
+
+    <view-entity entity-name="ComonadDetail" package="moqui.math.ct" cache="true">
+        <member-entity entity-alias="M" entity-name="moqui.math.ct.Comonad"/>
+        <member-entity entity-alias="C" entity-name="moqui.math.ct.Category" join-from-alias="M">
+            <key-map field-name="categoryId"/></member-entity>
+        <member-entity entity-alias="F" entity-name="moqui.math.ct.Functor" join-from-alias="M">
+            <key-map field-name="endofunctorId" related="functorId"/></member-entity>
+        <alias-all entity-alias="M"/>
+        <alias entity-alias="C" name="categoryName"/>
+        <alias entity-alias="F" name="endofunctorName" field="functorName"/>
+    </view-entity>
+
+    <view-entity entity-name="EndofunctorAlgebraDetail" package="moqui.math.ct" cache="true">
+        <member-entity entity-alias="EA" entity-name="moqui.math.ct.EndofunctorAlgebra"/>
+        <member-entity entity-alias="F" entity-name="moqui.math.ct.Functor" join-from-alias="EA">
+            <key-map field-name="endofunctorId" related="functorId"/></member-entity>
+        <member-entity entity-alias="O" entity-name="moqui.math.ct.CategoryObject" join-from-alias="EA">
+            <key-map field-name="carrierObjectId" related="categoryObjectId"/></member-entity>
+        <member-entity entity-alias="M" entity-name="moqui.math.ct.Morphism" join-from-alias="EA">
+            <key-map field-name="structureMorphismId" related="morphismId"/></member-entity>
+        <member-entity entity-alias="T" entity-name="moqui.basic.Enumeration" join-from-alias="EA">
+            <key-map field-name="algebraTypeEnumId" related="enumId"/></member-entity>
+        <alias-all entity-alias="EA"/>
+        <alias entity-alias="F" name="endofunctorName" field="functorName"/>
+        <alias entity-alias="O" name="carrierObjectName" field="objectName"/>
+        <alias entity-alias="M" name="structureMorphismName" field="morphismName"/>
+        <alias entity-alias="T" name="algebraTypeDescription" field="description"/>
+    </view-entity>
+
+    <view-entity entity-name="SubobjectClassificationDetail" package="moqui.math.ct" cache="true">
+        <member-entity entity-alias="SC" entity-name="moqui.math.ct.SubobjectClassification"/>
+        <member-entity entity-alias="S" entity-name="moqui.math.ct.Morphism" join-from-alias="SC">
+            <key-map field-name="subobjectMorphismId" related="morphismId"/></member-entity>
+        <member-entity entity-alias="C" entity-name="moqui.math.ct.Morphism" join-from-alias="SC">
+            <key-map field-name="characteristicMorphismId" related="morphismId"/></member-entity>
+        <member-entity entity-alias="PB" entity-name="moqui.math.ct.UniversalConstruction" join-from-alias="SC">
+            <key-map field-name="pullbackConstructionId" related="universalConstructionId"/></member-entity>
+        <alias-all entity-alias="SC"/>
+        <alias entity-alias="S" name="subobjectMorphismName" field="morphismName"/>
+        <alias entity-alias="S" name="specificationObjectId" field="sourceObjectId"/>
+        <alias entity-alias="S" name="baseObjectId" field="targetObjectId"/>
+        <alias entity-alias="C" name="characteristicMorphismName" field="morphismName"/>
+        <alias entity-alias="PB" name="pullbackUniversalObjectId" field="universalObjectId"/>
+    </view-entity>
+
+    <view-entity entity-name="SubobjectClassifierDetail" package="moqui.math.ct" cache="true">
+        <member-entity entity-alias="SC" entity-name="moqui.math.ct.SubobjectClassifier"/>
+        <member-entity entity-alias="C" entity-name="moqui.math.ct.Category" join-from-alias="SC">
+            <key-map field-name="categoryId"/></member-entity>
+        <member-entity entity-alias="T" entity-name="moqui.math.ct.CategoryObject" join-from-alias="SC">
+            <key-map field-name="terminalObjectId" related="categoryObjectId"/></member-entity>
+        <member-entity entity-alias="O" entity-name="moqui.math.ct.CategoryObject" join-from-alias="SC">
+            <key-map field-name="classifierObjectId" related="categoryObjectId"/></member-entity>
+        <member-entity entity-alias="M" entity-name="moqui.math.ct.Morphism" join-from-alias="SC">
+            <key-map field-name="truthMorphismId" related="morphismId"/></member-entity>
+        <alias-all entity-alias="SC"/>
+        <alias entity-alias="C" name="categoryName"/>
+        <alias entity-alias="T" name="terminalObjectName" field="objectName"/>
+        <alias entity-alias="O" name="classifierObjectName" field="objectName"/>
+        <alias entity-alias="M" name="truthMorphismName" field="morphismName"/>
+    </view-entity>
+</entities>

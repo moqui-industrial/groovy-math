@@ -15,9 +15,11 @@ MathModelDef('QuadraticEnergyDispatch',
     modelName: 'Bounded quadratic energy dispatch',
     description: 'Allocate two energy sources by minimizing convex operating cost') {
 
+    pipeline('DispatchSolveStep', stepSeqId: '01', sequenceNum: 1, stepName: 'BqpipSolve',
+        solvingMethodEnum: MathModelSolvingMethod.InteriorPoint)
+
     MathModel('EnergyDispatch',
         modelAlias: 'energy_dispatch',
-        solvingMethodEnum: MathModelSolvingMethod.InteriorPoint,
         sourceEnum: MathModelSource.Manual,
         description: 'Bounded convex QP solved by PETSc/TAO BQPIP',
         statusId: 'MathModelDraft') {

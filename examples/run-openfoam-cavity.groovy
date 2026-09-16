@@ -3,26 +3,24 @@
  * Grant of Patent License.
  */
 
-import groovy.math.Math as GroovyMath
-import groovy.math.dsl.MathDsl
-import groovy.math.dsl.MathMeta
-import groovy.math.openfoam.OpenFoamResult
+import org.moqui.math.MathEngine
+import org.moqui.math.dsl.MathDsl
+import org.moqui.math.dsl.MathMeta
+import org.moqui.math.openfoam.OpenFoamResult
 
 println '==================================================================='
 println ' Moqui-Math: OpenFOAM Finite Volume CFD Integration'
 println ' Lid-Driven Cavity Flow Benchmark (icoFoam / SIMPLE FVM)'
 println '==================================================================='
 
-String schemaPath = System.getenv('MOQUI_MATH_ENTITIES')
-if (!schemaPath) throw new IllegalStateException('MOQUI_MATH_ENTITIES must point to MathEntities.xml')
-println "Schema : ${schemaPath}"
+println "Schema : embedded moqui-math"
 println "Model  : openfoam-cavity.groovy"
 
 MathMeta mathMeta = MathDsl.evaluate(
-    new File(schemaPath), new File('examples/openfoam-cavity.groovy'))
+    new File('examples/openfoam-cavity.groovy'))
 
 // Execute OpenFOAM Simulation via GroovyMath automatic dispatcher
-OpenFoamResult result = (OpenFoamResult) GroovyMath.execute(mathMeta, 'CavityIcoFoam') {}
+OpenFoamResult result = (OpenFoamResult) MathEngine.execute(mathMeta, 'CavityIcoFoam') {}
 
 assert result != null
 assert result.status == 'CONVERGED'

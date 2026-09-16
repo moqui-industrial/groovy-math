@@ -26,7 +26,7 @@ Groovy Math does not aim to replace Python's role in exploratory research. Inste
    - Large tensor payloads are referenced versioned via `TensorContent` (SafeTensors, NPY, Zarr, Arrow IPC).
    - Discrete state-space matrices ($A, B, C, D$) and state/control vectors ($x, u$) are stored structured in `TensorElement`.
 3. **Multi-Engine Neutrality**: The same declared model can be lowered to different computational backends (**PyTorch/LibTorch, Google JAX/OpenXLA, OpenFOAM CFD, OpenCV, PETSc/TAO, Google OR-Tools, or Apache Jena**) without rewriting business logic.
-4. **Zero-Overhead Java 21 Foreign Function & Memory API (Project Panama)**: Bypasses JNI and Python GIL bottlenecks by utilizing zero-copy off-heap native memory segments (`MemorySegment`) and direct C ABI dispatch.
+4. **Zero-Overhead Java Foreign Function & Memory API (Project Panama)**: Bypasses JNI and Python GIL bottlenecks by utilizing zero-copy off-heap native memory segments (`MemorySegment`) and direct C ABI dispatch.
 5. **Zero-Crash Guard-Rail (`TensorValidator`)**: Prevents native Segmentation Faults (`SIGSEGV`) by verifying rank, shape, strides, and buffer byte allocations in Java *before* dispatching across the FFM boundary.
 6. **Concurrent Multi-Core Engine Pooling (`PanamaEnginePool`)**: Lock-free, multi-threaded native session management using `AutoCloseable` (`try-with-resources`).
 
@@ -71,6 +71,123 @@ Declarations in `examples/` are cleanly decoupled into **declarative model files
 | [`examples/production-plan.groovy`](examples/production-plan.groovy) | [`examples/run-ortools-production-plan.groovy`](examples/run-ortools-production-plan.groovy) | **Google OR-Tools GLOP** |
 | [`examples/jena-knowledge-graph.groovy`](examples/jena-knowledge-graph.groovy) | [`examples/run-jena-graph-sparql.groovy`](examples/run-jena-graph-sparql.groovy) | **Apache Jena RDF / OWL / SPARQL** |
 | [`examples/product-catalog-graph.groovy`](examples/product-catalog-graph.groovy) | [`examples/run-jena-product-catalog.groovy`](examples/run-jena-product-catalog.groovy) | **Apache Jena Rules Reasoner & SPARQL** |
+| [`examples/matrix-product-plan.groovy`](examples/matrix-product-plan.groovy) | [`examples/run-pytorch-matrix-product.groovy`](examples/run-pytorch-matrix-product.groovy) | **Pure Declarative Mathematical Plan** |
+| [`examples/matrix-decomposition-plan.groovy`](examples/matrix-decomposition-plan.groovy) | Standard JVM Test Suite | **Satellite Entities & Decompositions** |
+
+---
+
+## Declarative Mathematical DSL & Fluent API
+
+Groovy Math provides a dual-interface model declaration layer:
+1. **Dynamic Model-Driven DSL** (`MathDsl.evaluate` / `MathDsl.math`): Zero-import, schema-inspected declarative syntax matching Moqui relational definitions directly.
+2. **Type-Safe Fluent API** (`MathDsl.fluent`): Compile-time safe, IDE auto-completable builder API with static metamodel references and 1:1 entity-level correspondence.
+
+### Metamodel-to-DSL Derivation Rules
+
+The DSL is **strictly derived from the Moqui metamodel** (`MathEntities.xml` and `MathData.xml`). There are no arbitrary or synthetic keywords:
+
+| Concept / Metamodel Entity | DSL Method / Element | Key Operands & Results | Moqui Relational Entity & Relationship |
+| :--- | :--- | :--- | :--- |
+| **Linear Operator** | `matrix('Id', rows: M, cols: N)` | `data: [...]`, `domainSpace`, `codomainSpace` | `moqui.math.Matrix` |
+| **State / Coordinate Vector** | `vector('Id', size: N)` | `data: [...]`, `domainSpace` | `moqui.math.Vector` |
+| **Multi-dimensional Array** | `tensor('Id', rank: R, shape: S)` | `data: [...]`, `dataType`, `device` | `moqui.math.Tensor` |
+| **General Transformation** | `transformation('Id') { ... }` | `leftMatrix`, `rightMatrix`, `operandVector`, `resultMatrix` | `moqui.math.Transformation` & `moqui.math.TransformationOperand` |
+| **Matrix Decomposition** | `matrixDecomposition('Id') { ... }` | `operandMatrix`, `leftMatrix`, `diagMatrix`, `rightMatrix` | `moqui.math.MatrixDecomposition` (shared PK `transformationId`) |
+| **Diagonal Extraction** | `diagonalExtraction('Id') { ... }` | `operandMatrix`, `resultVector`, `axisOffset` | `moqui.math.DiagonalExtraction` (shared PK `transformationId`) |
+| **Triangular Extraction** | `triangularExtraction('Id') { ... }` | `operandMatrix`, `resultMatrix`, `type` (`Upper`/`Lower`) | `moqui.math.TriangularExtraction` (shared PK `transformationId`) |
+| **Band Extraction** | `bandExtraction('Id') { ... }` | `operandMatrix`, `resultMatrix`, `lowerBand`, `upperBand` | `moqui.math.BandExtraction` (shared PK `transformationId`) |
+| **Submatrix Block** | `blockMatrixExtraction('Id') { ... }` | `operandMatrix`, `resultMatrix`, `startRowBlock`, `endRowBlock` | `moqui.math.BlockMatrixExtraction` (shared PK `transformationId`) |
+| **Tensor Slice** | `tensorSlice('Id') { ... }` | `operandTensor`, `resultTensor`, `slice: [...]` | `moqui.math.TensorSlice` (shared PK `transformationId`) |
+| **Tensor Decomposition** | `tensorDecomposition('Id') { ... }` | `sourceTensor`, `coreTensor`, `method`, `factors: [...]` | `moqui.math.TensorDecomposition` (shared PK `transformationId`) |
+| **Matrix/Tensor Norm** | `normResult('Id') { ... }` | `operandMatrix`, `domain`, `order`, `normValue` | `moqui.math.NormResult` (shared PK `transformationId`) |
+| **Frame Transformation** | `coordinateSystemTransformation('Id')` | `sourceCoordSystem`, `targetCoordSystem`, `matrix` | `moqui.math.CoordinateSystemTransformation` (shared PK `transformationId`) |
+| **Algorithmic Def & Lifecycle** | `modelDef('DefId') { ... }` | `name`, `modelType`, `usageContext` | `moqui.math.MathModelDef` (Routing template) |
+| **Def Pipeline Sequence** | nested `transformation('Step')` | `sequenceNum`, `stepName` | `moqui.math.MathModelDefPipeline` (Task routing) |
+| **Concrete Model Instance** | `model('ModelId') { ... }` | `alias`, `solvingMethod`, `statusId` | `moqui.math.MathModel` |
+
+### Standalone Plans vs Governed Enterprise Models
+
+`MathModelDef` and `MathModel` are completely **optional**. If you only need to declare a mathematical operation or pipeline (such as a matrix multiplication, an SVD decomposition, or an affine coordinate frame change), you can declare a standalone mathematical plan:
+
+```groovy
+import org.moqui.math.dsl.*
+
+// Standalone mathematical plan: zero overhead, pure mathematics
+MathMeta plan = MathDsl.fluent {
+    matrix('A', rows: 2, cols: 3, data: [[1, 2, 3], [4, 5, 6]])
+    matrix('B', rows: 3, cols: 2, data: [[7, 8], [9, 10], [11, 12]])
+    matrix('C', rows: 2, cols: 2)
+
+    transformation('MultiplyAB') {
+        type TransformationType.MatrixProduct
+        leftMatrix 'A'
+        rightMatrix 'B'
+        resultMatrix 'C'
+    }
+}
+```
+
+When enterprise governance, auditability, and lifecycle management (Draft -> Approved -> Production -> Retired) are required, wrap the definition in `modelDef` and `model`:
+
+```groovy
+MathMeta enterpriseModel = MathDsl.fluent {
+    modelDef('VisionPipelineDef') {
+        name 'Vision Processing Pipeline'
+        modelType MathModelType.ComputerVision
+
+        model('EdgeDetectionModel') {
+            solvingMethod MathModelSolvingMethod.OpenCv
+
+            matrix('InputImage', rows: 8, cols: 8, purpose: MatrixPurpose.Original)
+            transformation('BlurStep', type: TransformationType.GaussianBlur)
+            transformation('SobelStep', type: TransformationType.Sobel)
+        }
+    }
+}
+```
+
+### Satellite Entities and Advanced Linear Algebra
+
+Decompositions and extractions are modeled as 1:1 satellite entities sharing `transformationId` with their parent `Transformation`. The DSL allows declaring them seamlessly:
+
+```groovy
+MathDsl.fluent {
+    matrix('A', rows: 4, cols: 4, data: [
+        [4.0, 1.0, 0.0, 0.0],
+        [1.0, 4.0, 1.0, 0.0],
+        [0.0, 1.0, 4.0, 1.0],
+        [0.0, 0.0, 1.0, 4.0]
+    ])
+
+    // SVD Decomposition: A = U * Sigma * V^T
+    matrixDecomposition('Svd_A', type: TransformationType.Svd) {
+        operandMatrix 'A'
+        leftMatrix 'U'
+        diagMatrix 'Sigma'
+        rightMatrix 'Vt'
+        rankApproximation 4
+    }
+
+    // Main Diagonal Extraction
+    diagonalExtraction('MainDiag_A', axisOffset: 0) {
+        operandMatrix 'A'
+        resultVector 'd'
+    }
+
+    // Triangular Extractions (Upper)
+    triangularExtraction('Upper_A', type: TriangularExtractionType.Upper) {
+        operandMatrix 'A'
+        resultMatrix 'U_tri'
+    }
+
+    // Matrix Frobenius Norm
+    normResult('NormFrob_A', domain: NormDomain.Matrix, order: NormOrder.MatFrobenius) {
+        operandMatrix 'A'
+        resultParameter 'frob_norm'
+        normValue 8.3666
+    }
+}
+```
 
 ---
 
@@ -80,7 +197,9 @@ This guide provides simple, step-by-step instructions so that any Java or Groovy
 
 ### 1. System Requirements
 
-* **Java Development Kit (JDK)**: Java 21 or newer (OpenJDK, Temurin, Corretto, Azul, etc.).
+* **Java Development Kit (JDK)**: Java 25 (LTS) or newer (OpenJDK, Temurin, Corretto, Azul, etc.).
+  The build declares a Java 25 toolchain and provisions one automatically if the machine has none,
+  so this is a requirement for running the artifacts, not for building the project.
   Verify with:
   ```bash
   java -version
@@ -107,7 +226,7 @@ Or run the full JVM validation and checkstyle/coverage verification:
 
 ### 3. Native Engines Mode (LibTorch, JAX, OpenFOAM)
 
-Groovy Math includes high-performance C++ engines dispatched via Java 21 Panama FFM.
+Groovy Math includes high-performance C++ engines dispatched via Panama FFM.
 
 #### Step 3.1: Build Native Bridges (Optional on First Setup)
 If you are developing or modifying the C++ bridge code:
@@ -145,7 +264,7 @@ You can execute targeted test tasks depending on the component you want to verif
 | `./gradlew nativeTest` | **LibTorch Engine** | LibTorch 2.7.1 FFM, GEMM, LayerNorm, RMSNorm, AdamW, Backward Autograd |
 | `./gradlew jaxNativeTest` | **JAX Engine** | JAX / NumPy FFM, XLA JIT dispatch, cross-entropy loss |
 | `./gradlew dlParityTest` | **Numerical Parity** | Strict numerical parity between LibTorch C++ and JAX C++ ($\Delta < 10^{-4}$) |
-| `./gradlew test --tests "groovy.math.pool.ConcurrentEnginePoolTest"` | **Multi-Core Concurrency** | 16 parallel threads running concurrent native inference through the engine pool |
+| `./gradlew test --tests "org.moqui.math.pool.ConcurrentEnginePoolTest"` | **Multi-Core Concurrency** | 16 parallel threads running concurrent native inference through the engine pool |
 
 ---
 
@@ -202,7 +321,7 @@ Downstream applications (such as **Moqui Framework**, Spring Boot, or Quarkus) c
 
 ### 8. Troubleshooting Tips
 
-* **Preview Features Warning**: Groovy Math uses Java 21 Foreign Function & Memory API. `--enable-preview` is already configured in `build.gradle` for compilation, testing, and execution tasks.
+* **Native access**: the Foreign Function & Memory API is final from Java 22, so no `--enable-preview` is needed anywhere. Java 24 does restrict native access: code that actually loads a backend shared library needs `--enable-native-access=ALL-UNNAMED`, which `build.gradle` already passes to the test and exec tasks. Using the DSL without a native backend needs no flag.
 * **Gradle Daemon / File Locks**: When developing inside IDEs (like VS Code or IntelliJ), background indexing can occasionally lock Gradle files. Pass `--no-daemon` if you need to run in completely isolated environments:
   ```bash
   ./gradlew --no-daemon check

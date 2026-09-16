@@ -3,22 +3,19 @@
  * Grant of Patent License.
  */
 
-import groovy.math.dsl.MathDsl
-import groovy.math.dsl.MathMeta
-import groovy.math.opencv.OpenCv
-import groovy.math.opencv.OpenCvPanama
-import groovy.math.opencv.OpenCvResult
+import org.moqui.math.dsl.MathDsl
+import org.moqui.math.dsl.MathMeta
+import org.moqui.math.opencv.OpenCv
+import org.moqui.math.opencv.OpenCvPanama
+import org.moqui.math.opencv.OpenCvResult
 
-String schemaPath = System.getenv('MOQUI_MATH_ENTITIES') ?:
-    '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'
-File schemaFile = new File(schemaPath)
 File dslFile = new File('examples/opencv-vision-pipeline.groovy')
 
 println '==================================================================='
 println ' Moqui-Math: OpenCV Computer Vision Pipeline (Project Panama)'
 println ' Textbook Example: Gaussian Blur, Sobel Gradient & 2D Spatial Filter'
 println '==================================================================='
-println "Schema : ${schemaFile.absolutePath}"
+println 'Schema : embedded moqui-math'
 println "Model  : ${dslFile.name}"
 
 int width = 8
@@ -40,7 +37,7 @@ println '\n1. Original Input Image (8x8):'
 printImageMatrix(inputImage, width, height)
 
 // 2. Evaluate Declarative Moqui DSL and Execute OpenCV Pipeline via Panama
-MathMeta mathMeta = MathDsl.evaluate(schemaFile, dslFile)
+MathMeta mathMeta = MathDsl.evaluate(dslFile)
 long t0 = System.nanoTime()
 OpenCvResult result = OpenCv.execute(mathMeta, 'EdgePipeline') {
     input 'InputImage', inputImage

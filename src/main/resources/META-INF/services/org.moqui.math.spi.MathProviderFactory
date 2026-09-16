@@ -1,0 +1,9 @@
+# Backends shipped with Groovy Math, discovered by java.util.ServiceLoader.
+# A third party adds a backend by putting its own factory and a file with this name
+# on the classpath; nothing here has to change.
+org.moqui.math.opencv.OpenCvProviderFactory
+org.moqui.math.jax.JaxProviderFactory
+org.moqui.math.petsctao.PetscTaoProviderFactory
+org.moqui.math.openfoam.OpenFoamProviderFactory
+org.moqui.math.ortools.OrToolsProviderFactory
+org.moqui.math.libtorch.LibTorchProviderFactory

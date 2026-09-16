@@ -9,26 +9,27 @@ MathModelDef('OpenCvVisionModel',
     modelName: 'OpenCV Computer Vision Filtering Pipeline',
     description: 'Gaussian Blur followed by Sobel Gradient and 2D Spatial Filtering') {
 
+    pipeline('BlurStep', stepSeqId: '01', sequenceNum: 10,
+        transformationId: 'GaussianBlur', stepName: 'Gaussian Smoothing',
+        solvingMethodEnum: MathModelSolvingMethod.OpenCv) {
+        Transformation('GaussianBlur', transformationTypeEnum: TransformationType.GaussianBlur,
+            name: 'Gaussian Smoothing')
+    }
+
+    pipeline('SobelStep', stepSeqId: '02', sequenceNum: 20,
+        transformationId: 'SobelGradient', stepName: 'Sobel Horizontal Gradient',
+        solvingMethodEnum: MathModelSolvingMethod.OpenCv) {
+        Transformation('SobelGradient', transformationTypeEnum: TransformationType.Sobel,
+            name: 'Sobel Horizontal Gradient')
+    }
+
     MathModel('EdgePipeline',
         modelAlias: 'edge_detection',
         statusId: 'MathModelDraft',
-        solvingMethodEnum: MathModelSolvingMethod.OpenCv,
         description: 'Gaussian smoothing and Sobel edge detection') {
 
-        data('InputImageData', dataTypeEnum: MathModelDataType.Matrix, matrixId: 'InputImage', sequenceNum: 1) {
-            Matrix('InputImage', matrixTypeEnum: MatrixType.Dense, purposeEnum: MatrixPurpose.Original,
-                domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
-                name: 'InputImage', rows: 8, cols: 8)
-        }
-
-        data('BlurStepData', dataTypeEnum: MathModelDataType.Transformation, transformationId: 'GaussianBlur', sequenceNum: 10) {
-            Transformation('GaussianBlur', transformationTypeEnum: TransformationType.GaussianBlur,
-                name: 'Gaussian Smoothing')
-        }
-
-        data('SobelStepData', dataTypeEnum: MathModelDataType.Transformation, transformationId: 'SobelGradient', sequenceNum: 20) {
-            Transformation('SobelGradient', transformationTypeEnum: TransformationType.Sobel,
-                name: 'Sobel Horizontal Gradient')
-        }
+        Matrix('InputImage', matrixTypeEnum: MatrixType.Dense, purposeEnum: MatrixPurpose.Original,
+            domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
+            name: 'InputImage', rows: 8, cols: 8)
     }
 }

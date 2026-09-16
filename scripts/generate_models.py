@@ -2,15 +2,19 @@
 import xml.etree.ElementTree as ET
 import os
 
-xml_path = os.environ.get('MOQUI_MATH_ENTITIES', '../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml')
+# Generate from the schema vendored under src/main/resources, not from an upstream
+# checkout: the POJOs must describe the XML that actually ships in the jar.
+# Upstream -> scripts/sync_schema.py -> vendored resources -> this generator.
+xml_path = os.environ.get('MOQUI_MATH_ENTITIES') or os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..', 'src', 'main', 'resources', 'moqui-math', 'MathEntities.xml'))
 if not os.path.exists(xml_path):
-    xml_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../moqui/tests/ai/moqui-framework/runtime/component/moqui-math/entity/MathEntities.xml'))
+    raise SystemExit('Schema not found: %s (run ./gradlew syncMoquiSchema)' % xml_path)
 
 tree = ET.parse(xml_path)
 root = tree.getroot()
 
-model_dir = 'src/main/groovy/groovy/math/model'
-meta_dir = 'src/main/groovy/groovy/math/metamodel'
+model_dir = 'src/main/groovy/org/moqui/math/model'
+meta_dir = 'src/main/groovy/org/moqui/math/metamodel'
 os.makedirs(model_dir, exist_ok=True)
 os.makedirs(meta_dir, exist_ok=True)
 
@@ -90,7 +94,7 @@ for ent in entities:
     # 1. Generate Model Entity
     m_lines = []
     m_lines.append("/*\n * Generated domain model for Moqui Math Metamodel\n * Entity: " + full_name + "\n */")
-    m_lines.append("package groovy.math.model\n")
+    m_lines.append("package org.moqui.math.model\n")
     m_lines.append("import groovy.transform.CompileStatic")
     m_lines.append("import groovy.transform.EqualsAndHashCode")
     m_lines.append("import groovy.transform.ToString")
@@ -170,9 +174,9 @@ for ent in entities:
     # 2. Generate Canonical Metamodel Class
     c_lines = []
     c_lines.append("/*\n * Canonical Static Metamodel for Moqui Math Entity: " + full_name + "\n * JPA Criteria-style Metamodel Descriptor\n */")
-    c_lines.append("package groovy.math.metamodel\n")
+    c_lines.append("package org.moqui.math.metamodel\n")
     c_lines.append("import groovy.transform.CompileStatic")
-    c_lines.append(f"import groovy.math.model.{class_name}\n")
+    c_lines.append(f"import org.moqui.math.model.{class_name}\n")
     c_lines.append("@CompileStatic")
     c_lines.append(f"class {class_name}_ {{")
     c_lines.append(f"    public static final String ENTITY_NAME = '{class_name}'")

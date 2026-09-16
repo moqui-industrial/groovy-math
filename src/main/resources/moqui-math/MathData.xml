@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<entity-facade-xml type="seed">
+    <!-- Note: Fundamental enumerations for the math package. Enumerations are finite sets. -->
+
+    <!-- Category Theory Core: keep these in ordinary seed data so component data files
+         and tests can rely on them before any category/morphism records are loaded. -->
+    <moqui.basic.EnumerationType description="Category Type" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Small / finite category" enumId="CtSmall" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Monoidal category" enumId="CtMonoidal" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Topos" enumId="CtTopos" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Large category" enumId="CtLarge" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Cartesian-closed category" enumId="CtCCC" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Syntactic category of a type theory" enumId="CtSyntactic" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Locally Cartesian-closed category for dependent types" enumId="CtLCCC" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Abelian category" enumId="CtAbelian" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Enriched (V-) category" enumId="CtEnriched" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Groupoid" enumId="CtGroupoid" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Poset viewed as category" enumId="CtPoset" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Discrete category" enumId="CtDiscrete" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Pre-additive category" enumId="CtPreAdditive" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Category of small sets: objects = sets, morphisms = functions" enumId="CtSet" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Finite sets" enumId="CtFinSet" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Category of Groups and Group Homomorphisms" enumId="CtGrp" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Abelian Groups and Homomorphisms" enumId="CtAb" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Real Vector Spaces (finite dimension) with Linear Maps" enumId="CtVectR" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Complex Vector Spaces (finite dimension) with Linear Maps" enumId="CtVectC" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Topological Spaces with Continuous Maps" enumId="CtTop" enumTypeId="CategoryType"/>
+    <moqui.basic.Enumeration description="Big Category of Small Categories + Functors" enumId="CtCat" enumTypeId="CategoryType"/>
+
+    <moqui.basic.EnumerationType enumTypeId="CategoryObjectType" description="Category Object Type"/>
+    <moqui.basic.Enumeration description="Generic object" enumId="CotGeneric" enumTypeId="CategoryObjectType"/>
+    <moqui.basic.Enumeration description="Type" enumId="CotType" enumTypeId="CategoryObjectType"/>
+    <moqui.basic.Enumeration description="Typing Context" enumId="CotContext" enumTypeId="CategoryObjectType"/>
+    <moqui.basic.Enumeration description="Proposition as Type" enumId="CotProposition" parentEnumId="CotType" enumTypeId="CategoryObjectType"/>
+    <moqui.basic.Enumeration description="Universe of Types" enumId="CotUniverse" parentEnumId="CotType" enumTypeId="CategoryObjectType"/>
+    <moqui.basic.Enumeration description="Algebraic Structure (one-object category)" enumId="CotAlgebraicStruct" enumTypeId="CategoryObjectType"/>
+    <moqui.basic.Enumeration description="Monoid" enumId="CotMonoid" parentEnumId="CotAlgebraicStruct" enumTypeId="CategoryObjectType"/>
+    <moqui.basic.Enumeration description="Group" enumId="CotGroup" parentEnumId="CotAlgebraicStruct" enumTypeId="CategoryObjectType"/>
+    <moqui.basic.Enumeration description="Abelian group" enumId="CotAbGroup" parentEnumId="CotGroup" enumTypeId="CategoryObjectType"/>
+    <moqui.basic.Enumeration description="Ring" enumId="CotRing" parentEnumId="CotAlgebraicStruct" enumTypeId="CategoryObjectType"/>
+    <moqui.basic.Enumeration description="Field" enumId="CotField" parentEnumId="CotAlgebraicStruct" enumTypeId="CategoryObjectType"/>
+    <moqui.basic.Enumeration description="Module" enumId="CotModule" parentEnumId="CotAlgebraicStruct" enumTypeId="CategoryObjectType"/>
+    <moqui.basic.Enumeration enumId="CotSpecification" parentEnumId="CotProposition" enumTypeId="CategoryObjectType" description="Specification or Observable Predicate"/>
+    <moqui.basic.Enumeration enumId="CotOperationalState" parentEnumId="CotSpecification" enumTypeId="CategoryObjectType" description="Operational State Specification"/>
+
+    <moqui.basic.EnumerationType description="Morphism Type" enumTypeId="MorphismType"/>
+    <moqui.basic.Enumeration description="General Morphism" enumId="MtGeneral" enumTypeId="MorphismType"/>
+    <moqui.basic.Enumeration description="Isomorphism" enumId="MtIso" enumTypeId="MorphismType"/>
+    <moqui.basic.Enumeration description="Endomorphism" enumId="MtEndo" enumTypeId="MorphismType"/>
+    <moqui.basic.Enumeration description="Epimorphism" enumId="MtEpi" enumTypeId="MorphismType"/>
+    <moqui.basic.Enumeration description="Monomorphism" enumId="MtMono" enumTypeId="MorphismType"/>
+
+    <!-- Logical Operator -->
+    <moqui.basic.EnumerationType description="Logical Operator" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Conjunction - AND" enumId="OpAnd" enumCode="AND" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Alternative Denial - NAND" enumId="OpNand" enumCode="NAND" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Disjunction - OR" enumId="OpOr" enumCode="OR" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Joint Denial - NOR" enumId="OpNor" enumCode="NOR" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Exclusive Or - XOR" enumId="OpXor" enumCode="XOR" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Negation - NOT" enumId="OpNot" enumCode="NOT" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Biconditional - XNOR" enumId="OpXnor" enumCode="XNOR" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Equality - EQ" enumId="OpEq" enumCode="EQ" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Inequality - NE" enumId="OpNe" enumCode="NE" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Less Than - LT" enumId="OpLt" enumCode="LT" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Less Than or Equal - LE" enumId="OpLe" enumCode="LE" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Greater Than - GT" enumId="OpGt" enumCode="GT" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Greater Than or Equal - GE" enumId="OpGe" enumCode="GE" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Implication - IMPLIES" enumId="OpImplies" enumCode="IMPLIES" enumTypeId="LogicalOperator"/>
+    <moqui.basic.Enumeration description="Membership - IN" enumId="OpIn" enumCode="IN" enumTypeId="LogicalOperator"/>
+
+    <!-- Conventional execution metadata attached through Parameter.morphismId. Absence means false.
+         These settings dispatch an independent root Morphism or MorphismComposition; they never
+         introduce parallel components inside a sequential composition. -->
+    <moqui.math.ParameterDef parameterDefId="MorphismAsync" parameterTypeEnumId="PtTextIndicator"
+        purposeEnumId="PpControl" parameterCode="async" parameterName="Asynchronous Morphism Execution"
+        description="When Y/true, submit the root categorical pipeline through Moqui ServiceCallAsync."/>
+    <moqui.math.ParameterDef parameterDefId="MorphismDistribute" parameterTypeEnumId="PtTextIndicator"
+        purposeEnumId="PpControl" parameterCode="distribute" parameterName="Distributed Morphism Execution"
+        description="When Y/true, distribute an asynchronous root pipeline. Requires async=Y and serializable runtime parameters."/>
+
+    <!-- Math Function -->
+    <moqui.basic.EnumerationType description="Mathematical Function" enumTypeId="MathFunction"/>
+    <moqui.basic.Enumeration description="Sine Function" enumId="MfSin" enumTypeId="MathFunction"/>
+    <moqui.basic.Enumeration description="Cosine Function" enumId="MfCos" enumTypeId="MathFunction"/>
+    <moqui.basic.Enumeration description="Exponential Function" enumId="MfExp" enumTypeId="MathFunction"/>
+    <moqui.basic.Enumeration description="Natural Logarithm" enumId="MfLog" enumTypeId="MathFunction"/>
+    <moqui.basic.Enumeration description="Polynomial" enumId="MfPoly" enumTypeId="MathFunction"/>
+    <!-- etc... -->
+
+    <!-- Algebraic Structure Type (Magma, Group, Ring, Field, Module, etc...).
+         parentEnumId defines the primary navigation taxonomy only. Algebraic structures may
+         satisfy laws inherited through more than one mathematical path; those laws must not
+         be inferred solely from this single-parent hierarchy. -->
+    <moqui.basic.EnumerationType description="Algebraic Structure Type" enumTypeId="AlgebraicStructureType"/>
+
+    <!-- ========================================================== -->
+    <!-- 1. Magma Hierarchy (One Binary Operation)                  -->
+    <!-- ========================================================== -->
+    <moqui.basic.Enumeration description="Magma: carrier set equipped with a closed binary operation" enumId="AsMagma" enumTypeId="AlgebraicStructureType"/>
+
+    <!-- Associativity -->
+    <moqui.basic.Enumeration description="Semigroup: associative magma" enumId="AsSemigroup" parentEnumId="AsMagma" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="Monoid: semigroup with a two-sided identity element" enumId="AsMonoid" parentEnumId="AsSemigroup" enumTypeId="AlgebraicStructureType"/>
+
+    <!-- Invertibility / Divisibility -->
+    <moqui.basic.Enumeration description="Quasigroup: magma in which every left and right division equation has a unique solution" enumId="AsQuasigroup" parentEnumId="AsMagma" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="Loop: quasigroup with a two-sided identity element" enumId="AsLoop" parentEnumId="AsQuasigroup" enumTypeId="AlgebraicStructureType"/>
+
+    <!-- Convergence: Associativity + Identity + Invertibility -->
+    <!-- A group is also an associative loop. The primary parent is Monoid because Enumeration
+         supports one parent only; this does not remove the mathematically valid Loop relation. -->
+    <moqui.basic.Enumeration description="Group: monoid in which every element has a two-sided inverse" enumId="AsGroup" parentEnumId="AsMonoid" enumTypeId="AlgebraicStructureType"/>
+    
+    <!-- Abelian Extension -->
+    <moqui.basic.Enumeration description="Abelian group: group with a commutative operation" enumId="AsAbelianGroup" parentEnumId="AsGroup" enumTypeId="AlgebraicStructureType"/>
+
+    <!-- Concrete Group Implementations -->
+    <moqui.basic.Enumeration description="Additive Abelian group of real numbers (R, +)" enumId="AsAdditiveReal" parentEnumId="AsAbelianGroup" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="Additive Abelian group of integers (Z, +)" enumId="AsAdditiveInteger" parentEnumId="AsAbelianGroup" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="Cyclic Abelian group of integers modulo 3 under addition (Z/3Z, +)" enumId="AsZ3Group" parentEnumId="AsAbelianGroup" enumTypeId="AlgebraicStructureType"/>
+
+    <!-- ========================================================== -->
+    <!-- 2. Ring and Field Hierarchy (Two Binary Operations)        -->
+    <!-- ========================================================== -->
+    <moqui.basic.Enumeration description="Unital ring: additive Abelian group, multiplicative monoid, and distributive laws" enumId="AsRing" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="Field: commutative unital ring with 0 != 1 whose nonzero elements form an Abelian group under multiplication" enumId="AsField" parentEnumId="AsRing" enumTypeId="AlgebraicStructureType"/>
+
+    <!-- Concrete Ring/Field Implementations -->
+    <moqui.basic.Enumeration description="Ring of Integers" enumId="AsIntegers" parentEnumId="AsRing" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="Finite field of integers modulo 5 (Z/5Z)" enumId="AsZ5Field" parentEnumId="AsField" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="Field of Rational Numbers" enumId="AsRationals" parentEnumId="AsField" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="Field of Real Numbers" enumId="AsReals" parentEnumId="AsField" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="Field Z/7Z (Finite Field of Order 7)" enumId="AsZ7Field" parentEnumId="AsField" enumTypeId="AlgebraicStructureType"/>
+
+    <!-- ========================================================== -->
+    <!-- 3. Module and Vector Space (Operations over Ring/Field)    -->
+    <!-- ========================================================== -->
+    <moqui.basic.Enumeration description="Module: additive Abelian group equipped with scalar multiplication over a specified ring" enumId="AsModule" enumTypeId="AlgebraicStructureType"/>
+    
+    <!-- Vector Space is essentially a Module where the underlying Ring is a Field -->
+    <moqui.basic.Enumeration description="Vector space: module whose scalar ring is a specified field" enumId="AsVectorSpace" parentEnumId="AsModule" enumTypeId="AlgebraicStructureType"/>
+
+    <!-- Concrete Vector Spaces -->
+    <moqui.basic.Enumeration description="Three-dimensional vector space R^3 over the field R" enumId="AsRn3" optionValue="3" parentEnumId="AsVectorSpace" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="Two-dimensional vector space C^2 over the field C" enumId="AsC2" optionValue="2" parentEnumId="AsVectorSpace" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="State space; its mathematical structure is defined by the selected model" enumId="VsStateSpace" enumCode="StateSpace" enumTypeId="AlgebraicStructureType"/>
+    
+    <!-- Euclidean Spaces -->
+    <moqui.basic.Enumeration description="Finite-dimensional real inner-product vector space" enumId="VsEuclideanSpace" enumCode="EuclideanSpace" parentEnumId="AsVectorSpace" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="2D Euclidean Space" enumId="EuclideanSpace2D" optionValue="2" enumCode="Euclidean2DSpace" parentEnumId="VsEuclideanSpace" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="3D Euclidean Space" enumId="EuclideanSpace3D" optionValue="3" enumCode="Euclidean3DSpace" parentEnumId="VsEuclideanSpace" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="Quaternion coordinates represented as the four-dimensional real Euclidean space R^4" enumId="QuaternionEuclideanSpace" optionValue="4" enumCode="EuclideanQuaternionSpace" parentEnumId="VsEuclideanSpace" enumTypeId="AlgebraicStructureType"/>
+    <moqui.basic.Enumeration description="N-dimensional real Euclidean space" enumId="EuclideanSpaceND" enumCode="EuclideanNDSpace" parentEnumId="VsEuclideanSpace" enumTypeId="AlgebraicStructureType"/>
+    
+    <!-- Thermodynamic Space -->
+    <moqui.basic.Enumeration description="Thermodynamic state space; dimensionality and constraints are defined by the selected state variables and model" enumId="VsThermodynamicSpace" enumCode="ThermodynamicSpace" parentEnumId="VsStateSpace" enumTypeId="AlgebraicStructureType"/>
+
+    <!-- Vector Space Dimension -->
+    <!-- NOTE: Dimension enumeration represents each dimension of a vector space, allowing for flexible handling of multiple dimensions.
+            Use EnumGroupMember to group the dimensions for each vector space. The sequenceNum field of the EnumGroupMember entity gives the position or order of each dimension. -->
+    <moqui.basic.EnumerationType description="Space Dimension" enumTypeId="SpaceDimension"/>
+    <moqui.basic.Enumeration description="X Dimension" enumId="DimX" enumCode="x" enumTypeId="SpaceDimension"/>
+    <moqui.basic.Enumeration description="Y Dimension" enumId="DimY" enumCode="y" enumTypeId="SpaceDimension"/>
+    <moqui.basic.Enumeration description="Z Dimension" enumId="DimZ" enumCode="z" enumTypeId="SpaceDimension"/>
+    <moqui.basic.EnumerationType description="Time Dimension" enumTypeId="TimeDimension"/>
+    <moqui.basic.Enumeration description="Time Dimension" enumId="DimTime" enumCode="t" enumTypeId="TimeDimension"/>
+    <moqui.basic.EnumerationType description="Thermodynamic Dimension" enumTypeId="ThermodynamicDimension"/>
+    <moqui.basic.Enumeration description="Mass" enumId="DimMass" enumCode="M" enumTypeId="ThermodynamicDimension"/>
+    <moqui.basic.Enumeration description="Volume Dimension" enumId="DimVolume" enumCode="V" enumTypeId="ThermodynamicDimension"/>
+    <moqui.basic.Enumeration description="Pressure Dimension" enumId="DimPressure" enumCode="P" enumTypeId="ThermodynamicDimension"/>
+    <moqui.basic.Enumeration description="Temperature Dimension" enumId="DimTemperature" enumCode="T" enumTypeId="ThermodynamicDimension"/>
+    <moqui.basic.Enumeration description="Enthalpy Dimension" enumId="DimEnthalpy" enumCode="H" enumTypeId="ThermodynamicDimension"/>
+    <moqui.basic.Enumeration description="Entropy Dimension" enumId="DimEntropy" enumCode="S" enumTypeId="ThermodynamicDimension"/>
+    <moqui.basic.Enumeration description="Relative Humidity Dimension" enumId="DimRelativeHumidity" enumCode="RH" enumTypeId="ThermodynamicDimension"/>
+            
+    <!-- 3D Euclidean Space -->
+    <moqui.basic.Enumeration description="3D Euclidean Space" enumId="Eng3DEuclideanSpace" enumTypeId="EnumGroup"/>
+    <moqui.basic.EnumGroupMember enumId="DimX" enumGroupEnumId="Eng3DEuclideanSpace"/>
+    <moqui.basic.EnumGroupMember enumId="DimY" enumGroupEnumId="Eng3DEuclideanSpace"/>
+    <moqui.basic.EnumGroupMember enumId="DimZ" enumGroupEnumId="Eng3DEuclideanSpace"/>
+    <!-- Space Time -->
+    <moqui.basic.Enumeration description="Space Time" enumId="EngSpaceTime" enumTypeId="EnumGroup"/>
+    <moqui.basic.EnumGroupMember enumId="DimX" enumGroupEnumId="EngSpaceTime"/>
+    <moqui.basic.EnumGroupMember enumId="DimY" enumGroupEnumId="EngSpaceTime"/>
+    <moqui.basic.EnumGroupMember enumId="DimZ" enumGroupEnumId="EngSpaceTime"/>
+    <moqui.basic.EnumGroupMember enumId="DimTime" enumGroupEnumId="EngSpaceTime"/>
+
+    <!-- Math Model Type: linear algebra as a model category in its own right, alongside
+         MmtLinearEqSystem. Referenced by MathModelDef.modelTypeEnumId. -->
+    <moqui.basic.Enumeration description="Linear Algebra" enumId="MmtLinearAlgebra" enumCode="LINEAR_ALGEBRA"
+        parentEnumId="MmtModelDriven" enumTypeId="MathModelType"/>
+
+    <!-- Matrix Type: the counterpart of MtSparse, which was the only one of the pair declared. -->
+    <moqui.basic.Enumeration description="Dense Matrix" enumId="MtDense" enumCode="DENSE" enumTypeId="MatrixType"/>
+
+    <!-- 2D Euclidean Space: the planar counterpart of Eng3DEuclideanSpace below. Matrix
+         domainSpaceEnumId / codomainSpaceEnumId take an enum-group id, so a plane needs a group
+         of its own rather than a bare literal. -->
+    <moqui.basic.Enumeration description="2D Euclidean Space" enumId="Eng2DEuclideanSpace" enumTypeId="EnumGroup"/>
+    <moqui.basic.EnumGroupMember enumId="DimX" enumGroupEnumId="Eng2DEuclideanSpace"/>
+    <moqui.basic.EnumGroupMember enumId="DimY" enumGroupEnumId="Eng2DEuclideanSpace"/>
+
+    <!-- Tensor Data Type: the scalar type of a single element. The codes are the names the
+         numerical libraries themselves use, so a declaration reads the same as the backend. -->
+    <moqui.basic.EnumerationType description="Tensor Data Type" enumTypeId="TensorDataType"/>
+    <moqui.basic.Enumeration description="32-bit IEEE 754 Floating Point" enumId="DtFloat32" enumCode="float32" enumTypeId="TensorDataType"/>
+    <moqui.basic.Enumeration description="64-bit IEEE 754 Floating Point" enumId="DtFloat64" enumCode="float64" enumTypeId="TensorDataType"/>
+    <moqui.basic.Enumeration description="16-bit IEEE 754 Floating Point" enumId="DtFloat16" enumCode="float16" enumTypeId="TensorDataType"/>
+    <moqui.basic.Enumeration description="16-bit Brain Floating Point" enumId="DtBFloat16" enumCode="bfloat16" enumTypeId="TensorDataType"/>
+    <moqui.basic.Enumeration description="32-bit Signed Integer" enumId="DtInt32" enumCode="int32" enumTypeId="TensorDataType"/>
+    <moqui.basic.Enumeration description="64-bit Signed Integer" enumId="DtInt64" enumCode="int64" enumTypeId="TensorDataType"/>
+    <moqui.basic.Enumeration description="8-bit Signed Integer" enumId="DtInt8" enumCode="int8" enumTypeId="TensorDataType"/>
+    <moqui.basic.Enumeration description="8-bit Unsigned Integer" enumId="DtUInt8" enumCode="uint8" enumTypeId="TensorDataType"/>
+    <moqui.basic.Enumeration description="Boolean" enumId="DtBool" enumCode="bool" enumTypeId="TensorDataType"/>
+    <moqui.basic.Enumeration description="64-bit Complex" enumId="DtComplex64" enumCode="complex64" enumTypeId="TensorDataType"/>
+    <moqui.basic.Enumeration description="128-bit Complex" enumId="DtComplex128" enumCode="complex128" enumTypeId="TensorDataType"/>
+
+    <!-- Tensor Device: where the tensor is expected to live. -->
+    <moqui.basic.EnumerationType description="Tensor Device" enumTypeId="TensorDevice"/>
+    <moqui.basic.Enumeration description="Host CPU" enumId="DevCpu" enumCode="cpu" enumTypeId="TensorDevice"/>
+    <moqui.basic.Enumeration description="NVIDIA CUDA Device" enumId="DevCuda" enumCode="cuda" enumTypeId="TensorDevice"/>
+    <moqui.basic.Enumeration description="AMD ROCm Device" enumId="DevRocm" enumCode="rocm" enumTypeId="TensorDevice"/>
+    <moqui.basic.Enumeration description="Apple Metal Performance Shaders" enumId="DevMps" enumCode="mps" enumTypeId="TensorDevice"/>
+    <moqui.basic.Enumeration description="Tensor Processing Unit" enumId="DevTpu" enumCode="tpu" enumTypeId="TensorDevice"/>
+
+    <!-- Parameter Type: a parameter whose value is a vector or a matrix. The type already
+         declares scalar, text and temporal kinds; these two were referenced but never declared. -->
+    <moqui.basic.Enumeration description="Vector Parameter" enumId="PtVector" enumCode="VECTOR" enumTypeId="ParameterType"/>
+    <moqui.basic.Enumeration description="Matrix Parameter" enumId="PtMatrix" enumCode="MATRIX" enumTypeId="ParameterType"/>
+</entity-facade-xml>

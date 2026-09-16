@@ -25,7 +25,7 @@ Category('AgentEntityModel',
 
     objects('AgEntObj_BillingAccount',
         objectEntityName: 'mantle.account.billing.BillingAccount',
-        objectPkValue: 'mantle.account.billing.BillingAccount',
+        objectPkPrimaryValue: 'mantle.account.billing.BillingAccount',
         objectTypeEnum: CategoryObjectType.Generic,
         objectName: 'BillingAccount',
         objectSymbol: 'BillingAccount')

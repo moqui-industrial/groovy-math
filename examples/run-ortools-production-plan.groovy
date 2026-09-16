@@ -3,15 +3,12 @@
  * Grant of Patent License.
  */
 
-import groovy.math.dsl.MathDsl
-import groovy.math.dsl.MathMeta
-import groovy.math.ortools.OrTools
-import groovy.math.ortools.OrToolsResult
+import org.moqui.math.dsl.MathDsl
+import org.moqui.math.dsl.MathMeta
+import org.moqui.math.ortools.OrTools
+import org.moqui.math.ortools.OrToolsResult
 
-String schemaPath = System.getenv('MOQUI_MATH_ENTITIES')
-if (!schemaPath) throw new IllegalStateException('MOQUI_MATH_ENTITIES must point to MathEntities.xml')
-MathMeta mathMeta = MathDsl.evaluate(
-    new File(schemaPath), new File('examples/production-plan.groovy'))
+MathMeta mathMeta = MathDsl.evaluate(new File('examples/production-plan.groovy'))
 
 OrToolsResult result = OrTools.solve(mathMeta, 'ProductionPlan')
 

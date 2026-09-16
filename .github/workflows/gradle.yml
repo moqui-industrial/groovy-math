@@ -12,60 +12,55 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Only this job needs the upstream schema, and only to prove the vendored copies
+      # under src/main/resources have not drifted from it. Nothing here reads them to run.
       - uses: actions/checkout@v4
         with:
           repository: moqui/moqui-math
           path: moqui-math
+      - uses: actions/checkout@v4
+        with:
+          repository: moqui/moqui-framework
+          path: moqui-framework
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Test
+      - name: Check vendored schema against upstream
         env:
-          MOQUI_MATH_ENTITIES: ${{ github.workspace }}/moqui-math/entity/MathEntities.xml
+          MOQUI_MATH_HOME: ${{ github.workspace }}/moqui-math
+          MOQUI_FRAMEWORK_HOME: ${{ github.workspace }}/moqui-framework
+        run: ./gradlew checkMoquiSchema
+      - name: Test
         run: ./gradlew check
       - name: Run OR-Tools example
-        env:
-          MOQUI_MATH_ENTITIES: ${{ github.workspace }}/moqui-math/entity/MathEntities.xml
         run: ./gradlew runOrToolsProductionPlan
 
   petsc-native:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
-        with:
-          repository: moqui/moqui-math
-          path: moqui-math
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
       - name: Install PETSc development files
         run: sudo apt-get update && sudo apt-get install --yes petsc-dev ninja-build pkg-config
       - name: Build bridge and run native TAO tests
-        env:
-          MOQUI_MATH_ENTITIES: ${{ github.workspace }}/moqui-math/entity/MathEntities.xml
         run: ./gradlew petscTaoNativeTest
       - name: Run PETSc/TAO energy dispatch example
-        env:
-          MOQUI_MATH_ENTITIES: ${{ github.workspace }}/moqui-math/entity/MathEntities.xml
         run: ./gradlew runPetscTaoEnergyDispatch
 
   jax-native:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
-        with:
-          repository: moqui/moqui-math
-          path: moqui-math
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
       - uses: actions/setup-python@v5
         with:
@@ -75,22 +70,16 @@ jobs:
           sudo apt-get update && sudo apt-get install --yes python3-dev ninja-build
           pip install numpy jax
       - name: Build bridge and run native JAX tests
-        env:
-          MOQUI_MATH_ENTITIES: ${{ github.workspace }}/moqui-math/entity/MathEntities.xml
         run: ./gradlew jaxNativeTest
 
   opencv-native:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
-        with:
-          repository: moqui/moqui-math
-          path: moqui-math
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
       - uses: actions/setup-python@v5
         with:
@@ -100,6 +89,4 @@ jobs:
           sudo apt-get update && sudo apt-get install --yes python3-dev ninja-build
           pip install numpy opencv-python-headless
       - name: Build bridge and run native OpenCV tests
-        env:
-          MOQUI_MATH_ENTITIES: ${{ github.workspace }}/moqui-math/entity/MathEntities.xml
         run: ./gradlew openCvNativeTest
