@@ -32,8 +32,24 @@ class NativeMemoryMapper {
 
     /**
      * Maps a Matrix and its discrete components (Tier 1) to an off-heap row-major float MemorySegment.
+     * If contentLocation is specified, maps from external file (.npy or raw binary).
      */
     static MemorySegment mapMatrix(Arena arena, Matrix matrix, List<MatrixComponent> components = null) {
+        if (matrix.contentLocation) {
+            File externalFile = new File(matrix.contentLocation)
+            if (externalFile.exists()) {
+                if (externalFile.name.endsWith('.npy')) {
+                    NpyReader.NpyHeader hdr = NpyReader.parseHeader(externalFile.toPath())
+                    if (hdr.shape.size() >= 2) {
+                        matrix.rows = hdr.shape.get(0)
+                        matrix.cols = hdr.shape.get(1)
+                    }
+                    return NpyReader.map(arena, externalFile.toPath())
+                }
+                return mapExternalFile(arena, externalFile.toPath())
+            }
+        }
+
         int rows = (matrix.rows ?: 0L).intValue()
         int cols = (matrix.cols ?: 0L).intValue()
         int totalElements = rows * cols
@@ -58,8 +74,23 @@ class NativeMemoryMapper {
 
     /**
      * Maps a Vector and its discrete components (Tier 1) to an off-heap float MemorySegment.
+     * If contentLocation is specified, maps from external file (.npy or raw binary).
      */
     static MemorySegment mapVector(Arena arena, Vector vector, List<VectorComponent> components = null) {
+        if (vector.contentLocation) {
+            File externalFile = new File(vector.contentLocation)
+            if (externalFile.exists()) {
+                if (externalFile.name.endsWith('.npy')) {
+                    NpyReader.NpyHeader hdr = NpyReader.parseHeader(externalFile.toPath())
+                    if (!hdr.shape.isEmpty()) {
+                        vector.dimension = hdr.shape.get(0)
+                    }
+                    return NpyReader.map(arena, externalFile.toPath())
+                }
+                return mapExternalFile(arena, externalFile.toPath())
+            }
+        }
+
         int size = (vector.dimension ?: 0L).intValue()
         if (size <= 0) throw new IllegalArgumentException("Vector dimension must be positive: ${size}")
 
@@ -82,16 +113,26 @@ class NativeMemoryMapper {
      * Maps a Tensor across all tiers:
      * - Tier 1: Discrete TensorElements (mechanics, small discrete physics tensors).
      * - Tier 2: Inline elementBlob or elementArray.
-     * - Tier 3: External large files via TensorContent (memory-mapped ONNX/Safetensors/binary blobs).
+     * - Tier 3: External large files via TensorContent (memory-mapped ONNX/Safetensors/NPY/binary blobs).
      */
     static MemorySegment mapTensor(Arena arena, Tensor tensor, List<TensorElement> elements = null, TensorContent content = null) {
         long totalElements = tensor.size ?: parseShapeTotal(tensor.shape)
         if (totalElements <= 0L) totalElements = 1L
 
-        // Tier 3: External Large File / ONNX via TensorContent
-        if (content?.contentLocation) {
-            File externalFile = new File(content.contentLocation)
+        // Tier 3: External Large File / NPY / Safetensors via TensorContent or direct contentLocation
+        String loc = content?.contentLocation ?: tensor.contentLocation
+        if (loc) {
+            File externalFile = new File(loc)
             if (externalFile.exists()) {
+                if (externalFile.name.endsWith('.npy')) {
+                    NpyReader.NpyHeader hdr = NpyReader.parseHeader(externalFile.toPath())
+                    if (tensor.shape == null || tensor.shape.isEmpty()) {
+                        tensor.shape = hdr.shape.join(',')
+                        tensor.rank = (long) hdr.shape.size()
+                        tensor.size = hdr.totalElements
+                    }
+                    return NpyReader.map(arena, externalFile.toPath())
+                }
                 return mapExternalFile(arena, externalFile.toPath())
             }
         }

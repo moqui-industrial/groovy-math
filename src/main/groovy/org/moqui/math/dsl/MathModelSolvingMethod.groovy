@@ -17,7 +17,8 @@ enum MathModelSolvingMethod implements DslEnumValue {
     OrTools('MmsmOrTools'),
     OpenFoam('MmsmOpenFoam'),
     OpenFoamIcoFoam('MmsmOpenFoamIcoFoam'),
-    OpenFoamSimpleFoam('MmsmOpenFoamSimpleFoam')
+    OpenFoamSimpleFoam('MmsmOpenFoamSimpleFoam'),
+    Onnx('MmsmOnnx')
 
     final String id
 

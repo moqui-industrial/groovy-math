@@ -309,6 +309,8 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- Cache for fast IO or processing -->
         <field name="componentArray" type="text-very-long"/>
         <field name="componentBlob" type="binary-very-long"/>
+        <field name="contentLocation" type="text-medium"/>
+        <field name="contentTypeEnumId" type="id"/>
 
         <relationship type="one" title="Parent" related="moqui.math.Vector" short-alias="parent">
             <key-map field-name="parentVectorId" related="vectorId"/></relationship>
@@ -466,6 +468,8 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- Cache for fast IO or processing -->
         <field name="componentArray" type="text-very-long"/>
         <field name="componentBlob" type="binary-very-long"/>
+        <field name="contentLocation" type="text-medium"/>
+        <field name="contentTypeEnumId" type="id"/>
 
         <relationship type="one" title="Parent" related="moqui.math.Matrix" short-alias="parent">
             <key-map field-name="parentMatrixId" related="matrixId"/></relationship>
@@ -637,6 +641,8 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- Cache for fast IO or processing -->
         <field name="elementArray" type="text-very-long"/>
         <field name="elementBlob" type="binary-very-long"/>
+        <field name="contentLocation" type="text-medium"/>
+        <field name="contentTypeEnumId" type="id"/>
         <field name="arrayEncodingEnumId" type="id"/>
         <field name="arrayChecksum" type="text-short"/>
         <field name="dataTypeEnumId" type="id">
@@ -2156,6 +2162,7 @@ along with this software (see the LICENSE.md file). If not, see
             <moqui.basic.Enumeration enumId="MmsmTabu" enumTypeId="MathModelSolvingMethod" description="Tabu Search"/>
             <!-- Computational Engine / Runtime Providers -->
             <moqui.basic.Enumeration enumId="MmsmOpenCv" enumTypeId="MathModelSolvingMethod" description="OpenCV Computer Vision Runtime"/>
+            <moqui.basic.Enumeration enumId="MmsmOnnx" enumTypeId="MathModelSolvingMethod" description="ONNX Runtime Neural Network Inference Engine"/>
             <moqui.basic.Enumeration enumId="MmsmJax" enumTypeId="MathModelSolvingMethod" description="Google JAX / OpenXLA Runtime"/>
             <moqui.basic.Enumeration enumId="MmsmJaxJit" parentEnumId="MmsmJax" enumTypeId="MathModelSolvingMethod" description="Google JAX XLA JIT Compiled / Autograd Runtime"/>
             <moqui.basic.Enumeration enumId="MmsmLibTorch" enumTypeId="MathModelSolvingMethod" description="LibTorch Native Runtime"/>
@@ -2193,6 +2200,8 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="sourceEnumId" type="id"/>
         <field name="modelAlias" type="text-short"/>
         <field name="description" type="text-medium"/>
+        <field name="contentLocation" type="text-medium"/>
+        <field name="location" type="text-medium"/>
         <field name="statusId" type="id">
             <description>Optional, as on WorkEffort: a model with no statusId runs no state
                 machine at all. With a statusId and no statusFlowId, changes are still checked

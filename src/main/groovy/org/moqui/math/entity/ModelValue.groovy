@@ -109,6 +109,10 @@ final class ModelValue extends LinkedHashMap<String, Object> {
         identityLocked
     }
 
+    Map<String, Object> toMap() {
+        new LinkedHashMap<String, Object>(this)
+    }
+
     ModelValue validate() {
         definition.fields.values().each { FieldDefinition field ->
             if (field.required && field.defaultExpression == null && get(field.name) == null) {

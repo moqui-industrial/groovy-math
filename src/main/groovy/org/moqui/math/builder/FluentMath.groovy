@@ -74,6 +74,28 @@ class FluentMath {
         builder.build()
     }
 
+    EntityRef<MathModel> model(final String modelId,
+                              @DelegatesTo(value = MathModelBuilder, strategy = Closure.DELEGATE_FIRST) final Closure<?> closure = null) {
+        String autoDefId = "${modelId}_Def"
+        if (mathMeta.entity('moqui.math.MathModelDef').findByName(autoDefId) == null) {
+            Map<String, Object> defValues = [
+                mathModelDefId: autoDefId,
+                modelName: modelId,
+                modelTypeEnumId: MathModelType.DlFeedforward.id,
+                usageContextEnumId: MathModelUsageContext.Inference.id
+            ]
+            mathMeta.declare('moqui.math.MathModelDef', autoDefId, defValues)
+        }
+        MathModelBuilder builder = new MathModelBuilder(mathMeta, autoDefId, modelId)
+        if (closure) {
+            Closure<?> copy = (Closure<?>) closure.clone()
+            copy.resolveStrategy = Closure.DELEGATE_FIRST
+            copy.delegate = builder
+            copy.call()
+        }
+        builder.build()
+    }
+
     EntityRef<Graph> graph(final String graphId,
                            @DelegatesTo(value = GraphBuilder, strategy = Closure.DELEGATE_FIRST) final Closure<?> closure = null) {
         GraphBuilder builder = new GraphBuilder(mathMeta, graphId)
@@ -436,6 +458,9 @@ class MathModelBuilder {
     final String modelId
     String alias
     String description
+    String location
+    String contentLocation
+    String contentTypeEnumId
     MathModelSolvingMethod solvingMethod
     private int dataSequence = 1
 
@@ -447,6 +472,9 @@ class MathModelBuilder {
 
     MathModelBuilder alias(String alias) { this.alias = alias; this }
     MathModelBuilder description(String desc) { this.description = desc; this }
+    MathModelBuilder location(String loc) { this.location = loc; this }
+    MathModelBuilder contentLocation(String loc) { this.contentLocation = loc; this }
+    MathModelBuilder contentType(String type) { this.contentTypeEnumId = type; this }
     MathModelBuilder solvingMethod(MathModelSolvingMethod method) { this.solvingMethod = method; this }
 
     EntityRef<Matrix> matrix(final Map<String, Object> args, final String matrixId = null,
@@ -588,6 +616,9 @@ class MathModelBuilder {
         values.put('mathModelDefId', defId)
         if (alias) values.put('modelAlias', alias)
         if (description) values.put('description', description)
+        if (location) values.put('location', location)
+        if (contentLocation) values.put('contentLocation', contentLocation)
+        if (contentTypeEnumId) values.put('contentTypeEnumId', contentTypeEnumId)
         mathMeta.declare('moqui.math.MathModel', modelId, values)
         new EntityRef<>(modelId, MathModel.class, values)
     }
@@ -599,6 +630,7 @@ class MatrixBuilder {
     final String matrixId
     Long rows
     Long cols
+    MatrixType matrixType
     MatrixPurpose purpose
     MathSpace domainSpace
     MathSpace codomainSpace
@@ -616,6 +648,8 @@ class MatrixBuilder {
     MatrixBuilder rows(int r) { this.rows = (long) r; this }
     MatrixBuilder cols(long c) { this.cols = c; this }
     MatrixBuilder cols(int c) { this.cols = (long) c; this }
+    MatrixBuilder matrixType(MatrixType t) { this.matrixType = t; this }
+    MatrixBuilder type(MatrixType t) { this.matrixType = t; this }
     MatrixBuilder purpose(MatrixPurpose p) { this.purpose = p; this }
     MatrixBuilder domainSpace(MathSpace s) { this.domainSpace = s; this }
     MatrixBuilder codomainSpace(MathSpace s) { this.codomainSpace = s; this }
@@ -625,6 +659,27 @@ class MatrixBuilder {
         this
     }
     MatrixBuilder data(Object obj) { componentArray(obj) }
+    String contentLocation
+    String contentTypeEnumId
+    DslEnumValue contentType
+
+    MatrixBuilder contentLocation(String loc) { this.contentLocation = loc; this }
+    MatrixBuilder contentType(DslEnumValue type) { this.contentType = type; this }
+    MatrixBuilder contentType(String typeId) { this.contentTypeEnumId = typeId; this }
+    MatrixBuilder content(String loc, DslEnumValue type = null) {
+        this.contentLocation = loc
+        this.contentType = type
+        this
+    }
+    MatrixBuilder content(Map<String, Object> args) {
+        if (args?.containsKey('location')) this.contentLocation = args.location?.toString()
+        if (args?.containsKey('type')) {
+            Object t = args.type
+            if (t instanceof DslEnumValue) this.contentType = (DslEnumValue) t
+            else if (t != null) this.contentTypeEnumId = t.toString()
+        }
+        this
+    }
     MatrixBuilder name(String n) { this.name = n; this }
     MatrixBuilder symbol(String s) { this.symbol = s; this }
     MatrixBuilder description(String d) { this.description = d; this }
@@ -637,6 +692,11 @@ class MatrixBuilder {
         if (args.containsKey('codomainSpace')) codomainSpace(args.codomainSpace as MathSpace)
         if (args.containsKey('componentArray')) componentArray(args.componentArray)
         if (args.containsKey('data')) data(args.data)
+        if (args.containsKey('contentLocation')) contentLocation(args.contentLocation as String)
+        if (args.containsKey('content')) {
+            if (args.content instanceof Map) content(args.content as Map<String, Object>)
+            else content(args.content as String)
+        }
         if (args.containsKey('name')) name(args.name as String)
         if (args.containsKey('symbol')) symbol(args.symbol as String)
         if (args.containsKey('description')) description(args.description as String)
@@ -647,15 +707,30 @@ class MatrixBuilder {
     private void cols(Number n) { if (n != null) this.cols = n.longValue() }
 
     EntityRef<Matrix> build() {
+        if (contentLocation && (rows == null || cols == null)) {
+            File f = new File(contentLocation)
+            if (f.exists() && f.name.endsWith('.npy')) {
+                try {
+                    org.moqui.math.memory.NpyReader.NpyHeader hdr = org.moqui.math.memory.NpyReader.parseHeader(f.toPath())
+                    if (hdr.shape.size() >= 2) {
+                        if (rows == null) rows = hdr.shape.get(0)
+                        if (cols == null) cols = hdr.shape.get(1)
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
         Map<String, Object> values = new LinkedHashMap<>()
         values.put('matrixId', matrixId)
-        if (rows != null) values.put('rows', rows)
-        if (cols != null) values.put('cols', cols)
-        values.put('matrixTypeEnumId', 'MtDense')
+        values.put('rows', rows != null ? rows : 1L)
+        values.put('cols', cols != null ? cols : 1L)
+        values.put('matrixTypeEnumId', matrixType ? matrixType.id : 'MtDense')
         values.put('purposeEnumId', purpose ? purpose.id : 'MpOriginal')
         values.put('domainSpaceEnumId', domainSpace ? domainSpace.id : 'Eng2DEuclideanSpace')
         values.put('codomainSpaceEnumId', codomainSpace ? codomainSpace.id : 'Eng2DEuclideanSpace')
         if (componentArray) values.put('componentArray', componentArray)
+        if (contentLocation) values.put('contentLocation', contentLocation)
+        if (contentType) values.put('contentTypeEnumId', contentType.id)
+        else if (contentTypeEnumId) values.put('contentTypeEnumId', contentTypeEnumId)
         if (name) values.put('name', name)
         if (symbol) values.put('symbol', symbol)
         if (description) values.put('description', description)
@@ -693,6 +768,27 @@ class VectorBuilder {
         this
     }
     VectorBuilder data(Object obj) { componentArray(obj) }
+    String contentLocation
+    String contentTypeEnumId
+    DslEnumValue contentType
+
+    VectorBuilder contentLocation(String loc) { this.contentLocation = loc; this }
+    VectorBuilder contentType(DslEnumValue type) { this.contentType = type; this }
+    VectorBuilder contentType(String typeId) { this.contentTypeEnumId = typeId; this }
+    VectorBuilder content(String loc, DslEnumValue type = null) {
+        this.contentLocation = loc
+        this.contentType = type
+        this
+    }
+    VectorBuilder content(Map<String, Object> args) {
+        if (args?.containsKey('location')) this.contentLocation = args.location?.toString()
+        if (args?.containsKey('type')) {
+            Object t = args.type
+            if (t instanceof DslEnumValue) this.contentType = (DslEnumValue) t
+            else if (t != null) this.contentTypeEnumId = t.toString()
+        }
+        this
+    }
     VectorBuilder name(String n) { this.name = n; this }
     VectorBuilder symbol(String s) { this.symbol = s; this }
     VectorBuilder description(String d) { this.description = d; this }
@@ -704,6 +800,11 @@ class VectorBuilder {
         if (args.containsKey('codomainSpace')) codomainSpace(args.codomainSpace as MathSpace)
         if (args.containsKey('componentArray')) componentArray(args.componentArray)
         if (args.containsKey('data')) data(args.data)
+        if (args.containsKey('contentLocation')) contentLocation(args.contentLocation as String)
+        if (args.containsKey('content')) {
+            if (args.content instanceof Map) content(args.content as Map<String, Object>)
+            else content(args.content as String)
+        }
         if (args.containsKey('name')) name(args.name as String)
         if (args.containsKey('symbol')) symbol(args.symbol as String)
         if (args.containsKey('description')) description(args.description as String)
@@ -713,13 +814,24 @@ class VectorBuilder {
     private void size(Number n) { if (n != null) this.size = n.longValue() }
 
     EntityRef<Vector> build() {
+        if (contentLocation && size == null) {
+            File f = new File(contentLocation)
+            if (f.exists() && f.name.endsWith('.npy')) {
+                try {
+                    org.moqui.math.memory.NpyReader.NpyHeader hdr = org.moqui.math.memory.NpyReader.parseHeader(f.toPath())
+                    if (!hdr.shape.isEmpty()) size = hdr.shape.get(0)
+                } catch (Exception ignored) {}
+            }
+        }
         Map<String, Object> values = new LinkedHashMap<>()
         values.put('vectorId', vectorId)
-        if (size != null) values.put('size', size)
+        values.put('dimension', size != null ? size : 1L)
         values.put('purposeEnumId', purpose ? purpose.id : 'VpOriginal')
-        values.put('domainSpaceEnumId', domainSpace ? domainSpace.id : 'Eng2DEuclideanSpace')
-        values.put('codomainSpaceEnumId', codomainSpace ? codomainSpace.id : 'Eng2DEuclideanSpace')
+        values.put('vectorSpaceEnumId', domainSpace ? domainSpace.id : 'Eng2DEuclideanSpace')
         if (componentArray) values.put('componentArray', componentArray)
+        if (contentLocation) values.put('contentLocation', contentLocation)
+        if (contentType) values.put('contentTypeEnumId', contentType.id)
+        else if (contentTypeEnumId) values.put('contentTypeEnumId', contentTypeEnumId)
         if (name) values.put('name', name)
         if (symbol) values.put('symbol', symbol)
         if (description) values.put('description', description)
@@ -762,6 +874,27 @@ class TensorBuilder {
         this
     }
     TensorBuilder data(Object obj) { componentArray(obj) }
+    String contentLocation
+    String contentTypeEnumId
+    DslEnumValue contentType
+
+    TensorBuilder contentLocation(String loc) { this.contentLocation = loc; this }
+    TensorBuilder contentType(DslEnumValue type) { this.contentType = type; this }
+    TensorBuilder contentType(String typeId) { this.contentTypeEnumId = typeId; this }
+    TensorBuilder content(String loc, DslEnumValue type = null) {
+        this.contentLocation = loc
+        this.contentType = type
+        this
+    }
+    TensorBuilder content(Map<String, Object> args) {
+        if (args?.containsKey('location')) this.contentLocation = args.location?.toString()
+        if (args?.containsKey('type')) {
+            Object t = args.type
+            if (t instanceof DslEnumValue) this.contentType = (DslEnumValue) t
+            else if (t != null) this.contentTypeEnumId = t.toString()
+        }
+        this
+    }
     TensorBuilder name(String n) { this.name = n; this }
     TensorBuilder symbol(String s) { this.symbol = s; this }
     TensorBuilder description(String d) { this.description = d; this }
@@ -779,6 +912,11 @@ class TensorBuilder {
         if (args.containsKey('device')) device(args.device as DslEnumValue)
         if (args.containsKey('componentArray')) componentArray(args.componentArray)
         if (args.containsKey('data')) data(args.data)
+        if (args.containsKey('contentLocation')) contentLocation(args.contentLocation as String)
+        if (args.containsKey('content')) {
+            if (args.content instanceof Map) content(args.content as Map<String, Object>)
+            else content(args.content as String)
+        }
         if (args.containsKey('name')) name(args.name as String)
         if (args.containsKey('symbol')) symbol(args.symbol as String)
         if (args.containsKey('description')) description(args.description as String)
@@ -786,6 +924,18 @@ class TensorBuilder {
     }
 
     EntityRef<Tensor> build() {
+        Long tensorSize = null
+        if (contentLocation && (shape == null || shape.isEmpty())) {
+            File f = new File(contentLocation)
+            if (f.exists() && f.name.endsWith('.npy')) {
+                try {
+                    org.moqui.math.memory.NpyReader.NpyHeader hdr = org.moqui.math.memory.NpyReader.parseHeader(f.toPath())
+                    shape = JsonOutput.toJson(hdr.shape)
+                    rank = (long) hdr.shape.size()
+                    tensorSize = hdr.totalElements
+                } catch (Exception ignored) {}
+            }
+        }
         Map<String, Object> values = new LinkedHashMap<>()
         values.put('tensorId', tensorId)
         long r = rank != null ? rank : 2L
@@ -796,9 +946,13 @@ class TensorBuilder {
             for (int i = 0; i < r; i++) defaultShape.add(1)
             values.put('shape', JsonOutput.toJson(defaultShape))
         }
+        if (tensorSize != null) values.put('size', tensorSize)
         if (purpose) values.put('purposeEnumId', purpose.id)
         if (dataType) values.put('dataTypeEnumId', dataType.id)
         if (device) values.put('deviceEnumId', device.id)
+        if (contentLocation) values.put('contentLocation', contentLocation)
+        if (contentType) values.put('contentTypeEnumId', contentType.id)
+        else if (contentTypeEnumId) values.put('contentTypeEnumId', contentTypeEnumId)
         if (name) values.put('name', name)
         if (symbol) values.put('symbol', symbol)
         if (description) values.put('description', description)

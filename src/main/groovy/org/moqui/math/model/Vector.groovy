@@ -58,6 +58,12 @@ class Vector implements Serializable {
     /** componentBlob */
     byte[] componentBlob
 
+    /** contentLocation */
+    String contentLocation
+
+    /** contentTypeEnumId */
+    String contentTypeEnumId
+
     Vector parent
 
     CoordinateSystem coordSystem
@@ -81,6 +87,8 @@ class Vector implements Serializable {
             if (args.containsKey('magnitude')) this.magnitude = args.get('magnitude') != null ? (args.get('magnitude') instanceof BigDecimal ? (BigDecimal) args.get('magnitude') : new BigDecimal(args.get('magnitude').toString())) : null
             if (args.containsKey('componentArray')) this.componentArray = args.get('componentArray')?.toString()
             if (args.containsKey('componentBlob')) this.componentBlob = (byte[]) args.get('componentBlob')
+            if (args.containsKey('contentLocation')) this.contentLocation = args.get('contentLocation')?.toString()
+            if (args.containsKey('contentTypeEnumId')) this.contentTypeEnumId = args.get('contentTypeEnumId')?.toString()
         }
     }
 

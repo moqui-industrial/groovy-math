@@ -46,6 +46,15 @@ class MathModel implements Serializable {
     /** statusFlowId */
     String statusFlowId
 
+    /** location */
+    String location
+
+    /** contentLocation */
+    String contentLocation
+
+    /** contentTypeEnumId */
+    String contentTypeEnumId
+
     MathModelDef modelDef
 
     Graph graph
@@ -69,6 +78,9 @@ class MathModel implements Serializable {
             if (args.containsKey('description')) this.description = args.get('description')?.toString()
             if (args.containsKey('statusId')) this.statusId = args.get('statusId')?.toString()
             if (args.containsKey('statusFlowId')) this.statusFlowId = args.get('statusFlowId')?.toString()
+            if (args.containsKey('location')) this.location = args.get('location')?.toString()
+            if (args.containsKey('contentLocation')) this.contentLocation = args.get('contentLocation')?.toString()
+            if (args.containsKey('contentTypeEnumId')) this.contentTypeEnumId = args.get('contentTypeEnumId')?.toString()
         }
     }
 
@@ -117,6 +129,21 @@ class MathModel implements Serializable {
         return this;
     }
 
+    MathModel location(String value) {
+        this.location = value
+        return this;
+    }
+
+    MathModel contentLocation(String value) {
+        this.contentLocation = value
+        return this;
+    }
+
+    MathModel contentTypeEnumId(String value) {
+        this.contentTypeEnumId = value
+        return this;
+    }
+
     MathModel modelDef(MathModelDef item) {
         this.modelDef = item;
         return this;
@@ -153,6 +180,9 @@ class MathModel implements Serializable {
         if (this.description != null) map.put('description', this.description);
         if (this.statusId != null) map.put('statusId', this.statusId);
         if (this.statusFlowId != null) map.put('statusFlowId', this.statusFlowId);
+        if (this.location != null) map.put('location', this.location);
+        if (this.contentLocation != null) map.put('contentLocation', this.contentLocation);
+        if (this.contentTypeEnumId != null) map.put('contentTypeEnumId', this.contentTypeEnumId);
         return map;
     }
 }

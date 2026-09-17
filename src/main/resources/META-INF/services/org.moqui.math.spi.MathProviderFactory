@@ -7,3 +7,4 @@ org.moqui.math.petsctao.PetscTaoProviderFactory
 org.moqui.math.openfoam.OpenFoamProviderFactory
 org.moqui.math.ortools.OrToolsProviderFactory
 org.moqui.math.libtorch.LibTorchProviderFactory
+org.moqui.math.onnx.OnnxProviderFactory

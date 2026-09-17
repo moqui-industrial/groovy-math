@@ -63,7 +63,7 @@ java {
 
 tasks.named('test') {
     useJUnitPlatform()
-    useJUnitPlatform { excludeTags 'libtorch-native', 'petsctao-native', 'jax-native', 'opencv-native', 'openfoam-native' }
+    useJUnitPlatform { excludeTags 'libtorch-native', 'petsctao-native', 'jax-native', 'opencv-native', 'openfoam-native', 'onnx-native' }
 }
 
 def nativeBuildDirectory = layout.buildDirectory.dir('native')
@@ -71,11 +71,13 @@ def petscTaoBuildDirectory = layout.buildDirectory.dir('native-petsctao')
 def jaxBuildDirectory = layout.buildDirectory.dir('native-jax')
 def openCvBuildDirectory = layout.buildDirectory.dir('native-opencv')
 def openFoamBuildDirectory = layout.buildDirectory.dir('native-openfoam')
+def onnxBuildDirectory = layout.buildDirectory.dir('native-onnx')
 def libTorchSourceDirectory = layout.projectDirectory.dir('src/main/cpp')
 def petscTaoSourceDirectory = layout.projectDirectory.dir('src/main/cpp/petsctao')
 def jaxSourceDirectory = layout.projectDirectory.dir('src/main/cpp/jax')
 def openCvSourceDirectory = layout.projectDirectory.dir('src/main/cpp/opencv')
 def openFoamSourceDirectory = layout.projectDirectory.dir('src/main/cpp/openfoam')
+def onnxSourceDirectory = layout.projectDirectory.dir('src/main/cpp/onnx')
 
 class LibTorchResolver {
     static String resolve() {
@@ -318,6 +320,37 @@ tasks.register('openFoamNativeTest', Test) {
         openFoamBuildDirectory.get().file('libgroovy_math_openfoam.so').asFile.absolutePath
 }
 
+tasks.register('configureOnnxNative', Exec) {
+    inputs.dir(onnxSourceDirectory)
+    outputs.file(onnxBuildDirectory.map { it.file('build.ninja') })
+    doFirst {
+        String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
+        commandLine cmake, '-S', onnxSourceDirectory.asFile.absolutePath,
+            '-B', onnxBuildDirectory.get().asFile.absolutePath, '-G', 'Ninja',
+            '-DCMAKE_BUILD_TYPE=Release'
+    }
+}
+
+tasks.register('buildOnnxNative', Exec) {
+    dependsOn tasks.named('configureOnnxNative')
+    inputs.dir(onnxSourceDirectory)
+    inputs.file(onnxBuildDirectory.map { it.file('build.ninja') })
+    outputs.file(onnxBuildDirectory.map { it.file('libgroovy_math_onnx.so') })
+    doFirst {
+        String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
+        commandLine cmake, '--build', onnxBuildDirectory.get().asFile.absolutePath, '--parallel'
+    }
+}
+
+tasks.register('onnxNativeTest', Test) {
+    dependsOn tasks.named('buildOnnxNative')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'onnx-native' }
+    systemProperty 'moqui.math.onnx.library',
+        onnxBuildDirectory.get().file('libgroovy_math_onnx.so').asFile.absolutePath
+}
+
 tasks.register('benchmarkLibTorch', JavaExec) {
     dependsOn tasks.named('buildLibTorchNative'), tasks.named('testClasses')
     classpath = sourceSets.test.runtimeClasspath
@@ -415,6 +448,20 @@ tasks.register('runOpenFoamCavity', JavaExec) {
         openFoamBuildDirectory.get().file('libgroovy_math_openfoam.so').asFile.absolutePath
 }
 
+tasks.register('runTensorExternalContent', JavaExec) {
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'groovy.ui.GroovyMain'
+    args file('examples/run-tensor-external-content.groovy').absolutePath
+}
+
+tasks.register('runOnnxModelInference', JavaExec) {
+    dependsOn tasks.named('buildOnnxNative'), tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'groovy.ui.GroovyMain'
+    args file('examples/run-onnx-model-inference.groovy').absolutePath
+}
+
 tasks.named('check') {
     dependsOn tasks.named('jacocoTestReport')
 }
@@ -461,6 +508,7 @@ tasks.register('packageNativeLibs', Copy) {
     from(openCvBuildDirectory) { include '*.so', '*.dylib', '*.dll' }
     from(petscTaoBuildDirectory) { include '*.so', '*.dylib', '*.dll' }
     from(openFoamBuildDirectory) { include '*.so', '*.dylib', '*.dll' }
+    from(onnxBuildDirectory) { include '*.so', '*.dylib', '*.dll' }
 }
 tasks.named('jar').configure {
     dependsOn 'packageNativeLibs'

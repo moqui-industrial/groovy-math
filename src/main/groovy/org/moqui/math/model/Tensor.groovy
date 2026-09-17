@@ -112,6 +112,12 @@ class Tensor implements Serializable {
     /** deviceEnumId */
     String deviceEnumId
 
+    /** contentLocation */
+    String contentLocation
+
+    /** contentTypeEnumId */
+    String contentTypeEnumId
+
     Tensor parent
 
     CoordinateSystem coordSystem
@@ -133,6 +139,8 @@ class Tensor implements Serializable {
             if (args.containsKey('symbol')) this.symbol = args.get('symbol')?.toString()
             if (args.containsKey('description')) this.description = args.get('description')?.toString()
             if (args.containsKey('size')) this.size = args.get('size') != null ? ((Number) args.get('size')).longValue() : null
+            if (args.containsKey('contentLocation')) this.contentLocation = args.get('contentLocation')?.toString()
+            if (args.containsKey('contentTypeEnumId')) this.contentTypeEnumId = args.get('contentTypeEnumId')?.toString()
             if (args.containsKey('rank')) this.rank = args.get('rank') != null ? ((Number) args.get('rank')).longValue() : null
             if (args.containsKey('shape')) this.shape = args.get('shape')?.toString()
             if (args.containsKey('strides')) this.strides = args.get('strides')?.toString()

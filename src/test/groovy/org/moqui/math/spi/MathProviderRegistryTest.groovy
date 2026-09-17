@@ -16,10 +16,10 @@ class MathProviderRegistryTest {
     void discoversEveryShippedBackendThroughServiceLoader() {
         List<MathProviderFactory> factories = MathProviderRegistry.factories()
 
-        assert factories*.providerId == ['opencv', 'jax', 'petsctao', 'openfoam', 'ortools', 'libtorch']
+        assert factories*.providerId == ['onnx', 'opencv', 'jax', 'petsctao', 'openfoam', 'ortools', 'libtorch']
         // The order the dispatcher used to hard-code as if/else branches is now a priority,
         // with the general-purpose backend last by construction.
-        assert factories*.priority == [60, 50, 40, 30, 20, Integer.MIN_VALUE]
+        assert factories*.priority == [70, 60, 50, 40, 30, 20, Integer.MIN_VALUE]
         assert factories.last().priority == Integer.MIN_VALUE
     }
 
