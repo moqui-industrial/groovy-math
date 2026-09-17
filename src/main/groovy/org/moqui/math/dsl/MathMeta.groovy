@@ -165,4 +165,13 @@ final class MathMeta implements Iterable<ModelValue> {
         }
         values.iterator()
     }
+
+    Object execute(final String targetId = null,
+                   @DelegatesTo(value = org.moqui.math.MathEngine.ExecutionRequest, strategy = Closure.DELEGATE_FIRST) final Closure<?> request = null) {
+        org.moqui.math.MathEngine.execute(this, targetId, request)
+    }
+
+    Object execute(@DelegatesTo(value = org.moqui.math.MathEngine.ExecutionRequest, strategy = Closure.DELEGATE_FIRST) final Closure<?> request) {
+        org.moqui.math.MathEngine.execute(this, null, request)
+    }
 }

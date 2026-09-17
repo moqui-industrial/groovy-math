@@ -107,15 +107,23 @@ The DSL is **strictly derived from the Moqui metamodel** (`MathEntities.xml` and
 
 ### Standalone Plans vs Governed Enterprise Models
 
-`MathModelDef` and `MathModel` are completely **optional**. If you only need to declare a mathematical operation or pipeline (such as a matrix multiplication, an SVD decomposition, or an affine coordinate frame change), you can declare a standalone mathematical plan:
+`MathModelDef` and `MathModel` are completely **optional**. If you only need to declare a mathematical operation or pipeline (such as a matrix multiplication, an SVD decomposition, or an affine coordinate frame change), you can declare and **directly execute** a standalone mathematical plan:
 
 ```groovy
+import org.moqui.math.MathEngine
 import org.moqui.math.dsl.*
 
-// Standalone mathematical plan: zero overhead, pure mathematics
+// 1. Standalone mathematical plan: zero overhead, pure mathematics
 MathMeta plan = MathDsl.fluent {
-    matrix('A', rows: 2, cols: 3, data: [[1, 2, 3], [4, 5, 6]])
-    matrix('B', rows: 3, cols: 2, data: [[7, 8], [9, 10], [11, 12]])
+    matrix('A', rows: 2, cols: 3, data: [
+        [1.0, 2.0, 3.0],
+        [4.0, 5.0, 6.0]
+    ])
+    matrix('B', rows: 3, cols: 2, data: [
+        [7.0, 8.0],
+        [9.0, 10.0],
+        [11.0, 12.0]
+    ])
     matrix('C', rows: 2, cols: 2)
 
     transformation('MultiplyAB') {
@@ -125,6 +133,18 @@ MathMeta plan = MathDsl.fluent {
         resultMatrix 'C'
     }
 }
+
+// 2. Direct execution (like Python torch.mm):
+// The data declared in the DSL matrices is automatically used as default inputs!
+Map<String, Object> result = plan.execute('MultiplyAB')
+println "Result C = " + result.C
+// Output: [[58.0, 64.0], [139.0, 154.0]]
+
+// Or override inputs dynamically at runtime:
+Map<String, Object> dynamicResult = MathEngine.execute(plan, 'MultiplyAB', [
+    A: [[2.0, 0.0, 0.0], [0.0, 2.0, 0.0]],
+    B: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
+])
 ```
 
 When enterprise governance, auditability, and lifecycle management (Draft -> Approved -> Production -> Retired) are required, wrap the definition in `modelDef` and `model`:
@@ -224,25 +244,34 @@ Or run the full JVM validation and checkstyle/coverage verification:
 
 ---
 
-### 3. Native Engines Mode (LibTorch, JAX, OpenFOAM)
-
-Groovy Math includes high-performance C++ engines dispatched via Panama FFM.
-
-#### Step 3.1: Build Native Bridges (Optional on First Setup)
-If you are developing or modifying the C++ bridge code:
-* Ensure `cmake` and `ninja` are installed (e.g. `sudo apt install cmake ninja-build` on Ubuntu/Debian).
-* To build the native OpenFOAM FVM CFD bridge:
-  ```bash
-  ./gradlew buildOpenFoamNative
-  ```
-* To build the native LibTorch bridge (requires LibTorch C++ distribution, set via `export LIBTORCH_HOME=/path/to/libtorch`):
-  ```bash
-  ./gradlew buildLibTorchNative
-  ```
-* To build the native JAX bridge (uses Python 3 + JAX + NumPy):
-  ```bash
-  ./gradlew buildJaxNative
-  ```
+### 3. Native Engines Mode (LibTorch, JAX, OpenFOAM, OpenCV)
+ 
+ Groovy Math acts as the **high-performance native C/C++ frontend for the Groovy community**, fulfilling the same role PyTorch and OpenCV-Python play in the Python ecosystem.
+ 
+ #### Python Wheel & Pip Philosophy for the JVM
+ In the Python ecosystem, users run `pip install torch` and receive pre-compiled native binaries (Wheels) for their specific OS and architecture (`linux-x86_64`, `macos-aarch64`, etc.), without needing a C++ compiler.
+ 
+ `groovy-math` brings this exact experience to Groovy and JVM developers:
+ * **Automated Native Provisioning (`downloadLibTorch`)**: If the official LibTorch C++ distribution is not present locally (`~/.local/opt/libtorch*` or `$LIBTORCH_HOME`), Gradle automatically downloads the official release for your OS/architecture directly from PyTorch servers.
+ * **Platform-Aware Packaging (`packageNativeLibs`)**: Native shared libraries (`.so`, `.dylib`, `.dll`) are bundled inside the JAR under platform-qualified paths (e.g. `native/linux-x86_64/`).
+ * **Automatic Runtime Unpacking (`NativeLibraryLoader`)**: At runtime, `NativeLibraryLoader` identifies the host OS/arch, unpacks the matching native library to a temporary cache, and loads it via `System.load()`.
+ * **Protected Panama Initialization**: The Java FFM classes (`LibTorchPanama`, `OpenCvPanama`) verify availability with `isAvailable()` before linking symbols, preventing fatal JVM startup crashes (`ExceptionInInitializerError` or `UnsatisfiedLinkError`) if an optional backend is missing.
+ 
+ #### Step 3.1: Build Native Bridges (Optional for C++ Contributors)
+ If you are developing or modifying the C++ bridge code:
+ * Ensure `cmake` and `ninja` are installed (e.g. `sudo apt install cmake ninja-build` on Ubuntu/Debian).
+ * To build the native LibTorch bridge (automatically discovers or downloads LibTorch):
+   ```bash
+   ./gradlew buildLibTorchNative
+   ```
+ * To build the native OpenFOAM FVM CFD bridge:
+   ```bash
+   ./gradlew buildOpenFoamNative
+   ```
+ * To build the native JAX bridge (uses Python 3 + JAX + NumPy):
+   ```bash
+   ./gradlew buildJaxNative
+   ```
 
 #### Step 3.2: Setting up Isolated Python Virtual Environment for JAX (Optional)
 Following the `moqui-jep` pattern, an isolated virtual environment can be created automatically:

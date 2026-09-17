@@ -63,10 +63,62 @@ public final class LibTorchPanama implements LibTorchBackend {
     private final MethodHandle configureThreadsHandle;
     private final MethodHandle intraOpThreadsHandle;
     private final MethodHandle interOpThreadsHandle;
+    private final boolean available;
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    private void checkAvailable() {
+        if (!available) {
+            throw new UnsatisfiedLinkError("LibTorch native library (libgroovy_math_libtorch) is not loaded or available. " +
+                "Run './gradlew buildLibTorchNative' to build or package the native binaries, " +
+                "or ensure the native library is available on java.library.path or ~/.local/opt/libtorch.");
+        }
+    }
 
     private LibTorchPanama() {
         this.linker = Linker.nativeLinker();
         this.symbols = loadSymbols();
+        boolean hasRequiredSymbols = this.symbols != null && this.symbols.find("torch_panama_create_plan").isPresent();
+        this.available = hasRequiredSymbols;
+
+        if (!hasRequiredSymbols) {
+            this.createPlanHandle = null;
+            this.destroyHandle = null;
+            this.outputWidthHandle = null;
+            this.sealHandle = null;
+            this.setTrainingHandle = null;
+            this.addAffineHandle = null;
+            this.addReluHandle = null;
+            this.addSigmoidHandle = null;
+            this.addGeluHandle = null;
+            this.addSiluHandle = null;
+            this.addTanhHandle = null;
+            this.addLeakyReluHandle = null;
+            this.addEluHandle = null;
+            this.addSoftmaxHandle = null;
+            this.addLogSoftmaxHandle = null;
+            this.addLayerNormHandle = null;
+            this.addRMSNormHandle = null;
+            this.addMatrixProductHandle = null;
+            this.addAttentionMaskHandle = null;
+            this.addScaledDotProductAttentionHandle = null;
+            this.addBinaryOpHandle = null;
+            this.addUnaryMathHandle = null;
+            this.addReductionHandle = null;
+            this.addLossHandle = null;
+            this.executeHandle = null;
+            this.backwardHandle = null;
+            this.stepOptimizerHandle = null;
+            this.zeroGradHandle = null;
+            this.matmulHandle = null;
+            this.tensorOpHandle = null;
+            this.configureThreadsHandle = null;
+            this.intraOpThreadsHandle = null;
+            this.interOpThreadsHandle = null;
+            return;
+        }
 
         this.createPlanHandle = find("torch_panama_create_plan",
             FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT));
@@ -157,6 +209,11 @@ public final class LibTorchPanama implements LibTorchBackend {
         if (defaultBuildLib.exists()) {
             return SymbolLookup.libraryLookup(defaultBuildLib.toPath(), Arena.global());
         }
+        String userHome = System.getProperty("user.home", "");
+        File cachedLib = new File(userHome, ".groovy-math/native/libgroovy_math_libtorch.so");
+        if (cachedLib.exists()) {
+            return SymbolLookup.libraryLookup(cachedLib.toPath(), Arena.global());
+        }
         try {
             org.moqui.math.nativeutil.NativeLibraryLoader.loadLibrary("groovy_math_libtorch");
         } catch (Throwable ignored) {
@@ -212,6 +269,7 @@ public final class LibTorchPanama implements LibTorchBackend {
 
     @Override
     public long createPlan(int inputWidth) {
+        checkAvailable();
         try {
             long handle = (long) createPlanHandle.invokeExact(inputWidth);
             if (handle != 0L) planInputWidths.put(handle, inputWidth);
@@ -572,6 +630,7 @@ public final class LibTorchPanama implements LibTorchBackend {
     public void matmul(MemorySegment a, long aRows, long aCols,
                        MemorySegment b, long bRows, long bCols,
                        MemorySegment out) {
+        checkAvailable();
         TensorValidator.validateMatmul(a, aRows, aCols, b, bRows, bCols, out, TensorDescriptor.DTYPE_FLOAT32);
         try {
             matmulHandle.invokeExact(a, aRows, aCols, b, bRows, bCols, out);

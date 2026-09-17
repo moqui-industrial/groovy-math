@@ -50,63 +50,55 @@ final class LibTorchProvider implements MathProvider<LibTorchPlan, LibTorchResul
     LibTorchPlan compile(final MathMeta mathMeta) {
         Objects.requireNonNull(mathMeta, 'Math metadata must not be null').freeze()
         ModelValue model = mathMeta.entity('MathModel').findByName(mathModelId)
-        if (model == null) throw new IllegalArgumentException("Unknown MathModel '${mathModelId}'")
 
-        List<ModelValue> modelData = []
-        for (ModelValue value : mathMeta.entity('MathModelData')) {
-            if (value.get('mathModelId') == mathModelId) modelData.add(value)
-        }
-        modelData.sort(Comparator.comparingInt { ModelValue value -> sequence(value) })
         Map<String, ModelValue> tensors = index(mathMeta.entity('Tensor'), 'tensorId')
         Map<String, ModelValue> matrices = index(mathMeta.entity('Matrix'), 'matrixId')
         Map<String, ModelValue> transformations = index(mathMeta.entity('Transformation'), 'transformationId')
         List<ModelValue> operands = []
         for (ModelValue value : mathMeta.entity('TransformationOperand')) operands.add(value)
 
-        List<ModelValue> tensorData = []
-        for (ModelValue value : modelData) if (value.get('tensorId') != null) tensorData.add(value)
-        ModelValue inputTensor
-        for (ModelValue value : tensorData) {
-            ModelValue candidate = tensors.get(value.get('tensorId') as String)
-            if (candidate?.get('purposeEnumId') == 'TpOriginal') { inputTensor = candidate; break }
-        }
-        if (inputTensor == null) {
+        List<ModelValue> pipelineSteps = []
+        ModelValue inputObject = null
+        String inputId = null
+
+        if (model != null) {
+            List<ModelValue> modelData = []
+            for (ModelValue value : mathMeta.entity('MathModelData')) {
+                if (value.get('mathModelId') == mathModelId) modelData.add(value)
+            }
+            modelData.sort(Comparator.comparingInt { ModelValue value -> sequence(value) })
+
+            List<ModelValue> tensorData = []
+            for (ModelValue value : modelData) if (value.get('tensorId') != null) tensorData.add(value)
+            ModelValue inputTensor
             for (ModelValue value : tensorData) {
                 ModelValue candidate = tensors.get(value.get('tensorId') as String)
-                if (candidate != null && candidate.get('purposeEnumId') != 'TpModelParams') {
-                    inputTensor = candidate
-                    break
+                if (candidate?.get('purposeEnumId') == 'TpOriginal') { inputTensor = candidate; break }
+            }
+            if (inputTensor == null) {
+                for (ModelValue value : tensorData) {
+                    ModelValue candidate = tensors.get(value.get('tensorId') as String)
+                    if (candidate != null && candidate.get('purposeEnumId') != 'TpModelParams') {
+                        inputTensor = candidate
+                        break
+                    }
                 }
             }
-        }
-        ModelValue inputObject = inputTensor
-        String inputId = inputTensor?.get('tensorId') as String
-        if (inputObject == null) {
-            for (ModelValue value : modelData) {
-                if (value.get('matrixId') == null) continue
-                ModelValue candidate = matrices.get(value.get('matrixId') as String)
-                if (candidate != null && candidate.get('purposeEnumId') == 'MpOriginal' &&
-                    candidate.get('componentArray') == null) {
-                    inputObject = candidate
-                    inputId = candidate.get('matrixId') as String
-                    break
+            inputObject = inputTensor
+            inputId = inputTensor?.get('tensorId') as String
+            if (inputObject == null) {
+                for (ModelValue value : modelData) {
+                    if (value.get('matrixId') == null) continue
+                    ModelValue candidate = matrices.get(value.get('matrixId') as String)
+                    if (candidate != null && candidate.get('purposeEnumId') == 'MpOriginal' &&
+                        candidate.get('componentArray') == null) {
+                        inputObject = candidate
+                        inputId = candidate.get('matrixId') as String
+                        break
+                    }
                 }
             }
-        }
-        if (inputObject == null) throw new IllegalStateException("MathModel '${mathModelId}' has no runtime input")
 
-        int inputWidth = objectWidth(inputObject)
-        int inputRows = objectRows(inputObject)
-        LinkedHashMap<String, Integer> slots = new LinkedHashMap<>()
-        slots.put(inputId, 0)
-        int nextSlot = 1
-        int operationCount = 0
-        int outputSlot = 0
-        int outputWidth = inputWidth
-        String outputId = inputId
-        long handle = backend.createPlan(inputWidth)
-        try {
-            List<ModelValue> pipelineSteps = []
             String defId = model.get('mathModelDefId') as String
             if (defId != null) {
                 for (ModelValue step : mathMeta.entity('MathModelDefPipeline')) {
@@ -121,7 +113,55 @@ final class LibTorchProvider implements MathProvider<LibTorchPlan, LibTorchResul
                     if (data.get('transformationId') != null) pipelineSteps.add(data)
                 }
             }
+        } else {
+            // Standalone Transformation or Plan!
+            ModelValue singleTf = mathMeta.entity('Transformation').findByName(mathModelId)
+            if (singleTf != null) {
+                pipelineSteps.add(singleTf)
+            } else {
+                for (ModelValue tf : mathMeta.entity('Transformation')) {
+                    pipelineSteps.add(tf)
+                }
+            }
+            if (pipelineSteps.isEmpty()) {
+                throw new IllegalArgumentException("Unknown MathModel or Transformation '${mathModelId}'")
+            }
 
+            // Find input object from operands of the first transformation
+            String firstTfId = pipelineSteps[0].get('transformationId') as String
+            for (ModelValue op : operands) {
+                if (op.get('transformationId') == firstTfId) {
+                    String opType = op.get('operandTypeEnumId') as String
+                    String mId = op.get('operandMatrixId') as String
+                    String tId = op.get('operandTensorId') as String
+                    if (opType == 'TotLeftMatrix' || opType == 'TotSingle' || opType == 'TotLeftTensor' || inputObject == null) {
+                        if (mId && matrices.containsKey(mId)) {
+                            inputObject = matrices.get(mId)
+                            inputId = mId
+                            if (opType == 'TotLeftMatrix') break
+                        } else if (tId && tensors.containsKey(tId)) {
+                            inputObject = tensors.get(tId)
+                            inputId = tId
+                            if (opType == 'TotLeftTensor') break
+                        }
+                    }
+                }
+            }
+        }
+
+        if (inputObject == null) throw new IllegalStateException("MathModel or Transformation '${mathModelId}' has no runtime input")
+
+        int inputWidth = objectWidth(inputObject)
+        int inputRows = objectRows(inputObject)
+        LinkedHashMap<String, Integer> slots = new LinkedHashMap<>()
+        slots.put(inputId, 0)
+        int nextSlot = 1
+        int operationCount = 0
+        int outputSlot = 0
+        int outputWidth = inputWidth
+        String outputId = inputId
+        long handle = backend.createPlan(inputWidth)
+        try {
             for (ModelValue data : pipelineSteps) {
                 if (data.get('transformationId') == null) continue
                 String transformationId = data.get('transformationId') as String
@@ -280,9 +320,10 @@ final class LibTorchProvider implements MathProvider<LibTorchPlan, LibTorchResul
             ModelValue outputObject = tensors.get(outputId) ?: matrices.get(outputId)
             String inputName = (inputObject.get('name') ?: inputId) as String
             String outputName = (outputObject?.get('name') ?: outputId) as String
+            float[] defaultInputValues = initialElements(inputObject, inputRows * inputWidth)
             new LibTorchPlan(mathModelId, inputName, outputName, inputRows, inputWidth, outputWidth,
                 operationCount, backend, handle, inputId, declaredShape(inputObject),
-                declaredDataType(inputObject, inputId))
+                declaredDataType(inputObject, inputId), defaultInputValues)
         } catch (Throwable failure) {
             backend.destroy(handle)
             throw failure
@@ -292,8 +333,12 @@ final class LibTorchProvider implements MathProvider<LibTorchPlan, LibTorchResul
     @Override
     LibTorchResult execute(final LibTorchPlan plan, final Map<String, ?> inputs) {
         Objects.requireNonNull(plan, 'LibTorch plan must not be null')
-        Object raw = inputs.get(plan.inputName)
-        if (raw == null) raw = inputs.get('input')
+        Object raw = inputs != null ? inputs.get(plan.inputName) : null
+        if (raw == null && inputs != null) raw = inputs.get('input')
+        if (raw == null && inputs != null && plan.inputId != null) raw = inputs.get(plan.inputId)
+        if (raw == null && plan.defaultInputValues != null && plan.defaultInputValues.length > 0) {
+            return plan.execute(plan.defaultInputValues)
+        }
         float[] values
         if (raw instanceof float[]) values = (float[]) raw
         else if (raw instanceof Collection) {
@@ -305,6 +350,18 @@ final class LibTorchProvider implements MathProvider<LibTorchPlan, LibTorchResul
             throw new IllegalArgumentException("Input '${plan.inputName}' must be float[] or Collection<Number>")
         }
         plan.execute(values)
+    }
+
+    private static float[] initialElements(final ModelValue value, final int expectedCount) {
+        if (value == null) return null
+        if (value.definition.name == 'Matrix') {
+            if (value.get('componentArray') == null) return null
+            return matrixElements(value, expectedCount)
+        }
+        if (value.get('elementArray') != null) {
+            return elements(value, expectedCount)
+        }
+        null
     }
 
     private static int sequence(final ModelValue value) {

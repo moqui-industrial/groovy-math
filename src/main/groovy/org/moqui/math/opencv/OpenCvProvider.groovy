@@ -32,13 +32,49 @@ final class OpenCvProvider implements MathProvider<OpenCvPlan, OpenCvResult> {
     OpenCvPlan compile(final MathMeta mathMeta) {
         Objects.requireNonNull(mathMeta, 'Math metadata must not be null').freeze()
         ModelValue model = mathMeta.entity('MathModel').findByName(mathModelId)
-        if (model == null) throw new IllegalArgumentException("Unknown MathModel '${mathModelId}'")
 
         List<ModelValue> modelData = []
-        for (ModelValue value : mathMeta.entity('MathModelData')) {
-            if (value.get('mathModelId') == mathModelId) modelData.add(value)
+        if (model != null) {
+            for (ModelValue value : mathMeta.entity('MathModelData')) {
+                if (value.get('mathModelId') == mathModelId) modelData.add(value)
+            }
+            modelData.sort(Comparator.comparingInt { ModelValue v -> ((v.get('sequenceNum') as Number) ?: 0).intValue() })
         }
-        modelData.sort(Comparator.comparingInt { ModelValue v -> ((v.get('sequenceNum') as Number) ?: 0).intValue() })
+
+        List<String> transformationIds = []
+        String defId = model?.get('mathModelDefId') as String
+        if (defId != null && mathMeta.hasEntity('MathModelDefPipeline')) {
+            List<ModelValue> steps = []
+            for (ModelValue step : mathMeta.entity('MathModelDefPipeline')) {
+                if (step.get('mathModelDefId') == defId && step.get('transformationId') != null) {
+                    steps.add(step)
+                }
+            }
+            steps.sort(Comparator.comparingInt { ModelValue v -> ((v.get('sequenceNum') as Number) ?: 0).intValue() })
+            for (ModelValue step : steps) {
+                transformationIds.add(step.get('transformationId') as String)
+            }
+        }
+        if (transformationIds.isEmpty()) {
+            for (ModelValue data : modelData) {
+                String tfId = data.get('transformationId') as String
+                if (tfId) transformationIds.add(tfId)
+            }
+        }
+        if (transformationIds.isEmpty() && model == null) {
+            ModelValue singleTf = mathMeta.entity('Transformation').findByName(mathModelId)
+            if (singleTf != null) {
+                transformationIds.add(mathModelId)
+            } else {
+                for (ModelValue tf : mathMeta.entity('Transformation')) {
+                    transformationIds.add(tf.get('transformationId') as String)
+                }
+            }
+        }
+
+        if (model == null && transformationIds.isEmpty()) {
+            throw new IllegalArgumentException("Unknown MathModel or Transformation '${mathModelId}'")
+        }
 
         String inputName = null
         String outputName = null
@@ -71,9 +107,6 @@ final class OpenCvProvider implements MathProvider<OpenCvPlan, OpenCvResult> {
                         }
                         axes.sort(Comparator.comparingInt { ModelValue v -> ((v.get('axisIndex') as Number) ?: 0).intValue() })
                         if (axes.size() >= 2) {
-                            // require() rather than get(): this used to read 'dimensionSize',
-                            // a name the schema does not define, which answered null and threw
-                            // a NullPointerException far from the mistake.
                             height = ((Number) axes.get(0).require('axisSize')).intValue()
                             width = ((Number) axes.get(1).require('axisSize')).intValue()
                         }
@@ -81,6 +114,29 @@ final class OpenCvProvider implements MathProvider<OpenCvPlan, OpenCvResult> {
                     outputName = tensorId
                 }
             }
+        }
+
+        if (inputName == null && !transformationIds.isEmpty()) {
+            String firstTfId = transformationIds.first()
+            for (ModelValue op : mathMeta.entity('TransformationOperand')) {
+                if (op.get('transformationId') == firstTfId) {
+                    String mId = op.get('operandMatrixId') as String
+                    String tId = op.get('operandTensorId') as String
+                    if (mId) {
+                        inputName = mId
+                        ModelValue m = mathMeta.entity('Matrix').findByName(mId)
+                        height = ((Number) m?.get('rows'))?.intValue() ?: 0
+                        width = ((Number) m?.get('cols'))?.intValue() ?: 0
+                        break
+                    } else if (tId) {
+                        inputName = tId
+                        break
+                    }
+                }
+            }
+            String lastTfId = transformationIds.last()
+            ModelValue lastTf = mathMeta.entity('Transformation').findByName(lastTfId)
+            outputName = (lastTf?.get('resultMatrixId') ?: lastTf?.get('resultTensorId') ?: 'Result') as String
         }
 
         if (width <= 0 || height <= 0) {
@@ -93,9 +149,7 @@ final class OpenCvProvider implements MathProvider<OpenCvPlan, OpenCvResult> {
         long planHandle = panama.createPlan(width, height)
         if (planHandle == 0L) throw new IllegalStateException('Failed to create native OpenCV plan')
 
-        for (ModelValue data : modelData) {
-            String transformationId = data.get('transformationId') as String
-            if (!transformationId) continue
+        for (String transformationId : transformationIds) {
             ModelValue tf = mathMeta.entity('Transformation').findByName(transformationId)
             if (!tf) continue
 

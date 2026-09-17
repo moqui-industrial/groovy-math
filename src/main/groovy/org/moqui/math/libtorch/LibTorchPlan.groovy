@@ -30,6 +30,7 @@ final class LibTorchPlan implements AutoCloseable {
     private final long[] declaredInputShape
     /** Element type declared for the input, as an FFM dtype code. */
     final int declaredDataType
+    final float[] defaultInputValues
     private final LibTorchBackend backend
     private final ReentrantReadWriteLock lifecycle = new ReentrantReadWriteLock()
     private long handle
@@ -38,7 +39,8 @@ final class LibTorchPlan implements AutoCloseable {
                  final int inputRows, final int inputWidth, final int outputWidth, final int operationCount,
                  final LibTorchBackend backend, final long handle,
                  final String inputId = null, final long[] declaredInputShape = null,
-                 final int declaredDataType = TensorDescriptor.DTYPE_FLOAT32) {
+                 final int declaredDataType = TensorDescriptor.DTYPE_FLOAT32,
+                 final float[] defaultInputValues = null) {
         this.mathModelId = mathModelId
         this.inputName = inputName
         this.outputName = outputName
@@ -51,6 +53,7 @@ final class LibTorchPlan implements AutoCloseable {
         this.inputId = inputId
         this.declaredInputShape = declaredInputShape == null ? null : Arrays.copyOf(declaredInputShape, declaredInputShape.length)
         this.declaredDataType = declaredDataType
+        this.defaultInputValues = defaultInputValues
     }
 
     /**

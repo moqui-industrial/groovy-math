@@ -77,14 +77,83 @@ def jaxSourceDirectory = layout.projectDirectory.dir('src/main/cpp/jax')
 def openCvSourceDirectory = layout.projectDirectory.dir('src/main/cpp/opencv')
 def openFoamSourceDirectory = layout.projectDirectory.dir('src/main/cpp/openfoam')
 
+class LibTorchResolver {
+    static String resolve() {
+        String envHome = System.getenv('LIBTORCH_HOME')
+        if (envHome && new File(envHome).exists()) return envHome
+
+        // Check user local opt directory (e.g. ~/.local/opt/libtorch*)
+        File userOpt = new File(System.getProperty('user.home'), '.local/opt')
+        if (userOpt.exists()) {
+            File[] candidates = userOpt.listFiles({ File dir, String name -> name.startsWith('libtorch') } as FilenameFilter)
+            if (candidates != null && candidates.length > 0) {
+                Arrays.sort(candidates, Collections.reverseOrder())
+                for (File candidate : candidates) {
+                    if (new File(candidate, 'share/cmake/Torch').exists()) {
+                        return candidate.absolutePath
+                    }
+                }
+            }
+        }
+
+        // Check cached auto-download
+        File cachedTorch = new File(System.getProperty('user.home'), '.groovy-math/cache/libtorch')
+        if (new File(cachedTorch, 'share/cmake/Torch').exists()) {
+            return cachedTorch.absolutePath
+        }
+        return null
+    }
+}
+
+tasks.register('downloadLibTorch') {
+    description = 'Auto-downloads official LibTorch CPU binary distribution if not present on system'
+    doLast {
+        String existing = LibTorchResolver.resolve()
+        if (existing != null) {
+            logger.lifecycle("LibTorch is already available at: ${existing}")
+            return
+        }
+
+        File cacheDir = new File(System.getProperty('user.home'), '.groovy-math/cache')
+        cacheDir.mkdirs()
+        String os = System.getProperty('os.name', '').toLowerCase()
+        String arch = System.getProperty('os.arch', '').toLowerCase()
+        String downloadUrl
+        if (os.contains('linux') && (arch.contains('x86_64') || arch.contains('amd64'))) {
+            downloadUrl = 'https://download-r2.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.4.0%2Bcpu.zip'
+        } else if ((os.contains('mac') || os.contains('darwin')) && (arch.contains('aarch64') || arch.contains('arm64'))) {
+            downloadUrl = 'https://download-r2.pytorch.org/libtorch/cpu/libtorch-macos-arm64-2.4.0.zip'
+        } else if ((os.contains('mac') || os.contains('darwin'))) {
+            downloadUrl = 'https://download-r2.pytorch.org/libtorch/cpu/libtorch-macos-x86_64-2.4.0.zip'
+        } else if (os.contains('win')) {
+            downloadUrl = 'https://download-r2.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.4.0%2Bcpu.zip'
+        } else {
+            throw new GradleException("Unsupported platform for auto-download: ${os}-${arch}. Please install LibTorch manually and set LIBTORCH_HOME.")
+        }
+
+        File zipFile = new File(cacheDir, 'libtorch-download.zip')
+        logger.lifecycle("Downloading official LibTorch distribution from: ${downloadUrl} ...")
+        new URL(downloadUrl).withInputStream { inStream ->
+            zipFile.withOutputStream { outStream -> outStream << inStream }
+        }
+        logger.lifecycle("Unpacking LibTorch to ${cacheDir.absolutePath} ...")
+        copy {
+            from zipTree(zipFile)
+            into cacheDir
+        }
+        zipFile.delete()
+        logger.lifecycle("LibTorch successfully provisioned at: ${new File(cacheDir, 'libtorch').absolutePath}")
+    }
+}
+
 tasks.register('configureLibTorchNative', Exec) {
+    dependsOn tasks.named('downloadLibTorch')
     inputs.dir(libTorchSourceDirectory)
     outputs.file(nativeBuildDirectory.map { it.file('build.ninja') })
     doFirst {
-        String libTorchHome = System.getenv('LIBTORCH_HOME')
+        String libTorchHome = LibTorchResolver.resolve()
         if (!libTorchHome || !new File(libTorchHome).exists()) {
-            throw new GradleException('LIBTORCH_HOME must point to an unpacked LibTorch distribution' +
-                (libTorchHome ? ": ${libTorchHome} does not exist" : ' (it is not set)'))
+            throw new GradleException("LibTorch distribution not found after downloadLibTorch.")
         }
         String cmake = System.getenv('CMAKE_COMMAND') ?: 'cmake'
         commandLine cmake, '-S', libTorchSourceDirectory.asFile.absolutePath,
@@ -378,10 +447,19 @@ publishing {
     }
 }
 
+def osPrefix = org.gradle.internal.os.OperatingSystem.current().with {
+    isWindows() ? 'windows' : isMacOsX() ? 'osx' : 'linux'
+}
+def archPrefix = System.getProperty('os.arch', '').toLowerCase().with {
+    (it.contains('x86_64') || it.contains('amd64')) ? 'x86_64' : (it.contains('aarch64') || it.contains('arm64')) ? 'aarch64' : it
+}
+
 tasks.register('packageNativeLibs', Copy) {
-    into layout.buildDirectory.dir("resources/main/native/linux-x86_64")
+    into layout.buildDirectory.dir("resources/main/native/${osPrefix}-${archPrefix}")
     from(nativeBuildDirectory) { include '*.so', '*.dylib', '*.dll' }
     from(jaxBuildDirectory) { include '*.so', '*.dylib', '*.dll' }
+    from(openCvBuildDirectory) { include '*.so', '*.dylib', '*.dll' }
+    from(petscTaoBuildDirectory) { include '*.so', '*.dylib', '*.dll' }
     from(openFoamBuildDirectory) { include '*.so', '*.dylib', '*.dll' }
 }
 tasks.named('jar').configure {

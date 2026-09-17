@@ -25,20 +25,57 @@ import org.moqui.math.spi.MathProviderRegistry
 final class MathEngine {
     private MathEngine() { }
 
-    static Object execute(final MathMeta mathMeta, final String mathModelId,
-                          @DelegatesTo(value = ExecutionRequest, strategy = Closure.DELEGATE_FIRST) final Closure<?> request) {
+    static Object execute(final MathMeta mathMeta, final String targetId = null,
+                          @DelegatesTo(value = ExecutionRequest, strategy = Closure.DELEGATE_FIRST) final Closure<?> request = null) {
         ExecutionRequest execution = new ExecutionRequest()
-        execution.configure(request)
+        if (request != null) execution.configure(request)
 
         Objects.requireNonNull(mathMeta, 'Math metadata must not be null').freeze()
-        ModelValue model = mathMeta.entity('MathModel').findByName(mathModelId)
-        if (model == null) throw new IllegalArgumentException("Unknown MathModel '${mathModelId}'")
-
-        MathProviderFactory factory = MathProviderRegistry.select(mathMeta, model)
-        if (factory == null) {
-            throw new IllegalStateException(MathProviderRegistry.unclaimedMessage(mathMeta, model))
+        String effectiveId = targetId
+        ModelValue model = effectiveId != null ? mathMeta.entity('MathModel').findByName(effectiveId) : null
+        if (model == null && effectiveId == null) {
+            List<ModelValue> models = []
+            for (ModelValue m : mathMeta.entity('MathModel')) models.add(m)
+            if (models.size() == 1) {
+                model = models[0]
+                effectiveId = model.get('mathModelId') as String
+            }
         }
-        factory.create(mathModelId).run(mathMeta, execution.inputs)
+
+        if (model != null) {
+            MathProviderFactory factory = MathProviderRegistry.select(mathMeta, model)
+            if (factory == null) {
+                throw new IllegalStateException(MathProviderRegistry.unclaimedMessage(mathMeta, model))
+            }
+            return factory.create(effectiveId).run(mathMeta, execution.inputs)
+        }
+
+        // Standalone Transformation or Plan execution!
+        ModelValue transformation = effectiveId != null ? mathMeta.entity('Transformation').findByName(effectiveId) : null
+        if (transformation == null && effectiveId == null) {
+            for (ModelValue tf : mathMeta.entity('Transformation')) {
+                transformation = tf
+                effectiveId = tf.get('transformationId') as String
+                break
+            }
+        }
+
+        if (transformation != null || mathMeta.entity('Transformation').iterator().hasNext()) {
+            String dispatchId = effectiveId ?: 'Plan'
+            // Default to LibTorch provider for general linear algebra and tensor plans
+            org.moqui.math.libtorch.LibTorchProvider provider = new org.moqui.math.libtorch.LibTorchProvider(dispatchId)
+            return provider.run(mathMeta, execution.inputs)
+        }
+
+        String notFoundMsg = (effectiveId != null) ?
+            "Unknown MathModel or Transformation '${effectiveId}'" :
+            "No MathModel or Transformation found in MathMeta to execute"
+        throw new IllegalArgumentException(notFoundMsg)
+    }
+
+    static Object execute(final MathMeta mathMeta,
+                          @DelegatesTo(value = ExecutionRequest, strategy = Closure.DELEGATE_FIRST) final Closure<?> request) {
+        execute(mathMeta, null, request)
     }
 
     @CompileStatic

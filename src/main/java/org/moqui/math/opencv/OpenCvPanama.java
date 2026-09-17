@@ -38,10 +38,41 @@ public final class OpenCvPanama {
     private final MethodHandle executeHandle;
     private final MethodHandle filter2dDirectHandle;
     private final MethodHandle warpAffineDirectHandle;
+    private final boolean available;
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    private void checkAvailable() {
+        if (!available) {
+            throw new UnsatisfiedLinkError("OpenCV native library (libgroovy_math_opencv) is not loaded or available. " +
+                "Run './gradlew buildOpenCvNative' or ensure the native library is available on java.library.path.");
+        }
+    }
 
     private OpenCvPanama() {
         this.linker = Linker.nativeLinker();
         this.symbols = loadSymbols();
+        boolean hasSymbols = this.symbols != null && this.symbols.find("opencv_panama_create_plan").isPresent();
+        this.available = hasSymbols;
+
+        if (!hasSymbols) {
+            this.createPlanHandle = null;
+            this.destroyHandle = null;
+            this.outputWidthHandle = null;
+            this.outputHeightHandle = null;
+            this.sealHandle = null;
+            this.addGaussianBlurHandle = null;
+            this.addSobelHandle = null;
+            this.addWarpAffineHandle = null;
+            this.addWarpPerspectiveHandle = null;
+            this.addFilter2dHandle = null;
+            this.executeHandle = null;
+            this.filter2dDirectHandle = null;
+            this.warpAffineDirectHandle = null;
+            return;
+        }
 
         this.createPlanHandle = find("opencv_panama_create_plan",
             FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
@@ -94,6 +125,10 @@ public final class OpenCvPanama {
         if (defaultBuildLib.exists()) {
             return SymbolLookup.libraryLookup(defaultBuildLib.toPath(), Arena.global());
         }
+        try {
+            org.moqui.math.nativeutil.NativeLibraryLoader.loadLibrary("groovy_math_opencv");
+        } catch (Throwable ignored) {
+        }
         return SymbolLookup.loaderLookup();
     }
 
@@ -126,6 +161,7 @@ public final class OpenCvPanama {
     private final ConcurrentMap<Long, Long> planInputPixels = new ConcurrentHashMap<>();
 
     public long createPlan(int width, int height) {
+        checkAvailable();
         try {
             long handle = (long) createPlanHandle.invokeExact(width, height);
             if (handle != 0L) planInputPixels.put(handle, (long) width * height);
