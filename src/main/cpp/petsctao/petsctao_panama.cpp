@@ -35,7 +35,7 @@ struct Plan {
 std::once_flag petsc_initialization;
 std::mutex petsc_execution_mutex;
 
-static std::unordered_map<int64_t, std::unique_ptr<Plan>> g_plans;
+static std::unordered_map<int64_t, std::shared_ptr<Plan>> g_plans;
 static std::mutex g_plans_mutex;
 static std::atomic<int64_t> g_next_plan_id{1};
 
@@ -162,7 +162,7 @@ int64_t petsc_panama_create_bounded_quadratic_plan(
             return 0;
         }
 
-        auto result = std::make_unique<Plan>();
+        auto result = std::make_shared<Plan>();
         result->dimension = static_cast<PetscInt>(dimension);
         result->hessian.assign(hessian_data, hessian_data + dimension * dimension);
         result->linear.assign(linear_data, linear_data + dimension);
@@ -195,7 +195,7 @@ int32_t petsc_panama_solve(int64_t handle, double* out_solution_and_meta, int64_
         ensure_petsc();
         std::lock_guard<std::mutex> execution_guard(petsc_execution_mutex);
 
-        Plan* target = nullptr;
+        std::shared_ptr<Plan> target;
         {
             std::lock_guard<std::mutex> lock(g_plans_mutex);
             auto it = g_plans.find(handle);
@@ -203,7 +203,7 @@ int32_t petsc_panama_solve(int64_t handle, double* out_solution_and_meta, int64_
                 g_last_error = "Invalid or expired PETSc plan handle: " + std::to_string(handle);
                 return -2;
             }
-            target = it->second.get();
+            target = it->second;
         }
 
         int64_t required_bytes = static_cast<int64_t>((target->dimension + 4) * sizeof(double));
@@ -225,7 +225,7 @@ int32_t petsc_panama_solve(int64_t handle, double* out_solution_and_meta, int64_
 
         check(MatCreateSeqDense(PETSC_COMM_SELF, target->dimension, target->dimension,
                                 nullptr, &objects.hessian), "MatCreateSeqDense");
-        check(hessian(nullptr, nullptr, objects.hessian, objects.hessian, target),
+        check(hessian(nullptr, nullptr, objects.hessian, objects.hessian, target.get()),
               "Hessian assembly");
 
         check(TaoCreate(PETSC_COMM_SELF, &objects.tao), "TaoCreate");
@@ -234,10 +234,10 @@ int32_t petsc_panama_solve(int64_t handle, double* out_solution_and_meta, int64_
         check(TaoSetVariableBounds(objects.tao, objects.lower, objects.upper),
               "TaoSetVariableBounds");
         check(TaoSetObjectiveAndGradient(objects.tao, objects.gradient,
-                                         objective_gradient, target),
+                                         objective_gradient, target.get()),
               "TaoSetObjectiveAndGradient");
         check(TaoSetHessian(objects.tao, objects.hessian, objects.hessian,
-                            hessian, target), "TaoSetHessian");
+                            hessian, target.get()), "TaoSetHessian");
         check(TaoSetFromOptions(objects.tao), "TaoSetFromOptions");
         check(TaoSolve(objects.tao), "TaoSolve");
 

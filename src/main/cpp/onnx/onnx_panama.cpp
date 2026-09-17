@@ -37,7 +37,7 @@ struct OnnxSessionContext {
 };
 
 static std::mutex g_sessions_mutex;
-static std::unordered_map<int64_t, std::unique_ptr<OnnxSessionContext>> g_sessions;
+static std::unordered_map<int64_t, std::shared_ptr<OnnxSessionContext>> g_sessions;
 static std::atomic<int64_t> g_next_session_id{1};
 
 const char* onnx_panama_last_error(void) {
@@ -144,7 +144,7 @@ int64_t onnx_panama_create_session(const char* model_path) {
             return 0;
         }
 
-        auto ctx = std::make_unique<OnnxSessionContext>();
+        auto ctx = std::make_shared<OnnxSessionContext>();
         ctx->session = session;
 
         status = g_ort->GetAllocatorWithDefaultOptions(&ctx->allocator);
@@ -220,7 +220,7 @@ int64_t onnx_panama_run(int64_t session_handle,
             return -2;
         }
 
-        OnnxSessionContext* ctx = nullptr;
+        std::shared_ptr<OnnxSessionContext> ctx;
         {
             std::lock_guard<std::mutex> lock(g_sessions_mutex);
             auto it = g_sessions.find(session_handle);
@@ -228,7 +228,7 @@ int64_t onnx_panama_run(int64_t session_handle,
                 g_last_error = "Invalid or expired session handle: " + std::to_string(session_handle);
                 return -3;
             }
-            ctx = it->second.get();
+            ctx = it->second;
         }
 
         const char* in_name = (input_name && input_name[0] != '\0') ? input_name : ctx->input_name.c_str();

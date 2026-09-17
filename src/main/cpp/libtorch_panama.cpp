@@ -204,7 +204,7 @@ int configured_interop_threads = 0;
 
 static std::mutex g_plans_mutex;
 static std::atomic<int64_t> g_next_plan_id{1};
-static std::unordered_map<int64_t, std::unique_ptr<Plan>> g_plans;
+static std::unordered_map<int64_t, std::shared_ptr<Plan>> g_plans;
 
 thread_local std::string g_last_error;
 
@@ -212,7 +212,7 @@ static void set_last_error(const std::string& err) {
     g_last_error = err;
 }
 
-static Plan* get_plan(int64_t handle) {
+static std::shared_ptr<Plan> get_plan(int64_t handle) {
     if (handle <= 0) {
         set_last_error("Invalid plan handle: " + std::to_string(handle));
         return nullptr;
@@ -223,7 +223,7 @@ static Plan* get_plan(int64_t handle) {
         set_last_error("Plan handle not found or already destroyed: " + std::to_string(handle));
         return nullptr;
     }
-    return it->second.get();
+    return it->second;
 }
 
 at::Tensor run_plan(Plan& execution_plan, const float* input, int32_t batch_size) {
@@ -345,7 +345,7 @@ int64_t torch_panama_create_plan(int32_t input_width) {
             set_last_error("input width must be positive: " + std::to_string(input_width));
             return 0;
         }
-        auto p = std::make_unique<Plan>(input_width);
+        auto p = std::make_shared<Plan>(input_width);
         int64_t id = g_next_plan_id.fetch_add(1, std::memory_order_relaxed);
         std::lock_guard<std::mutex> lock(g_plans_mutex);
         g_plans[id] = std::move(p);
@@ -376,7 +376,7 @@ int32_t torch_panama_destroy(int64_t handle) {
 
 int32_t torch_panama_output_width(int64_t handle) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return 0;
         return target->output_width;
     } catch (const std::exception& e) {
@@ -390,7 +390,7 @@ int32_t torch_panama_output_width(int64_t handle) {
 
 int32_t torch_panama_seal(int64_t handle, int32_t output_slot, int32_t output_width) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->operations.empty()) {
             set_last_error("cannot seal an empty native plan");
@@ -415,7 +415,7 @@ int32_t torch_panama_seal(int64_t handle, int32_t output_slot, int32_t output_wi
 
 int32_t torch_panama_set_training(int64_t handle, int32_t is_training) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         target->training = (is_training != 0);
         for (at::Tensor* p : target->get_trainable_params()) {
@@ -435,7 +435,7 @@ int32_t torch_panama_add_affine(int64_t handle, int32_t input_slot, int32_t outp
                              int32_t input_width, int32_t output_width,
                              const float* weight, const float* bias) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify a sealed native plan");
@@ -463,7 +463,7 @@ int32_t torch_panama_add_affine(int64_t handle, int32_t input_slot, int32_t outp
 
 int32_t torch_panama_add_relu(int64_t handle, int32_t input_slot, int32_t output_slot) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -482,7 +482,7 @@ int32_t torch_panama_add_relu(int64_t handle, int32_t input_slot, int32_t output
 
 int32_t torch_panama_add_sigmoid(int64_t handle, int32_t input_slot, int32_t output_slot) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -501,7 +501,7 @@ int32_t torch_panama_add_sigmoid(int64_t handle, int32_t input_slot, int32_t out
 
 int32_t torch_panama_add_gelu(int64_t handle, int32_t input_slot, int32_t output_slot) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -520,7 +520,7 @@ int32_t torch_panama_add_gelu(int64_t handle, int32_t input_slot, int32_t output
 
 int32_t torch_panama_add_silu(int64_t handle, int32_t input_slot, int32_t output_slot) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -539,7 +539,7 @@ int32_t torch_panama_add_silu(int64_t handle, int32_t input_slot, int32_t output
 
 int32_t torch_panama_add_tanh(int64_t handle, int32_t input_slot, int32_t output_slot) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -558,7 +558,7 @@ int32_t torch_panama_add_tanh(int64_t handle, int32_t input_slot, int32_t output
 
 int32_t torch_panama_add_leaky_relu(int64_t handle, int32_t input_slot, int32_t output_slot, float negative_slope) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -577,7 +577,7 @@ int32_t torch_panama_add_leaky_relu(int64_t handle, int32_t input_slot, int32_t 
 
 int32_t torch_panama_add_elu(int64_t handle, int32_t input_slot, int32_t output_slot, float alpha) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -596,7 +596,7 @@ int32_t torch_panama_add_elu(int64_t handle, int32_t input_slot, int32_t output_
 
 int32_t torch_panama_add_softmax(int64_t handle, int32_t input_slot, int32_t output_slot, int64_t dim) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -615,7 +615,7 @@ int32_t torch_panama_add_softmax(int64_t handle, int32_t input_slot, int32_t out
 
 int32_t torch_panama_add_log_softmax(int64_t handle, int32_t input_slot, int32_t output_slot, int64_t dim) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -635,7 +635,7 @@ int32_t torch_panama_add_log_softmax(int64_t handle, int32_t input_slot, int32_t
 int32_t torch_panama_add_layer_norm(int64_t handle, int32_t input_slot, int32_t output_slot,
                                  int32_t normalized_width, const float* weight, const float* bias, float eps) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -658,7 +658,7 @@ int32_t torch_panama_add_layer_norm(int64_t handle, int32_t input_slot, int32_t 
 int32_t torch_panama_add_rms_norm(int64_t handle, int32_t input_slot, int32_t output_slot,
                                int32_t normalized_width, const float* weight, float eps) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -681,7 +681,7 @@ int32_t torch_panama_add_matrix_product(int64_t handle, int32_t input_slot, int3
                                      int32_t input_width, int32_t output_width,
                                      const float* right) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -709,7 +709,7 @@ int32_t torch_panama_add_matrix_product(int64_t handle, int32_t input_slot, int3
 int32_t torch_panama_add_attention_mask(int64_t handle, int32_t input_slot, int32_t output_slot,
                                      int64_t rows, int64_t cols, const float* mask_data) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -736,7 +736,7 @@ int32_t torch_panama_add_attention_mask(int64_t handle, int32_t input_slot, int3
 int32_t torch_panama_add_scaled_dot_product_attention(int64_t handle, int32_t query_slot, int32_t key_slot,
                                                    int32_t value_slot, int32_t output_slot, float scale) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -755,7 +755,7 @@ int32_t torch_panama_add_scaled_dot_product_attention(int64_t handle, int32_t qu
 
 int32_t torch_panama_add_binary_op(int64_t handle, int32_t op_type, int32_t input_slot_a, int32_t input_slot_b, int32_t output_slot) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -775,7 +775,7 @@ int32_t torch_panama_add_binary_op(int64_t handle, int32_t op_type, int32_t inpu
 
 int32_t torch_panama_add_unary_math(int64_t handle, int32_t op_type, int32_t input_slot, int32_t output_slot, float param) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -795,7 +795,7 @@ int32_t torch_panama_add_unary_math(int64_t handle, int32_t op_type, int32_t inp
 
 int32_t torch_panama_add_reduction(int64_t handle, int32_t red_type, int32_t input_slot, int32_t output_slot, int64_t dim, int32_t keepdim) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -815,7 +815,7 @@ int32_t torch_panama_add_reduction(int64_t handle, int32_t red_type, int32_t inp
 
 int32_t torch_panama_add_loss(int64_t handle, int32_t loss_type, int32_t pred_slot, int32_t target_slot, int32_t output_slot) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (target->sealed) {
             set_last_error("cannot modify sealed plan");
@@ -835,7 +835,7 @@ int32_t torch_panama_add_loss(int64_t handle, int32_t loss_type, int32_t pred_sl
 
 int32_t torch_panama_execute(int64_t handle, const float* input, int32_t batch_size, float* output, int64_t output_capacity_bytes) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         if (!input || !output) {
             set_last_error("input or output buffer is null");
@@ -871,7 +871,7 @@ int32_t torch_panama_execute(int64_t handle, const float* input, int32_t batch_s
 
 int32_t torch_panama_backward(int64_t handle, int32_t loss_slot) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         auto it = target->last_slots.find(loss_slot);
         if (it == target->last_slots.end()) {
@@ -895,7 +895,7 @@ int32_t torch_panama_backward(int64_t handle, int32_t loss_slot) {
 
 int32_t torch_panama_step_optimizer(int64_t handle, int32_t opt_type, float lr, float weight_decay, float momentum) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         target->step_count++;
 
@@ -949,7 +949,7 @@ int32_t torch_panama_step_optimizer(int64_t handle, int32_t opt_type, float lr, 
 
 int32_t torch_panama_zero_grad(int64_t handle) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return -1;
         for (at::Tensor* p : target->get_trainable_params()) {
             if (p && p->grad().defined()) {

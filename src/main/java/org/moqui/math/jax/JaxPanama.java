@@ -60,6 +60,7 @@ public final class JaxPanama implements LibTorchBackend {
     private final MethodHandle configureThreadsHandle;
     private final MethodHandle intraOpThreadsHandle;
     private final MethodHandle interOpThreadsHandle;
+    private final MethodHandle lastErrorHandle;
 
     private JaxPanama() {
         this.linker = Linker.nativeLinker();
@@ -136,6 +137,19 @@ public final class JaxPanama implements LibTorchBackend {
             FunctionDescriptor.of(ValueLayout.JAVA_INT));
         this.interOpThreadsHandle = findOptional("jax_panama_inter_op_threads",
             FunctionDescriptor.of(ValueLayout.JAVA_INT));
+        this.lastErrorHandle = findOptional("jax_panama_last_error",
+            FunctionDescriptor.of(ValueLayout.ADDRESS));
+    }
+
+    public String lastError() {
+        try {
+            if (lastErrorHandle == null) return null;
+            MemorySegment seg = (MemorySegment) lastErrorHandle.invokeExact();
+            if (seg.equals(MemorySegment.NULL) || seg.address() == 0) return null;
+            return seg.reinterpret(4096).getUtf8String(0);
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     private static SymbolLookup loadSymbols() {
@@ -183,9 +197,14 @@ public final class JaxPanama implements LibTorchBackend {
     public long createPlan(int inputWidth) {
         try {
             long handle = (long) createPlanHandle.invokeExact(inputWidth);
-            if (handle != 0L) planInputWidths.put(handle, inputWidth);
+            if (handle == 0L) {
+                String err = lastError();
+                throw new RuntimeException("Failed to create JAX native plan" + (err != null ? ": " + err : ""));
+            }
+            planInputWidths.put(handle, inputWidth);
             return handle;
         } catch (Throwable t) {
+            if (t instanceof RuntimeException) throw (RuntimeException) t;
             throw new RuntimeException(t);
         }
     }

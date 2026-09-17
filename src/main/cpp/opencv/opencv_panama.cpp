@@ -59,7 +59,7 @@ struct Plan {
     }
 };
 
-static std::unordered_map<int64_t, std::unique_ptr<Plan>> g_plans;
+static std::unordered_map<int64_t, std::shared_ptr<Plan>> g_plans;
 static std::mutex g_plans_mutex;
 static std::atomic<int64_t> g_next_plan_id{1};
 
@@ -125,7 +125,7 @@ void ensure_opencv() {
     });
 }
 
-Plan* get_plan(int64_t handle) {
+std::shared_ptr<Plan> get_plan(int64_t handle) {
     if (handle == 0) {
         g_last_error = "OpenCV plan handle is zero";
         return nullptr;
@@ -136,7 +136,7 @@ Plan* get_plan(int64_t handle) {
         g_last_error = "Invalid or expired OpenCV plan handle: " + std::to_string(handle);
         return nullptr;
     }
-    return it->second.get();
+    return it->second;
 }
 
 PyObject* wrap_2d_float_array(const float* data, npy_intp rows, npy_intp cols) {
@@ -178,7 +178,7 @@ int64_t opencv_panama_create_plan(int32_t width, int32_t height) {
             g_last_error = "dimensions must be positive";
             return 0;
         }
-        auto p = std::make_unique<Plan>(width, height);
+        auto p = std::make_shared<Plan>(width, height);
         int64_t handle = g_next_plan_id.fetch_add(1);
         std::lock_guard<std::mutex> lock(g_plans_mutex);
         g_plans[handle] = std::move(p);
@@ -204,7 +204,7 @@ void opencv_panama_destroy(int64_t handle) {
 
 int32_t opencv_panama_output_width(int64_t handle) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         return target ? target->output_width : 0;
     } catch (...) {
         return 0;
@@ -213,7 +213,7 @@ int32_t opencv_panama_output_width(int64_t handle) {
 
 int32_t opencv_panama_output_height(int64_t handle) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         return target ? target->output_height : 0;
     } catch (...) {
         return 0;
@@ -223,7 +223,7 @@ int32_t opencv_panama_output_height(int64_t handle) {
 void opencv_panama_seal(int64_t handle, int32_t output_width, int32_t output_height) {
     try {
         g_last_error.clear();
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return;
         if (target->operations.empty()) {
             g_last_error = "cannot seal empty plan";
@@ -241,7 +241,7 @@ void opencv_panama_seal(int64_t handle, int32_t output_width, int32_t output_hei
 
 void opencv_panama_add_gaussian_blur(int64_t handle, int32_t ksize, double sigma) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return;
         Operation op;
         op.type = OpType::GAUSSIAN_BLUR;
@@ -256,7 +256,7 @@ void opencv_panama_add_gaussian_blur(int64_t handle, int32_t ksize, double sigma
 
 void opencv_panama_add_sobel(int64_t handle, int32_t dx, int32_t dy, int32_t ksize) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) return;
         Operation op;
         op.type = OpType::SOBEL;
@@ -272,7 +272,7 @@ void opencv_panama_add_sobel(int64_t handle, int32_t dx, int32_t dy, int32_t ksi
 
 void opencv_panama_add_warp_affine(int64_t handle, const double* matrix_2x3, int32_t out_width, int32_t out_height) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target || !matrix_2x3) return;
         Operation op;
         op.type = OpType::WARP_AFFINE;
@@ -288,7 +288,7 @@ void opencv_panama_add_warp_affine(int64_t handle, const double* matrix_2x3, int
 
 void opencv_panama_add_warp_perspective(int64_t handle, const double* matrix_3x3, int32_t out_width, int32_t out_height) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target || !matrix_3x3) return;
         Operation op;
         op.type = OpType::WARP_PERSPECTIVE;
@@ -304,7 +304,7 @@ void opencv_panama_add_warp_perspective(int64_t handle, const double* matrix_3x3
 
 void opencv_panama_add_filter2d(int64_t handle, const float* kernel, int32_t kwidth, int32_t kheight) {
     try {
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target || !kernel) return;
         Operation op;
         op.type = OpType::FILTER_2D;
@@ -324,7 +324,7 @@ void opencv_panama_execute(int64_t handle, const float* input, float* output, in
         std::lock_guard<std::mutex> lock(opencv_execution_mutex);
         PyGILState_STATE gstate = PyGILState_Ensure();
 
-        Plan* target = get_plan(handle);
+        auto target = get_plan(handle);
         if (!target) {
             PyGILState_Release(gstate);
             return;

@@ -64,7 +64,7 @@ class OpenFoamProvider implements MathProvider<OpenFoamPlan, OpenFoamResult> {
 
         for (ModelValue param : mathMeta.entity('Parameter')) {
             String mId = param.get('mathModelId') as String
-            if (mId != null && mId != mathModelId) continue
+            if (mId != mathModelId) continue
             String alias = (param.get('parameterAlias') ?: '') as String
             Number num = param.get('numericValue') as Number
             if (num == null) continue
@@ -119,7 +119,7 @@ class OpenFoamProvider implements MathProvider<OpenFoamPlan, OpenFoamResult> {
         // Read mesh parameters if set
         for (ModelValue param : mathMeta.entity('Parameter')) {
             String mId = param.get('mathModelId') as String
-            if (mId != null && mId != mathModelId) continue
+            if (mId != mathModelId) continue
             String alias = (param.get('parameterAlias') ?: '') as String
             Number num = param.get('numericValue') as Number
             if (num != null) {
@@ -200,26 +200,7 @@ class OpenFoamProvider implements MathProvider<OpenFoamPlan, OpenFoamResult> {
             if (!OpenFoamPanama.INSTANCE.isAvailable()) {
                 throw new UnsatisfiedLinkError("OpenFOAM native C++ runtime (libOpenFOAM / libfiniteVolume) is not installed on this system. The native solver '${plan.solver}' cannot be executed.")
             }
-            int rc = OpenFoamPanama.INSTANCE.runSolver(
-                casePath.toAbsolutePath().toString(),
-                plan.solver, plan.kinematicViscosity, plan.deltaT,
-                plan.nx, plan.ny, plan.nz)
-            if (rc != 0) {
-                throw new RuntimeException("OpenFOAM solver execution failed with code: " + rc)
-            }
-            double elapsedMs = (System.nanoTime() - startNano) / 1_000_000.0d
-            int totalIters = (int) Math.round((plan.endTime - plan.startTime) / plan.deltaT)
-            return new OpenFoamResult(
-                plan.mathModelId,
-                plan.solver,
-                'CONVERGED',
-                plan.endTime,
-                totalIters,
-                Collections.emptyMap(),
-                plan.cellCount,
-                Collections.emptyMap(),
-                elapsedMs
-            )
+            throw new UnsupportedOperationException("Native OpenFOAM solver '${plan.solver}' execution is not yet integrated with libfiniteVolume")
         } else if (plan.solver == 'incompressibleFvm') {
             // Execute Finite Volume Solver (Navier-Stokes FVM Incompressible 2D)
             Map<String, Object> fvmRun = solveIncompressibleFvm(plan)
@@ -229,13 +210,14 @@ class OpenFoamProvider implements MathProvider<OpenFoamPlan, OpenFoamResult> {
             String executionStatus = fvmRun.get('status') as String
 
             double elapsedMs = (System.nanoTime() - startNano) / 1_000_000.0d
-            int totalIters = (int) Math.round((plan.endTime - plan.startTime) / plan.deltaT)
+            int totalIters = (fvmRun.get('actualIters') ?: (int) Math.round((plan.endTime - plan.startTime) / plan.deltaT)) as int
+            double simulatedTime = (fvmRun.get('actualTime') ?: plan.endTime) as double
 
             return new OpenFoamResult(
                 plan.mathModelId,
                 plan.solver,
                 executionStatus,
-                plan.endTime,
+                simulatedTime,
                 totalIters,
                 residuals,
                 plan.cellCount,
@@ -585,10 +567,15 @@ boundaryField
         double[][] vPrev = new double[ny + 2][nx + 2]
         double resUx = 1.0d
         double resUy = 1.0d
-        double resP = 1.0d
+        double resContinuity = 1.0d
+        int actualIters = 0
+        double actualTime = plan.startTime
 
         // Discrete FVM solver iterations for Cavity / Navier-Stokes flow
         for (int step = 0; step < steps; step++) {
+            actualIters++
+            actualTime = plan.startTime + (step + 1) * plan.deltaT
+
             for (int j = 0; j <= ny + 1; j++) {
                 System.arraycopy(u[j], 0, uPrev[j], 0, nx + 2)
                 System.arraycopy(v[j], 0, vPrev[j], 0, nx + 2)
@@ -665,7 +652,7 @@ boundaryField
                 }
             }
 
-            // Real physical residuals: L2 norm of velocity increment per step and divergence of velocity
+            // Real physical residuals: L2 norm of velocity increment per step and divergence of velocity (continuity)
             double sumSqDu = 0.0d
             double sumSqDv = 0.0d
             double sumSqDivU = 0.0d
@@ -682,9 +669,9 @@ boundaryField
             int totalCells = nx * ny
             resUx = Math.sqrt(sumSqDu / totalCells)
             resUy = Math.sqrt(sumSqDv / totalCells)
-            resP = Math.sqrt(sumSqDivU / totalCells)
+            resContinuity = Math.sqrt(sumSqDivU / totalCells)
 
-            if (resP <= plan.pTolerance && resUx <= plan.uTolerance && resUy <= plan.uTolerance) {
+            if (resContinuity <= plan.pTolerance && resUx <= plan.uTolerance && resUy <= plan.uTolerance) {
                 break
             }
         }
@@ -704,11 +691,11 @@ boundaryField
             }
         }
 
-        boolean isConverged = (resP <= plan.pTolerance && resUx <= plan.uTolerance && resUy <= plan.uTolerance)
+        boolean isConverged = (resContinuity <= plan.pTolerance && resUx <= plan.uTolerance && resUy <= plan.uTolerance)
         String computedStatus = isConverged ? 'CONVERGED' : 'NOT_CONVERGED'
 
         Map<String, Double> residualsMap = new LinkedHashMap<>()
-        residualsMap.put('p', resP)
+        residualsMap.put('continuity', resContinuity)
         residualsMap.put('Ux', resUx)
         residualsMap.put('Uy', resUy)
 
@@ -717,6 +704,8 @@ boundaryField
         res.put('p', pressureList)
         res.put('residuals', residualsMap)
         res.put('status', computedStatus)
+        res.put('actualTime', actualTime)
+        res.put('actualIters', actualIters)
         return res
     }
 }

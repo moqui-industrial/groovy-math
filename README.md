@@ -26,9 +26,9 @@ Groovy Math does not aim to replace Python's role in exploratory research. Inste
    - Large tensor payloads are referenced versioned via `TensorContent` (SafeTensors, NPY, Zarr, Arrow IPC).
    - Discrete state-space matrices ($A, B, C, D$) and state/control vectors ($x, u$) are stored structured in `TensorElement`.
 3. **Multi-Engine Neutrality**: The same declared model can be lowered to different computational backends (**PyTorch/LibTorch, Google JAX/OpenXLA, OpenFOAM CFD, OpenCV, PETSc/TAO, Google OR-Tools, or Apache Jena**) without rewriting business logic.
-4. **Zero-Overhead Java Foreign Function & Memory API (Project Panama)**: Bypasses JNI and Python GIL bottlenecks by utilizing zero-copy off-heap native memory segments (`MemorySegment`) and direct C ABI dispatch.
-5. **Zero-Crash Guard-Rail (`TensorValidator`)**: Prevents native Segmentation Faults (`SIGSEGV`) by verifying rank, shape, strides, and buffer byte allocations in Java *before* dispatching across the FFM boundary.
-6. **Concurrent Multi-Core Engine Pooling (`PanamaEnginePool`)**: Lock-free, multi-threaded native session management using `AutoCloseable` (`try-with-resources`).
+4. **Off-Heap Java Foreign Function & Memory API (Project Panama)**: Direct C ABI dispatch utilizing off-heap native memory segments (`MemorySegment`) without legacy JNI boilerplate.
+5. **Guard-Rail Pre-Validation (`TensorValidator`)**: Validates rank, shape, strides, and buffer byte allocations in Java *before* dispatching across the FFM boundary to prevent buffer overflows and fatal signals.
+6. **Concurrent Engine Pool (`PanamaEnginePool`)**: Multi-threaded native session management using `AutoCloseable` (`try-with-resources`).
 
 ---
 
@@ -65,12 +65,12 @@ The following matrix documents the exact technical status, integration mechanism
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **LibTorch** | Deep Learning, Tensors, Autograd | Panama FFM (C++ direct) | **Production** | `./gradlew buildLibTorchNative nativeTest` | LibTorch 2.7.1+ C++ distribution (auto-downloaded by Gradle task `downloadLibTorch`) |
 | **ONNX Runtime** | Cross-Platform Neural Inference | Panama FFM (C++ direct) | **Production** | `./gradlew buildOnnxNative onnxNativeTest` | `libonnxruntime` (`.so`, `.dylib`, or `.dll`) on system path |
-| **OpenCV** | Vision, Filters, Affine Transforms | Panama FFM (C++ direct) | **Production** | `./gradlew buildOpenCvNative openCvNativeTest` | Python 3 with `numpy` and `opencv-python` / `cv2` |
+| **OpenCV** | Vision, Filters, Affine Transforms | Panama FFM via embedded CPython (`cv2`) | **Production** | `./gradlew buildOpenCvNative openCvNativeTest` | Python 3 with `numpy` and `opencv-python` / `cv2` |
 | **PETSc / TAO** | Bounded Quadratic & PDE Optimization | Panama FFM (C++ direct) | **Production** | `./gradlew buildPetscTaoNative petscTaoNativeTest` | PETSc 3.x real-scalar build + OpenMPI |
-| **Google JAX** | Accelerated Linear Algebra & JIT | Panama FFM (C++ direct) | **Preview** | `./gradlew buildJaxNative jaxNativeTest` | Python 3 with `jax`, `jaxlib`, `numpy` |
-| **Google OR-Tools** | Linear & Mixed Integer Programming (LP/MIP) | JVM In-Process (JNI wrapper) | **Production** | `./gradlew test --tests "*OrTools*"` | None (managed automatically by Maven dependencies) |
+| **Google JAX** | Accelerated Linear Algebra | Panama FFM via embedded CPython (`jax.numpy`) | **Preview** | `./gradlew buildJaxNative jaxNativeTest` | Python 3 with `jax`, `jaxlib`, `numpy` |
+| **Google OR-Tools** | Linear & Mixed Integer Programming (LP/MIP) | In-process GLOP (`MmtLp`, via OR-Tools Java bindings) | **Production** | `./gradlew test --tests "*OrTools*"` | None (managed automatically by Maven dependencies) |
 | **Apache Jena** | Graph & Categorical RDF/OWL/SPARQL | JVM In-Process (Pure Java) | **Production** | `./gradlew test --tests "*Jena*"` | None (managed automatically by Maven dependencies) |
-| **OpenFOAM** | Finite Volume Method (FVM) Fluid Dynamics | Pure Groovy FVM + Panama C++ Stub | **Stub (Native) / Preview (Groovy)** | `./gradlew buildOpenFoamNative openFoamNativeTest` | CMake & Ninja (native stub); zero dependencies for Groovy FVM solver |
+| **OpenFOAM** | Finite Volume Method (FVM) Fluid Dynamics | Reference Groovy FVM solver + Native Panama Stub | **Stub (Native) / Preview (Groovy)** | `./gradlew buildOpenFoamNative openFoamNativeTest` | CMake & Ninja (native stub); zero dependencies for Groovy FVM solver |
 
 
 ---
@@ -235,9 +235,10 @@ This guide provides simple, step-by-step instructions so that any Java or Groovy
 
 ### 1. System Requirements
 
-* **Java Development Kit (JDK)**: Java 21 (LTS) or newer (OpenJDK, Temurin, Corretto, Azul, etc.).
-  The build declares a Java 21 toolchain with `--enable-preview` and `--enable-native-access=ALL-UNNAMED`
-  for Project Panama Foreign Function & Memory (FFM) API access.
+* **Java Development Kit (JDK)**: Java 21 (LTS) specifically.
+  The build declares a Gradle Java 21 toolchain with `--enable-preview` and `--enable-native-access=ALL-UNNAMED`
+  for Project Panama Foreign Function & Memory (FFM) API access. Note that JVM preview bytecode compiled on JDK 21
+  is strictly rejected by newer JVM versions (Java 22+), so JDK 21 LTS is strictly required.
   Verify with:
   ```bash
   java -version
@@ -309,7 +310,7 @@ You can execute targeted test tasks depending on the component you want to verif
 | `./gradlew test` | **Pure JVM Suite** | DSL, Metamodels, OR-Tools, Jena RDF/OWL, `TensorValidatorTest` |
 | `./gradlew openFoamNativeTest` | **CFD Simulation** | OpenFOAM FVM Navier-Stokes solver, mesh grading, cavity flow |
 | `./gradlew nativeTest` | **LibTorch Engine** | LibTorch 2.7.1 FFM, GEMM, LayerNorm, RMSNorm, AdamW, Backward Autograd |
-| `./gradlew jaxNativeTest` | **JAX Engine** | JAX / NumPy FFM, XLA JIT dispatch, cross-entropy loss |
+| `./gradlew jaxNativeTest` | **JAX Engine** | JAX / NumPy FFM via embedded CPython, cross-entropy loss |
 | `./gradlew dlParityTest` | **Numerical Parity** | Strict numerical parity between LibTorch C++ and JAX C++ ($\Delta < 10^{-4}$) |
 | `./gradlew test --tests "org.moqui.math.pool.ConcurrentEnginePoolTest"` | **Multi-Core Concurrency** | 16 parallel threads running concurrent native inference through the engine pool |
 

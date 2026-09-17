@@ -78,6 +78,71 @@ class MathDslSecurityTest {
     }
 
     @Test
+    void rejectsStringExecutePayload() {
+        // Payload 1: 'touch /tmp/x'.execute()
+        File maliciousFile = new File(tempDir, "exploit-execute.groovy")
+        maliciousFile.text = """
+            'touch /tmp/x'.execute()
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
+    void rejectsReflectionClassForNamePayload() {
+        // Payload 2: Class.forName('java.lang.Runtime').getMethod('getRuntime').invoke(null).exec('touch /tmp/x')
+        File maliciousFile = new File(tempDir, "exploit-reflection.groovy")
+        maliciousFile.text = """
+            Class.forName('java.lang.Runtime').getMethod('getRuntime').invoke(null).exec('touch /tmp/x')
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
+    void rejectsEvaluatePayload() {
+        // Payload 3: evaluate("'touch /tmp/x'.execute()")
+        File maliciousFile = new File(tempDir, "exploit-evaluate.groovy")
+        maliciousFile.text = """
+            evaluate("'touch /tmp/x'.execute()")
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
+    void rejectsDynamicRuntimeVariablePayload() {
+        // Payload 4: def rt = Runtime; rt.getRuntime().exec('touch /tmp/x')
+        File maliciousFile = new File(tempDir, "exploit-runtime-var.groovy")
+        maliciousFile.text = """
+            def rt = Runtime
+            rt.getRuntime().exec('touch /tmp/x')
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
     void allowsLegitimateMathDsl() {
         File validFile = new File(tempDir, "valid-math.groovy")
         validFile.text = """

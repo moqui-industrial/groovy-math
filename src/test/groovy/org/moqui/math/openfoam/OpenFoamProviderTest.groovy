@@ -14,6 +14,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static org.junit.jupiter.api.Assertions.assertThrows
@@ -26,6 +27,14 @@ class OpenFoamProviderTest {
             dslFile = new File('examples/openfoam-cavity.groovy')
         }
         MathDsl.evaluate(dslFile)
+    }
+
+    @Test
+    void testOpenFoamNativeStubIsNotAvailable() {
+        // Native OpenFOAM runtime integration with libfiniteVolume is not yet linked.
+        // It must report false unconditionally so callers do not fabricate results.
+        assertFalse(OpenFoamPanama.INSTANCE.isAvailable(),
+            "Native OpenFOAM Panama bridge must report isAvailable == false until real solver linking is implemented")
     }
 
     @Test
@@ -63,13 +72,12 @@ class OpenFoamProviderTest {
 
     @Test
     void testNativeOpenFoamThrowsWhenNotInstalled() {
-        if (!OpenFoamPanama.INSTANCE.isAvailable()) {
-            MathMeta mathMeta = createCavityModel()
-            OpenFoamProvider provider = new OpenFoamProvider('CavityIcoFoam')
-            OpenFoamPlan plan = provider.compile(mathMeta)
-            assertThrows(UnsatisfiedLinkError) {
-                provider.execute(plan, Collections.emptyMap())
-            }
+        MathMeta mathMeta = createCavityModel()
+        OpenFoamProvider provider = new OpenFoamProvider('CavityIcoFoam')
+        OpenFoamPlan plan = provider.compile(mathMeta)
+        // Must fail unconditionally with UnsatisfiedLinkError since native library is not linked
+        assertThrows(UnsatisfiedLinkError) {
+            provider.execute(plan, Collections.emptyMap())
         }
     }
 
@@ -87,14 +95,23 @@ class OpenFoamProviderTest {
         assertEquals(400, result.pressureField.size())
         assertTrue(result.executionTimeMs > 0)
 
-        // Residuals must be computed mathematically, not hardcoded
+        // Residuals must be computed mathematically from velocity and continuity, not hardcoded
         assertNotNull(result.residuals)
-        assertTrue(result.residuals.containsKey('p'))
+        assertTrue(result.residuals.containsKey('continuity'), "Continuity divergence residual must be present")
+        assertFalse(result.residuals.containsKey('p'), "Residual must be named 'continuity', not 'p'")
         assertTrue(result.residuals.containsKey('Ux'))
         assertTrue(result.residuals.containsKey('Uy'))
-        assertTrue(result.residuals.get('p') >= 0.0d)
+        assertTrue(result.residuals.get('continuity') >= 0.0d)
         assertTrue(result.residuals.get('Ux') >= 0.0d)
         assertTrue(result.residuals.get('Uy') >= 0.0d)
+
+        // Actual iterations and simulated time must come from the actual loop
+        int maxIters = (int) Math.round((plan.endTime - plan.startTime) / plan.deltaT)
+        assertTrue(result.iterations > 0)
+        assertTrue(result.iterations <= maxIters,
+            "actual iterations (${result.iterations}) must not exceed max allowed (${maxIters})")
+        assertTrue(result.finalTime > plan.startTime)
+        assertTrue(result.finalTime <= plan.endTime + 1e-9)
 
         // Verify generated OpenFOAM case files on disk
         String caseDir = plan.caseDirectory
@@ -125,13 +142,17 @@ class OpenFoamProviderTest {
 
     @Test
     void testModelParameterScopeIsolation() {
-        // Evaluate two models in the same MathMeta and ensure parameter scoping prevents leakage
+        // Evaluate two models in the same MathMeta and ensure parameters with null mathModelId
+        // or a different mathModelId do not leak into model scope
         MathMeta mathMeta = MathDsl.math {
             ParameterDef('nuDef', parameterCode: 'kinematicViscosity', parameterName: 'Viscosity',
                 purposeEnum: org.moqui.math.dsl.ParameterPurpose.FluidProperty,
                 parameterTypeEnum: org.moqui.math.dsl.ParameterType.NumberDecimal, defaultValue: 0.01)
             Graph('TestGraph')
             Mesh('TestMesh', graphId: 'TestGraph', meshTypeEnumId: 'MtHexahedral', purposeEnumId: 'MpCFD')
+
+            // Parameter with null mathModelId (must NOT pollute ModelA or ModelB)
+            Parameter('P_Global', parameterDefId: 'nuDef', parameterAlias: 'nu', numericValue: 999.0)
 
             MathModelDef('Def1', modelTypeEnum: org.moqui.math.dsl.MathModelType.CFD) {
                 MathModel('ModelA', meshId: 'TestMesh') {
@@ -146,8 +167,8 @@ class OpenFoamProviderTest {
         OpenFoamPlan planA = new OpenFoamProvider('ModelA').compile(mathMeta)
         OpenFoamPlan planB = new OpenFoamProvider('ModelB').compile(mathMeta)
 
-        assertEquals(0.02d, planA.kinematicViscosity, 1e-6)
-        assertEquals(0.07d, planB.kinematicViscosity, 1e-6)
+        assertEquals(0.02d, planA.kinematicViscosity, 1e-6, "ModelA must use its own parameter value 0.02, not global 999.0")
+        assertEquals(0.07d, planB.kinematicViscosity, 1e-6, "ModelB must use its own parameter value 0.07, not global 999.0")
     }
 
     @Test

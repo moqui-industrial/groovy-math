@@ -38,11 +38,9 @@ thread_local std::string g_last_error;
 extern "C" {
 
 int32_t openfoam_panama_is_available() {
-#if defined(HAVE_OPENFOAM)
-    return 1;
-#else
+    // Real native OpenFOAM integration with libfiniteVolume is not yet linked.
+    // Must return 0 until fully implemented to prevent fabricated execution.
     return 0;
-#endif
 }
 
 void openfoam_panama_last_error(char* buf, size_t max_len) {
