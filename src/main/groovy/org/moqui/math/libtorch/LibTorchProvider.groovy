@@ -160,7 +160,12 @@ final class LibTorchProvider implements MathProvider<LibTorchPlan, LibTorchResul
         int outputSlot = 0
         int outputWidth = inputWidth
         String outputId = inputId
-        long handle = backend.createPlan(inputWidth)
+        long handle
+        try {
+            handle = backend.createPlan(inputWidth)
+        } catch (UnsatisfiedLinkError e) {
+            throw new org.moqui.math.spi.ProviderUnavailableException(providerId, e.message, "Run './gradlew buildLibTorchNative'.", e)
+        }
         try {
             for (ModelValue data : pipelineSteps) {
                 if (data.get('transformationId') == null) continue

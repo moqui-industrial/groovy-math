@@ -83,4 +83,110 @@ class LibTorchNativeLifecycleTest {
         assertTrue(ex.message.contains("Plan handle not found or already destroyed") ||
                    ex.message.contains("failed"))
     }
+
+    @Test
+    void concurrentExecuteAndDestroyNoCrash() {
+        LibTorchPanama panama = LibTorchPanama.INSTANCE
+        long handle = panama.createPlan(4)
+        panama.addAffine(handle, 0, 1, 4, 4,
+            [1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f] as float[],
+            [0f, 0f, 0f, 0f] as float[])
+        panama.seal(handle, 1, 4)
+
+        int threadsCount = 10
+        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(threadsCount + 1)
+        java.util.concurrent.CountDownLatch startLatch = new java.util.concurrent.CountDownLatch(1)
+        java.util.concurrent.atomic.AtomicInteger successes = new java.util.concurrent.atomic.AtomicInteger()
+        java.util.concurrent.atomic.AtomicInteger controlledErrors = new java.util.concurrent.atomic.AtomicInteger()
+        java.util.concurrent.atomic.AtomicInteger fatalErrors = new java.util.concurrent.atomic.AtomicInteger()
+
+        List<java.util.concurrent.Future<?>> futures = []
+        for (int i = 0; i < threadsCount; i++) {
+            futures.add(executor.submit({
+                startLatch.await()
+                float[] input = [1f, 2f, 3f, 4f] as float[]
+                for (int iter = 0; iter < 100; iter++) {
+                    try {
+                        float[] out = panama.execute(handle, input, 1)
+                        if (out != null && out.length == 4) successes.incrementAndGet()
+                    } catch (RuntimeException re) {
+                        controlledErrors.incrementAndGet()
+                        break
+                    } catch (Throwable t) {
+                        fatalErrors.incrementAndGet()
+                        break
+                    }
+                }
+            }))
+        }
+
+        futures.add(executor.submit({
+            startLatch.await()
+            Thread.sleep(5)
+            panama.destroy(handle)
+        }))
+
+        startLatch.countDown()
+        for (java.util.concurrent.Future<?> f : futures) {
+            f.get(10, java.util.concurrent.TimeUnit.SECONDS)
+        }
+        executor.shutdown()
+
+        assertTrue(fatalErrors.get() == 0, "No fatal non-runtime errors or SIGSEGV allowed")
+        assertTrue(successes.get() + controlledErrors.get() > 0, "All threads completed or caught controlled errors")
+    }
+
+    @Test
+    void concurrentPlanExecuteAndCloseNoCrash() {
+        LibTorchPanama panama = LibTorchPanama.INSTANCE
+        long handle = panama.createPlan(4)
+        panama.addAffine(handle, 0, 1, 4, 4,
+            [1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1f] as float[],
+            [0f, 0f, 0f, 0f] as float[])
+        panama.seal(handle, 1, 4)
+
+        LibTorchPlan plan = new LibTorchPlan('testModel', 'input', 'output', 1, 4, 4, 1, panama, handle)
+        int threadsCount = 10
+        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(threadsCount + 1)
+        java.util.concurrent.CountDownLatch startLatch = new java.util.concurrent.CountDownLatch(1)
+        java.util.concurrent.atomic.AtomicInteger successes = new java.util.concurrent.atomic.AtomicInteger()
+        java.util.concurrent.atomic.AtomicInteger planClosedErrors = new java.util.concurrent.atomic.AtomicInteger()
+        java.util.concurrent.atomic.AtomicInteger fatalErrors = new java.util.concurrent.atomic.AtomicInteger()
+
+        List<java.util.concurrent.Future<?>> futures = []
+        for (int i = 0; i < threadsCount; i++) {
+            futures.add(executor.submit({
+                startLatch.await()
+                float[] input = [1f, 2f, 3f, 4f] as float[]
+                for (int iter = 0; iter < 100; iter++) {
+                    try {
+                        LibTorchResult out = plan.execute(input)
+                        if (out != null && out.values != null) successes.incrementAndGet()
+                    } catch (IllegalStateException ise) {
+                        planClosedErrors.incrementAndGet()
+                        break
+                    } catch (Throwable t) {
+                        t.printStackTrace()
+                        fatalErrors.incrementAndGet()
+                        break
+                    }
+                }
+            }))
+        }
+
+        futures.add(executor.submit({
+            startLatch.await()
+            Thread.sleep(5)
+            plan.close()
+        }))
+
+        startLatch.countDown()
+        for (java.util.concurrent.Future<?> f : futures) {
+            f.get(10, java.util.concurrent.TimeUnit.SECONDS)
+        }
+        executor.shutdown()
+
+        assertTrue(fatalErrors.get() == 0, "No unexpected crashes allowed")
+        assertTrue(successes.get() + planClosedErrors.get() > 0)
+    }
 }

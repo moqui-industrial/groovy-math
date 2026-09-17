@@ -94,9 +94,8 @@ public final class OpenFoamPanama {
             throw new UnsupportedOperationException("OpenFOAM Panama native library is not available");
         }
         try (Arena arena = Arena.ofConfined()) {
-            // allocateFrom(String) since Java 22; it was allocateUtf8String while FFM was preview.
-            MemorySegment caseDirSeg = arena.allocateUtf8String(caseDir);
-            MemorySegment solverSeg = arena.allocateUtf8String(solverName);
+            MemorySegment caseDirSeg = arena.allocateFrom(caseDir);
+            MemorySegment solverSeg = arena.allocateFrom(solverName);
             return (int) runSolverHandle.invokeExact(caseDirSeg, solverSeg, nu, deltaT, nx, ny, nz);
         } catch (Throwable t) {
             throw new RuntimeException("Failed to run OpenFOAM solver via Panama", t);

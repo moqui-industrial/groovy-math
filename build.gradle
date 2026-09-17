@@ -19,9 +19,8 @@ plugins {
     id 'maven-publish'
 }
 
-// groovy-math targets Java 21 LTS with preview features enabled for Foreign Function & Memory (FFM) API.
-// Note: Bytecode compiled with --enable-preview on JDK 21 is strictly bound to JDK 21 (JVM rejects preview bytecode on newer versions).
-// Gradle Java Toolchain (configured below) strictly enforces Java 21.
+// groovy-math targets Java 25 LTS with standard Foreign Function & Memory (FFM) API.
+// Gradle Java Toolchain (configured below) strictly enforces Java 25.
 
 repositories {
     mavenCentral()
@@ -38,31 +37,26 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-// Java 24 restricts native access and a future release will block it outright. The FFM
-// backends load shared libraries, so the tasks that exercise them have to opt in. This is not
-// a flag consumers of the DSL need: it is only required by code that actually reaches native.
-tasks.withType(JavaCompile).configureEach {
-    options.compilerArgs += ['--enable-preview']
-}
-
-tasks.withType(GroovyCompile).configureEach {
-    groovyOptions.forkOptions.jvmArgs += ['--enable-preview']
-}
-
+// Java 25 LTS with standard Foreign Function & Memory (FFM) API (JEP 454).
+// Native access is enabled for tasks executing Panama native bindings.
 tasks.withType(Test).configureEach {
-    jvmArgs += ['--enable-preview', '--enable-native-access=ALL-UNNAMED']
+    jvmArgs += ['--enable-native-access=ALL-UNNAMED']
 }
 
 tasks.withType(JavaExec).configureEach {
-    jvmArgs += ['--enable-preview', '--enable-native-access=ALL-UNNAMED']
+    jvmArgs += ['--enable-native-access=ALL-UNNAMED']
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
     withSourcesJar()
     withJavadocJar()
+}
+
+jacoco {
+    toolVersion = '0.8.14'
 }
 
 tasks.named('test') {
@@ -516,6 +510,9 @@ tasks.register('packageNativeLibs', Copy) {
 }
 tasks.named('jar').configure {
     dependsOn 'packageNativeLibs'
+    manifest {
+        attributes('Enable-Native-Access': 'ALL-UNNAMED')
+    }
 }
 
 def pythonVenvDir = file("${projectDir}/runtime/python_venv")

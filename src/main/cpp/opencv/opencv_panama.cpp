@@ -167,7 +167,9 @@ void copy_to_output(PyObject* obj, float* output, size_t count) {
 extern "C" {
 
 const char* opencv_panama_last_error(void) {
-    return g_last_error.empty() ? nullptr : g_last_error.c_str();
+    if (g_last_error.empty()) return nullptr;
+    if (g_last_error.size() > 4095) g_last_error.resize(4095);
+    return g_last_error.c_str();
 }
 
 int64_t opencv_panama_create_plan(int32_t width, int32_t height) {

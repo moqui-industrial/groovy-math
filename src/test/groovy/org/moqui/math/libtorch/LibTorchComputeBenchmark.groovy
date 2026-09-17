@@ -15,7 +15,7 @@ final class LibTorchComputeBenchmark {
         int width = Integer.getInteger('moqui.math.benchmark.width', 256)
         int batch = Integer.getInteger('moqui.math.benchmark.batch', 16)
         int iterations = Integer.getInteger('moqui.math.benchmark.iterations', 100)
-        LibTorchBackend backend = LibTorchNative.INSTANCE
+        LibTorchBackend backend = LibTorchPanama.INSTANCE
         LibTorchPlan plan = createPlan(backend, width)
         println 'intraOp,callers,width,batch,iterations,elapsedMs,samplesPerSecond'
         try {

@@ -41,7 +41,9 @@ static std::unordered_map<int64_t, std::shared_ptr<OnnxSessionContext>> g_sessio
 static std::atomic<int64_t> g_next_session_id{1};
 
 const char* onnx_panama_last_error(void) {
-    return g_last_error.empty() ? nullptr : g_last_error.c_str();
+    if (g_last_error.empty()) return nullptr;
+    if (g_last_error.size() > 4095) g_last_error.resize(4095);
+    return g_last_error.c_str();
 }
 
 static bool init_onnx_api() {

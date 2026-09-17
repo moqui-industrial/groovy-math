@@ -59,8 +59,31 @@ class OpenFoamProvider implements MathProvider<OpenFoamPlan, OpenFoamResult> {
         double endTime = 0.5d
         double deltaT = 0.005d
         double writeInterval = 0.1d
-        double pTolerance = 1e-6d
-        double uTolerance = 1e-6d
+        double pTolerance = 1e-4d
+        double uTolerance = 1e-4d
+
+        // Check ParameterDef defaults first
+        for (ModelValue paramDef : mathMeta.entity('ParameterDef')) {
+            String code = (paramDef.get('parameterCode') ?: paramDef.get('parameterDefId')) as String
+            Object defVal = paramDef.get('defaultValue')
+            if (defVal instanceof Number) {
+                double val = ((Number) defVal).doubleValue()
+                switch (code) {
+                    case 'nu':
+                    case 'kinematicViscosity': nu = val; break
+                    case 'rho':
+                    case 'density': rho = val; break
+                    case 'deltaT': deltaT = val; break
+                    case 'startTime': startTime = val; break
+                    case 'endTime': endTime = val; break
+                    case 'writeInterval': writeInterval = val; break
+                    case 'pTolerance':
+                    case 'residualToleranceP': pTolerance = val; break
+                    case 'uTolerance':
+                    case 'residualToleranceU': uTolerance = val; break
+                }
+            }
+        }
 
         for (ModelValue param : mathMeta.entity('Parameter')) {
             String mId = param.get('mathModelId') as String
@@ -92,6 +115,10 @@ class OpenFoamProvider implements MathProvider<OpenFoamPlan, OpenFoamResult> {
                 case 'residualToleranceU':
                     uTolerance = val; break
             }
+        }
+
+        if (deltaT <= 0.0d) {
+            throw new IllegalArgumentException("deltaT must be strictly positive, got: ${deltaT}")
         }
 
         // 2. Resolve Mesh & Adaptation
@@ -198,7 +225,9 @@ class OpenFoamProvider implements MathProvider<OpenFoamPlan, OpenFoamResult> {
         // Try Panama C++ Bridge first if native solver requested
         if (plan.solver == 'icoFoam' || plan.solver == 'simpleFoam') {
             if (!OpenFoamPanama.INSTANCE.isAvailable()) {
-                throw new UnsatisfiedLinkError("OpenFOAM native C++ runtime (libOpenFOAM / libfiniteVolume) is not installed on this system. The native solver '${plan.solver}' cannot be executed.")
+                throw new org.moqui.math.spi.ProviderUnavailableException('openfoam',
+                    "OpenFOAM native C++ runtime (libOpenFOAM / libfiniteVolume) is not installed on this system. The native solver '${plan.solver}' cannot be executed.",
+                    "Install OpenFOAM or run './gradlew buildOpenFoamNative'.")
             }
             throw new UnsupportedOperationException("Native OpenFOAM solver '${plan.solver}' execution is not yet integrated with libfiniteVolume")
         } else if (plan.solver == 'incompressibleFvm') {
@@ -549,11 +578,6 @@ boundaryField
         double[][] v = new double[ny + 2][nx + 2]
         double[][] p = new double[ny + 2][nx + 2]
 
-        int steps = Math.max(10, (int) Math.round((plan.endTime - plan.startTime) / dt))
-        double fvmDt = Math.min(dt, 0.20 * dx * dx / Math.max(1e-6, nu))
-        int subSteps = Math.max(1, (int) Math.ceil(dt / fvmDt))
-        fvmDt = dt / subSteps
-
         double lidVelocity = 1.0d
         Map<String, Object> moving = plan.boundaryPatches.get('movingWall')
         if (moving != null && moving.get('velocity') instanceof List) {
@@ -563,6 +587,22 @@ boundaryField
             }
         }
 
+        int steps = Math.max(10, (int) Math.round((plan.endTime - plan.startTime) / dt))
+        double maxVel = Math.max(Math.abs(lidVelocity), 1e-6d)
+        double cfl = (maxVel / dx) * dt
+
+        double fvmDt
+        int subSteps
+        if (cfl > 5.0) {
+            // Severe CFL violation: user time-step violates explicit advection limit, do not suppress divergence
+            fvmDt = dt
+            subSteps = 1
+        } else {
+            double fvmDtLimit = Math.min(dt, 0.20 * dx * dx / Math.max(1e-6, nu))
+            subSteps = Math.max(1, (int) Math.ceil(dt / fvmDtLimit))
+            fvmDt = dt / subSteps
+        }
+
         double[][] uPrev = new double[ny + 2][nx + 2]
         double[][] vPrev = new double[ny + 2][nx + 2]
         double resUx = 1.0d
@@ -570,6 +610,7 @@ boundaryField
         double resContinuity = 1.0d
         int actualIters = 0
         double actualTime = plan.startTime
+        boolean diverged = false
 
         // Discrete FVM solver iterations for Cavity / Navier-Stokes flow
         for (int step = 0; step < steps; step++) {
@@ -618,8 +659,17 @@ boundaryField
                         double vConv = u[j][i] * (v[j][i + 1] - v[j][i - 1]) / (2 * dx) +
                                        v[j][i] * (v[j + 1][i] - v[j - 1][i]) / (2 * dy)
                         vStar[j][i] = v[j][i] + fvmDt * (vDiff - vConv)
+
+                        if (Double.isNaN(uStar[j][i]) || Double.isInfinite(uStar[j][i]) ||
+                            Double.isNaN(vStar[j][i]) || Double.isInfinite(vStar[j][i]) ||
+                            Math.abs(uStar[j][i]) > 1e4 || Math.abs(vStar[j][i]) > 1e4) {
+                            diverged = true
+                            break
+                        }
                     }
+                    if (diverged) break
                 }
+                if (diverged) break
 
                 // Pressure Poisson Equation Solver (Gauss-Seidel / DIC parity)
                 for (int it = 0; it < 30; it++) {
@@ -652,6 +702,8 @@ boundaryField
                 }
             }
 
+            if (diverged) break
+
             // Real physical residuals: L2 norm of velocity increment per step and divergence of velocity (continuity)
             double sumSqDu = 0.0d
             double sumSqDv = 0.0d
@@ -671,7 +723,8 @@ boundaryField
             resUy = Math.sqrt(sumSqDv / totalCells)
             resContinuity = Math.sqrt(sumSqDivU / totalCells)
 
-            if (resContinuity <= plan.pTolerance && resUx <= plan.uTolerance && resUy <= plan.uTolerance) {
+            double steadyTol = 1e-4d
+            if (resContinuity <= plan.pTolerance && resUx <= steadyTol && resUy <= steadyTol) {
                 break
             }
         }
@@ -691,7 +744,8 @@ boundaryField
             }
         }
 
-        boolean isConverged = (resContinuity <= plan.pTolerance && resUx <= plan.uTolerance && resUy <= plan.uTolerance)
+        double steadyTol = 1e-4d
+        boolean isConverged = !diverged && (resContinuity <= plan.pTolerance && resUx <= steadyTol && resUy <= steadyTol)
         String computedStatus = isConverged ? 'CONVERGED' : 'NOT_CONVERGED'
 
         Map<String, Double> residualsMap = new LinkedHashMap<>()

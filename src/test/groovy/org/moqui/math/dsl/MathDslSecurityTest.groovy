@@ -143,6 +143,131 @@ class MathDslSecurityTest {
     }
 
     @Test
+    void rejectsMetaClassPropertyAccess() {
+        File maliciousFile = new File(tempDir, "exploit-metaclass-prop.groovy")
+        maliciousFile.text = """
+            def s = 'hello'
+            s.metaClass
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
+    void rejectsMetaClassMethodCall() {
+        File maliciousFile = new File(tempDir, "exploit-metaclass-call.groovy")
+        maliciousFile.text = """
+            def s = 'hello'
+            s.getMetaClass()
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
+    void rejectsDynamicMethodCallGString() {
+        File maliciousFile = new File(tempDir, "exploit-dynamic-call-gstring.groovy")
+        maliciousFile.text = """
+            def m = 'execute'
+            'echo'."\$m"()
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
+    void rejectsDynamicMethodCallVariable() {
+        File maliciousFile = new File(tempDir, "exploit-dynamic-call-var.groovy")
+        maliciousFile.text = """
+            def m = 'execute'
+            'echo'.(m)()
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
+    void rejectsDynamicPropertyAccess() {
+        File maliciousFile = new File(tempDir, "exploit-dynamic-prop.groovy")
+        maliciousFile.text = """
+            def p = 'class'
+            'echo'."\$p"
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
+    void rejectsDirectFieldAccess() {
+        File maliciousFile = new File(tempDir, "exploit-direct-field.groovy")
+        maliciousFile.text = """
+            'echo'.@value
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
+    void rejectsScriptPrintln() {
+        File maliciousFile = new File(tempDir, "exploit-println.groovy")
+        maliciousFile.text = """
+            println 'pwned'
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
+    void rejectsScriptSleep() {
+        File maliciousFile = new File(tempDir, "exploit-sleep.groovy")
+        maliciousFile.text = """
+            sleep 1000
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
     void allowsLegitimateMathDsl() {
         File validFile = new File(tempDir, "valid-math.groovy")
         validFile.text = """

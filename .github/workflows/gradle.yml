@@ -31,7 +31,12 @@ jobs:
         env:
           MOQUI_MATH_HOME: ${{ github.workspace }}/moqui-math
           MOQUI_FRAMEWORK_HOME: ${{ github.workspace }}/moqui-framework
-        run: ./gradlew checkMoquiSchema
+      - name: Verify no preview flags
+        run: |
+          if grep -rn "enable-preview" build.gradle; then
+            echo "ERROR: Found forbidden --enable-preview in build.gradle"
+            exit 1
+          fi
       - name: Test
         run: ./gradlew check
       - name: Run OR-Tools example

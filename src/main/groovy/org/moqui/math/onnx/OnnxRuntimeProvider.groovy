@@ -31,7 +31,9 @@ final class OnnxRuntimeProvider implements MathProvider<OnnxPlan, Map<String, Ob
     @Override
     OnnxPlan compile(final MathMeta mathMeta) {
         if (!panama.isAvailable()) {
-            throw new UnsatisfiedLinkError("ONNX Runtime native library is not available on this system.")
+            throw new org.moqui.math.spi.ProviderUnavailableException(providerId,
+                "ONNX Runtime native library is not available on this system.",
+                "Run './gradlew buildOnnxNative' and ensure libonnxruntime is on library path.")
         }
 
         ModelValue model = mathModelId ? mathMeta.entity('MathModel').findByName(mathModelId) : null

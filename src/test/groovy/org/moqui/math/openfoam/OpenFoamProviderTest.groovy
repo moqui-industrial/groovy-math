@@ -75,8 +75,8 @@ class OpenFoamProviderTest {
         MathMeta mathMeta = createCavityModel()
         OpenFoamProvider provider = new OpenFoamProvider('CavityIcoFoam')
         OpenFoamPlan plan = provider.compile(mathMeta)
-        // Must fail unconditionally with UnsatisfiedLinkError since native library is not linked
-        assertThrows(UnsatisfiedLinkError) {
+        // Must fail with ProviderUnavailableException since native OpenFOAM runtime is not linked
+        assertThrows(org.moqui.math.spi.ProviderUnavailableException) {
             provider.execute(plan, Collections.emptyMap())
         }
     }
@@ -89,7 +89,7 @@ class OpenFoamProviderTest {
         OpenFoamResult result = provider.execute(plan, Collections.emptyMap())
 
         assertNotNull(result)
-        assertTrue(result.status == 'CONVERGED' || result.status == 'NOT_CONVERGED')
+        assertEquals('NOT_CONVERGED', result.status)
         assertEquals(400, result.cellCount)
         assertEquals(400, result.velocityField.size())
         assertEquals(400, result.pressureField.size())
@@ -136,8 +136,102 @@ class OpenFoamProviderTest {
 
         assertTrue(result instanceof OpenFoamResult)
         OpenFoamResult foamResult = (OpenFoamResult) result
-        assertTrue(foamResult.status == 'CONVERGED' || foamResult.status == 'NOT_CONVERGED')
+        assertEquals('NOT_CONVERGED', foamResult.status)
         assertEquals(400, foamResult.cellCount)
+    }
+
+    private static MathMeta createCustomCavityModel(double nu, double deltaT, double endTime = 0.5d) {
+        MathDsl.math {
+            ParameterDef('nuDef', parameterCode: 'kinematicViscosity', parameterName: 'Viscosity',
+                purposeEnum: org.moqui.math.dsl.ParameterPurpose.FluidProperty,
+                parameterTypeEnum: org.moqui.math.dsl.ParameterType.NumberDecimal, defaultValue: nu)
+            ParameterDef('dtDef', parameterCode: 'deltaT', parameterName: 'Time step',
+                purposeEnum: org.moqui.math.dsl.ParameterPurpose.SolverControl,
+                parameterTypeEnum: org.moqui.math.dsl.ParameterType.NumberDecimal, defaultValue: deltaT)
+            ParameterDef('endDef', parameterCode: 'endTime', parameterName: 'End time',
+                purposeEnum: org.moqui.math.dsl.ParameterPurpose.SolverControl,
+                parameterTypeEnum: org.moqui.math.dsl.ParameterType.NumberDecimal, defaultValue: endTime)
+
+            Graph('TestGraph')
+            Mesh('CavityMesh', graphId: 'TestGraph', meshTypeEnumId: 'MtHexahedral', purposeEnumId: 'MpCFD')
+
+            MathModelDef('CavityDef', modelTypeEnum: org.moqui.math.dsl.MathModelType.CFD) {
+                pipeline('FvmStep', stepSeqId: '01', sequenceNum: 1, stepName: 'FvmSolve',
+                    solvingMethodEnum: org.moqui.math.dsl.MathModelSolvingMethod.Fvm)
+                MathModel('CustomCavity', meshId: 'CavityMesh', statusId: 'MathModelDraft') {
+                    parameters('P_nu', parameterDefId: 'nuDef', parameterAlias: 'nu', numericValue: nu)
+                    parameters('P_dt', parameterDefId: 'dtDef', parameterAlias: 'deltaT', numericValue: deltaT)
+                    parameters('P_end', parameterDefId: 'endDef', parameterAlias: 'endTime', numericValue: endTime)
+                }
+            }
+        }
+    }
+
+    @Test
+    void testViscositySensitivity() {
+        // Discriminant test 1: Increasing nu changes the velocity field measurably
+        OpenFoamResult res1 = new OpenFoamProvider('CustomCavity').run(createCustomCavityModel(0.01, 0.005, 0.2))
+        OpenFoamResult res2 = new OpenFoamProvider('CustomCavity').run(createCustomCavityModel(0.1, 0.005, 0.2))
+
+        double sumDiff = 0.0d
+        for (int j = 0; j < 20; j++) {
+            sumDiff += Math.abs(res1.velocityField[j * 20 + 10][0] - res2.velocityField[j * 20 + 10][0])
+        }
+        assertTrue(sumDiff > 1e-3, "Centerline horizontal velocity profile must vary with viscosity, sumDiff: ${sumDiff}")
+    }
+
+    @Test
+    void testVortexAsymmetryShiftWithReynolds() {
+        // Discriminant test 2: As Re increases (nu decreases), vortex core shifts
+        OpenFoamResult resLowRe = new OpenFoamProvider('CustomCavity').run(createCustomCavityModel(0.1, 0.005, 0.25))
+        OpenFoamResult resHighRe = new OpenFoamProvider('CustomCavity').run(createCustomCavityModel(0.01, 0.005, 0.25))
+
+        // Compare vertical velocity along horizontal centerline (j=10)
+        double sumDiff = 0.0d
+        for (int i = 0; i < 20; i++) {
+            double vLow = resLowRe.velocityField[10 * 20 + i][1]
+            double vHigh = resHighRe.velocityField[10 * 20 + i][1]
+            sumDiff += Math.abs(vLow - vHigh)
+        }
+        assertTrue(sumDiff > 1e-3, "Vortex velocity profile across centerline must shift with Reynolds number")
+    }
+
+    @Test
+    void testMassConservationInInternalCells() {
+        // Discriminant test 3: Continuity divergence must satisfy physical bounds across all cells
+        OpenFoamResult res = new OpenFoamProvider('CustomCavity').run(createCustomCavityModel(0.01, 0.005, 0.15))
+        double continuityResidual = res.residuals.get('continuity')
+        assertTrue(continuityResidual < 2.0, "Continuity residual must be conserved: ${continuityResidual}")
+    }
+
+    @Test
+    void testBoundaryConditionsAdherence() {
+        // Discriminant test 4: No-slip at stationary walls, lid velocity at top
+        OpenFoamResult res = new OpenFoamProvider('CustomCavity').run(createCustomCavityModel(0.01, 0.005, 0.15))
+
+        // Bottom row (j=0 in 0-indexed mesh): near zero
+        for (int i = 0; i < 20; i++) {
+            double uBot = res.velocityField[0 * 20 + i][0]
+            double vBot = res.velocityField[0 * 20 + i][1]
+            assertTrue(Math.abs(uBot) < 0.15, "Bottom wall u velocity should be near zero, was: ${uBot}")
+            assertTrue(Math.abs(vBot) < 0.15, "Bottom wall v velocity should be near zero, was: ${vBot}")
+        }
+
+        // Top row (j=19 near lid): positive horizontal flow driven by lid
+        double avgTopU = 0.0d
+        for (int i = 0; i < 20; i++) {
+            avgTopU += res.velocityField[19 * 20 + i][0]
+        }
+        avgTopU /= 20.0
+        assertTrue(avgTopU > 0.3, "Top row near moving lid must show strong positive u velocity, got: ${avgTopU}")
+    }
+
+    @Test
+    void testExcessiveDeltaTCausesDivergence() {
+        // Discriminant test 5: Massive CFL violation (dt = 0.5 with dx = 0.005 => CFL = 100) must NOT converge
+        OpenFoamPlan plan = new OpenFoamProvider('CustomCavity').compile(createCustomCavityModel(0.01, 0.5, 0.5))
+        OpenFoamResult res = new OpenFoamProvider('CustomCavity').execute(plan, Collections.emptyMap())
+        assertEquals('NOT_CONVERGED', res.status, "Simulation with huge CFL must not report CONVERGED")
     }
 
     @Test

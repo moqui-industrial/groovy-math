@@ -62,8 +62,14 @@ final class PetscTaoProvider implements MathProvider<PetscTaoPlan, PetscTaoResul
             System.arraycopy(hessianValues[row], 0, flattenedHessian,
                 row * variableNames.size(), variableNames.size())
         }
-        long handle = backend.createBoundedQuadraticPlan(variableNames.size(), flattenedHessian,
-            linearValues, boundValues[0], boundValues[1], initialValues)
+        long handle
+        try {
+            handle = backend.createBoundedQuadraticPlan(variableNames.size(), flattenedHessian,
+                linearValues, boundValues[0], boundValues[1], initialValues)
+        } catch (UnsatisfiedLinkError e) {
+            throw new org.moqui.math.spi.ProviderUnavailableException(providerId, e.message,
+                "Run './gradlew buildPetscTaoNative' and verify petsc-dev is installed.", e)
+        }
         new PetscTaoPlan(mathModelId, 'bqpip', variableNames, backend, handle)
     }
 

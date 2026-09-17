@@ -241,8 +241,8 @@ public final class LibTorchPanama implements LibTorchBackend {
         if (lastErrorHandle == null) return "Unknown error (lastErrorHandle unavailable)";
         try {
             MemorySegment seg = (MemorySegment) lastErrorHandle.invokeExact();
-            if (seg.equals(MemorySegment.NULL)) return "None";
-            return seg.getUtf8String(0);
+            if (seg.equals(MemorySegment.NULL) || seg.address() == 0) return "None";
+            return seg.reinterpret(4096).getString(0);
         } catch (Throwable t) {
             return "Failed to retrieve native error: " + t.getMessage();
         }

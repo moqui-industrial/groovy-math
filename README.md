@@ -59,7 +59,11 @@ LibTorch (C++)   ONNX Runtime     OpenFOAM (C++)   OpenCV (C++)     PETSc / TAO 
 
 ## Provider Matrix: Real Status & System Prerequisites
 
-The following matrix documents the exact technical status, integration mechanism, and system prerequisites for each computation engine:
+### Provider Status Definitions
+
+* **Production**: Complete, Panama FFM native C++ ABI binding (or JVM in-process pure engine), verified in automated test suites and CI.
+* **Preview**: Functional implementation with execution capabilities, but relies on external bridge runtimes (e.g., embedded CPython) or has partial feature coverage.
+* **Stub**: Metamodel integration, declared schema verification, and reference implementation in Groovy/JVM, with external native solver backend remaining a stub pending full C++ binary link.
 
 | Provider / Engine | Domain | Integration Type | Status | CI / Verification Task | System Prerequisites |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -71,6 +75,7 @@ The following matrix documents the exact technical status, integration mechanism
 | **Google OR-Tools** | Linear & Mixed Integer Programming (LP/MIP) | In-process GLOP (`MmtLp`, via OR-Tools Java bindings) | **Production** | `./gradlew test --tests "*OrTools*"` | None (managed automatically by Maven dependencies) |
 | **Apache Jena** | Graph & Categorical RDF/OWL/SPARQL | JVM In-Process (Pure Java) | **Production** | `./gradlew test --tests "*Jena*"` | None (managed automatically by Maven dependencies) |
 | **OpenFOAM** | Finite Volume Method (FVM) Fluid Dynamics | Reference Groovy FVM solver + Native Panama Stub | **Stub (Native) / Preview (Groovy)** | `./gradlew buildOpenFoamNative openFoamNativeTest` | CMake & Ninja (native stub); zero dependencies for Groovy FVM solver |
+
 
 
 ---

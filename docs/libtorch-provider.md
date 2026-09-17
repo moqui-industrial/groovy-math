@@ -55,32 +55,25 @@ LibTorchResult product = PyTorch.execute(mathMeta, 'MatrixProduct') {
 
 `LibTorchBackend` is a narrow Java interface (`createPlan`, `addAffine`,
 `addMatrixProduct`, `addRelu`, `seal`, `execute`, `executeDirect`, `destroy`,
-thread configuration) with two interchangeable native implementations built
-from the same `src/main/cpp/libtorch_jni.cpp` / `libtorch_panama.cpp`
-translation units into one shared library:
+thread configuration) implemented natively via Panama FFM:
 
 - **`LibTorchPanama`** (`org.moqui.math.libtorch.LibTorchPanama`, Java) is the
-  default used by `LibTorchProvider`. It needs Java 22 or newer, where the Foreign
-  Function & Memory API (`java.lang.foreign`) is final rather than a preview
-  feature as it was on 21; the build targets Java 25 LTS. It dispatches through
+  default used by `LibTorchProvider`. It targets Java 25 LTS where the Foreign
+  Function & Memory API (`java.lang.foreign`) is standard. It dispatches through
   `Linker.nativeLinker()` with zero-copy `MemorySegment` views, bypassing JNI
-  array marshalling entirely.
-- **`LibTorchNative`** (`org.moqui.math.libtorch.LibTorchNative`, Groovy) is the
-  legacy JNI bridge, kept alongside Panama so `LibTorchParallelBenchmark` /
-  `LibTorchComputeBenchmark` can measure one against the other; it is not the
-  provider's default backend.
+  entirely.
 
-Both share the same plan model on the C++ side: it owns all `at::Tensor`
-parameters and the immutable operation list, while Java owns an opaque handle
-through `LibTorchPlan`, whose read/write lock permits concurrent execution
-while making `close()` exclusive. Execution uses `c10::InferenceMode`.
+The C++ side owns all `at::Tensor` parameters and the immutable operation list,
+while Java owns an opaque handle through `LibTorchPlan`, whose read/write lock
+permits concurrent execution while making `close()` exclusive. Execution uses
+`c10::InferenceMode`.
 
-Two input boundaries are available on both backends:
+Two input boundaries are available:
 
 - `float[]` copies Java input into native memory and native output back to Java;
 - direct `ByteBuffer` lets LibTorch view the input in place and writes the
   result into reusable off-heap output storage with one native copy, avoiding
-  per-call allocation (and, for `LibTorchNative`, JNI array marshalling).
+  per-call allocation.
 
 ## Build and verification
 

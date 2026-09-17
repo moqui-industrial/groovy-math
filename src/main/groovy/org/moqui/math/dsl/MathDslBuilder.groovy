@@ -25,15 +25,17 @@ import org.moqui.math.entity.RelationshipDefinition
 @CompileStatic
 final class MathDslBuilder {
     final MathMeta mathMeta
+    final DslVocabulary vocabulary
 
     MathDslBuilder(final MathMeta mathMeta) {
         this.mathMeta = Objects.requireNonNull(mathMeta, 'Math metadata must not be null')
+        this.vocabulary = DslVocabulary.of(mathMeta.definition)
     }
 
     ModelProvider entity(final String entityName, final String modelKey,
                          final Map<String, ?> values = Collections.emptyMap(),
                          final Closure<?> action = null) {
-        EntityDefinition definition = mathMeta.definition.entity(entityName)
+        EntityDefinition definition = vocabulary.findEntity(entityName)
         LinkedHashMap<String, Object> attributes = copyValues(values)
         declare(definition, modelKey, attributes, action, null, null).provider
     }
@@ -41,16 +43,23 @@ final class MathDslBuilder {
     @CompileStatic(TypeCheckingMode.SKIP)
     Object methodMissing(final String entityName, final Object rawArguments) {
         List<Object> arguments = normalizeArguments(rawArguments)
-        EntityDefinition entityDefinition = mathMeta.definition.entity(entityName)
+        EntityDefinition entityDefinition = vocabulary.findEntity(entityName)
         ParsedDeclaration parsed = parseArguments(entityName, arguments)
         declare(entityDefinition, parsed.modelKey, parsed.values, parsed.action, null, null).provider
+    }
+
+    @CompileStatic(TypeCheckingMode.SKIP)
+    Object propertyMissing(final String name) {
+        DslSymbol symbol = vocabulary.resolveSymbol(name)
+        if (symbol != null) return symbol
+        throw new MissingPropertyException(name, getClass())
     }
 
     @PackageScope
     DslDeclaration declareNested(final String entityName, final Object rawArguments,
                                  final DslDeclaration parent,
                                  final RelationshipDefinition relationship = null) {
-        EntityDefinition entityDefinition = mathMeta.definition.entity(entityName)
+        EntityDefinition entityDefinition = vocabulary.findEntity(entityName)
         ParsedDeclaration parsed = parseArguments(entityName, normalizeArguments(rawArguments))
         declare(entityDefinition, parsed.modelKey, parsed.values, parsed.action, parent, relationship)
     }
@@ -253,6 +262,12 @@ final class MathDslBuilder {
         if (requestedName.endsWith('Enum')) {
             String alias = requestedName + 'Id'
             if (definition.fields.containsKey(alias)) return alias
+        }
+        if (definition.fields.containsKey(requestedName + 'EnumId')) {
+            return requestedName + 'EnumId'
+        }
+        if (definition.fields.containsKey(requestedName + 'Id')) {
+            return requestedName + 'Id'
         }
         requestedName
     }

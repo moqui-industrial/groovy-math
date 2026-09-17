@@ -17,6 +17,7 @@ package org.moqui.math.dsl
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
+import org.moqui.math.entity.ModelProvider
 import org.moqui.math.entity.RelationshipDefinition
 
 @CompileStatic
@@ -44,22 +45,15 @@ final class DslRecordDelegate {
             (Object[]) rawArguments : [rawArguments] as Object[]
         String fieldName = MathDslBuilder.resolveFieldName(record.definition, name)
         if (record.definition.fields.containsKey(fieldName)) {
-            if (arguments.length != 1 || arguments[0] instanceof Closure) {
-                throw new MissingMethodException(name, getClass(), arguments)
+            if (arguments.length == 1 && !(arguments[0] instanceof Closure)) {
+                Object fieldValue = MathDslBuilder.normalizeValue(arguments[0])
+                record.values.put(fieldName, fieldValue)
+                record.provider.configure { value -> value.put(fieldName, fieldValue) }
+                return this
             }
-            Object fieldValue = MathDslBuilder.normalizeValue(arguments[0])
-            record.values.put(fieldName, fieldValue)
-            record.provider.configure { value -> value.put(fieldName, fieldValue) }
-            return this
         }
 
-        List<String> transformationEntities = [
-            'moqui.math.Transformation', 'moqui.math.DiagonalExtraction', 'moqui.math.TriangularExtraction',
-            'moqui.math.BandExtraction', 'moqui.math.BlockMatrixExtraction', 'moqui.math.MatrixDecomposition',
-            'moqui.math.TensorDecomposition', 'moqui.math.TensorSlice', 'moqui.math.NormResult',
-            'moqui.math.CoordinateSystemTransformation'
-        ]
-        if (transformationEntities.contains(record.definition.fullName)) {
+        if (root.vocabulary.isTransformationEntity(record.definition.fullName)) {
             if (record.definition.fullName != 'moqui.math.Transformation') {
                 if (!root.mathMeta.hasEntity('Transformation') || root.mathMeta.entity('Transformation').findByName(record.modelKey) == null) {
                     Map<String, Object> tVals = [transformationId: record.modelKey, transformationTypeEnumId: 'TtMeta']
@@ -68,7 +62,7 @@ final class DslRecordDelegate {
             }
 
             if (['resultMatrix', 'resultVector', 'resultTensor', 'resultParameter', 'resultFunction'].contains(name)) {
-                Object targetId = arguments.length > 0 ? (arguments[0] instanceof org.moqui.math.metamodel.EntityRef ? ((org.moqui.math.metamodel.EntityRef<?>) arguments[0]).id : arguments[0]?.toString()) : null
+                Object targetId = arguments.length > 0 ? (arguments[0] instanceof org.moqui.math.metamodel.EntityRef ? ((org.moqui.math.metamodel.EntityRef<?>) arguments[0]).id : (arguments[0] instanceof ModelProvider ? ((ModelProvider) arguments[0]).name : arguments[0]?.toString())) : null
                 String fieldIdName = "${name}Id"
                 if (root.mathMeta.hasEntity('Transformation') && root.mathMeta.entity('Transformation').findByName(record.modelKey) != null) {
                     root.mathMeta.entity('Transformation').findByName(record.modelKey).configure { org.moqui.math.entity.ModelValue val -> val.put(fieldIdName, targetId) }
@@ -76,28 +70,9 @@ final class DslRecordDelegate {
                 return this
             }
 
-            Map<String, String> operandTypeMap = [
-                leftMatrix: 'TotLeftMatrix',
-                rightMatrix: 'TotRightMatrix',
-                operandMatrix: 'TotMatrix',
-                leftVector: 'TotLeftVector',
-                rightVector: 'TotRightVector',
-                operandVector: 'TotVector',
-                leftTensor: 'TotLeftTensor',
-                rightTensor: 'TotRightTensor',
-                operandTensor: 'TotTensor',
-                kernelMatrix: 'TotKernelMatrix',
-                biasMatrix: 'TotBiasMatrix',
-                kernelVector: 'TotKernelVector',
-                biasVector: 'TotBiasVector',
-                operandTransformation: 'TotTransformation',
-                leftTransformation: 'TotLeft',
-                rightTransformation: 'TotRight',
-                operandParameter: 'TotParameter'
-            ]
-            if (operandTypeMap.containsKey(name)) {
-                String operandTypeEnumId = operandTypeMap.get(name)
-                Object targetId = arguments.length > 0 ? (arguments[0] instanceof org.moqui.math.metamodel.EntityRef ? ((org.moqui.math.metamodel.EntityRef<?>) arguments[0]).id : arguments[0]?.toString()) : null
+            String operandTypeEnumId = root.vocabulary.getOperandTypeEnumId(name)
+            if (operandTypeEnumId != null && arguments.length == 1 && !(arguments[0] instanceof Map) && !(arguments[0] instanceof Closure)) {
+                Object targetId = arguments.length > 0 ? (arguments[0] instanceof org.moqui.math.metamodel.EntityRef ? ((org.moqui.math.metamodel.EntityRef<?>) arguments[0]).id : (arguments[0] instanceof ModelProvider ? ((ModelProvider) arguments[0]).name : arguments[0]?.toString())) : null
                 Map<String, Object> opValues = new LinkedHashMap<>()
                 opValues.put('transformationId', record.modelKey)
                 opValues.put('operandTypeEnumId', operandTypeEnumId)
@@ -118,8 +93,9 @@ final class DslRecordDelegate {
             }
         }
 
-        if (record.definition.fullName == 'moqui.math.MathModel' && ['Matrix', 'Vector', 'Tensor'].contains(name)) {
-            DslDeclaration childDecl = root.declareNested(name, rawArguments, null, null)
+        String capName = name ? name.capitalize() : name
+        if (record.definition.fullName == 'moqui.math.MathModel' && ['Matrix', 'Vector', 'Tensor'].contains(capName)) {
+            DslDeclaration childDecl = root.declareNested(capName, rawArguments, null, null)
             String targetKey = childDecl.modelKey
             long seq = root.mathMeta.hasEntity('MathModelData') ?
                 (long) root.mathMeta.entity('MathModelData').count { Object v ->
@@ -129,12 +105,12 @@ final class DslRecordDelegate {
             Map<String, Object> dataValues = [
                 mathModelDataId: dataId,
                 mathModelId: record.modelKey,
-                dataTypeEnumId: "Mmdt${name}",
+                dataTypeEnumId: "Mmdt${capName}",
                 sequenceNum: seq
             ]
-            if (name == 'Matrix') dataValues.put('matrixId', targetKey)
-            else if (name == 'Vector') dataValues.put('vectorId', targetKey)
-            else if (name == 'Tensor') dataValues.put('tensorId', targetKey)
+            if (capName == 'Matrix') dataValues.put('matrixId', targetKey)
+            else if (capName == 'Vector') dataValues.put('vectorId', targetKey)
+            else if (capName == 'Tensor') dataValues.put('tensorId', targetKey)
             root.mathMeta.declare('moqui.math.MathModelData', dataId, dataValues)
             return childDecl.provider
         }
@@ -145,8 +121,23 @@ final class DslRecordDelegate {
                 return new DslRelationshipDelegate(root, record, relationship)
                     .configure((Closure<?>) arguments[0])
             }
-            return root.declareNested(relationship.relatedEntityName, arguments, record, relationship)
+            return root.declareNested(relationship.relatedEntityName, arguments, record, relationship).provider
         }
-        root.declareNested(name, arguments, record)
+        root.declareNested(name, arguments, record).provider
+    }
+
+    private final Map<String, Object> localVariables = new LinkedHashMap<>()
+
+    @CompileStatic(TypeCheckingMode.SKIP)
+    Object propertyMissing(final String name) {
+        if (localVariables.containsKey(name)) return localVariables.get(name)
+        DslSymbol symbol = root.vocabulary.resolveSymbol(name)
+        if (symbol != null) return symbol
+        throw new MissingPropertyException(name, getClass())
+    }
+
+    @CompileStatic(TypeCheckingMode.SKIP)
+    void propertyMissing(final String name, final Object value) {
+        localVariables.put(name, value)
     }
 }

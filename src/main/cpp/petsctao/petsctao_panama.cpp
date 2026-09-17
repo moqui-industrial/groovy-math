@@ -140,7 +140,9 @@ void fill_vector(Vec vector, const std::vector<PetscScalar>& values) {
 extern "C" {
 
 const char* petsc_panama_last_error(void) {
-    return g_last_error.empty() ? nullptr : g_last_error.c_str();
+    if (g_last_error.empty()) return nullptr;
+    if (g_last_error.size() > 4095) g_last_error.resize(4095);
+    return g_last_error.c_str();
 }
 
 int64_t petsc_panama_create_bounded_quadratic_plan(

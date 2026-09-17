@@ -210,6 +210,7 @@ thread_local std::string g_last_error;
 
 static void set_last_error(const std::string& err) {
     g_last_error = err;
+    if (g_last_error.size() > 4095) g_last_error.resize(4095);
 }
 
 static std::shared_ptr<Plan> get_plan(int64_t handle) {

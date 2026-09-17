@@ -146,6 +146,11 @@ final class OpenCvProvider implements MathProvider<OpenCvPlan, OpenCvResult> {
         outWidth = width
         outHeight = height
 
+        if (!panama.isAvailable()) {
+            throw new org.moqui.math.spi.ProviderUnavailableException(providerId,
+                "OpenCV native library is not available on this system.",
+                "Run './gradlew buildOpenCvNative'.")
+        }
         long planHandle = panama.createPlan(width, height)
         if (planHandle == 0L) throw new IllegalStateException('Failed to create native OpenCV plan')
 

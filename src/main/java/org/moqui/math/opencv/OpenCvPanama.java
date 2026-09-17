@@ -170,7 +170,7 @@ public final class OpenCvPanama {
         try {
             MemorySegment seg = (MemorySegment) lastErrorHandle.invokeExact();
             if (seg.equals(MemorySegment.NULL) || seg.address() == 0) return null;
-            return seg.reinterpret(4096).getUtf8String(0);
+            return seg.reinterpret(4096).getString(0);
         } catch (Throwable ignored) {
             return null;
         }
