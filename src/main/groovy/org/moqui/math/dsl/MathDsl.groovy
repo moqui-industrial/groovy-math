@@ -19,6 +19,7 @@ import groovy.lang.GroovyShell
 import groovy.transform.CompileStatic
 import groovy.util.DelegatingScript
 import org.codehaus.groovy.control.customizers.ImportCustomizer
+import org.codehaus.groovy.control.customizers.SecureASTCustomizer
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.moqui.math.entity.ModelDefinition
 import org.moqui.math.moqui.MoquiSchemaInspector
@@ -65,6 +66,52 @@ final class MathDsl {
         ImportCustomizer imports = new ImportCustomizer()
         imports.addStarImports('org.moqui.math.dsl')
         configuration.addCompilationCustomizers(imports)
+
+        SecureASTCustomizer secure = new SecureASTCustomizer()
+        secure.starImportsWhitelist = [
+            'org.moqui.math.dsl',
+            'org.moqui.math.dsl.*',
+            'java.lang',
+            'java.lang.*',
+            'java.util',
+            'java.util.*',
+            'java.math',
+            'java.math.*'
+        ]
+        secure.importsWhitelist = [
+            'org.moqui.math.dsl.*',
+            'java.lang.*',
+            'java.util.*',
+            'java.math.*'
+        ]
+        secure.receiversBlackList = [
+            'java.lang.System',
+            'java.lang.Runtime',
+            'java.lang.Process',
+            'java.lang.ProcessBuilder',
+            'java.lang.Thread',
+            'java.lang.ThreadGroup',
+            'java.lang.ClassLoader',
+            'java.lang.reflect.Method',
+            'java.lang.reflect.Field',
+            'java.lang.reflect.Constructor',
+            'java.io.File',
+            'java.io.FileInputStream',
+            'java.io.FileOutputStream',
+            'java.io.FileReader',
+            'java.io.FileWriter',
+            'java.io.RandomAccessFile',
+            'java.nio.file.Files',
+            'java.nio.file.Path',
+            'java.nio.file.Paths',
+            'java.net.Socket',
+            'java.net.ServerSocket',
+            'java.net.URL',
+            'java.net.URI',
+            'java.net.http.HttpClient'
+        ]
+        secure.indirectImportCheckEnabled = true
+        configuration.addCompilationCustomizers(secure)
         GroovyShell shell = new GroovyShell(MathDsl.classLoader, new Binding(), configuration)
         DelegatingScript script = (DelegatingScript) shell.parse(dslFile)
 

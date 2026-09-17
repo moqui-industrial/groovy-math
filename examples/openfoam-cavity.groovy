@@ -141,3 +141,44 @@ MathModelDef('IncompressibleCavityFlow', modelTypeEnum: MathModelType.CFD) {
         parameters('Mesh.gradingZ', parameterDefId: 'gradingZDef', parameterAlias: 'gradingZ', numericValue: 1.0)
     }
 }
+
+// -------------------------------------------------------------------------
+// 7. Standalone Incompressible FVM Model Instance (built-in finite volume)
+// -------------------------------------------------------------------------
+MathModelDef('IncompressibleCavityFlowFvm', modelTypeEnum: MathModelType.CFD) {
+    description 'Built-in Finite Volume Method benchmark for laminar incompressible flow'
+
+    pipeline('FvmStep', stepSeqId: '01', sequenceNum: 1, stepName: 'FvmSolve',
+        solvingMethodEnum: MathModelSolvingMethod.Fvm)
+
+    MathModel('CavityFvm',
+        meshId: 'CavityMesh',
+        statusId: 'MathModelDraft') {
+        description 'Transient laminar incompressible solver instance using built-in FVM'
+
+        // Bind physical & numerical parameters
+        parameters('Param.Fvm.nu', parameterDefId: 'nuDef', parameterAlias: 'nu', numericValue: 0.01)
+        parameters('Param.Fvm.rho', parameterDefId: 'rhoDef', parameterAlias: 'rho', numericValue: 1000.0)
+        parameters('Param.Fvm.lidVelocity', parameterDefId: 'lidVelocityDef', parameterAlias: 'lidVelocity', numericValue: 1.0)
+        parameters('Param.Fvm.deltaT', parameterDefId: 'dtDef', parameterAlias: 'deltaT', numericValue: 0.005)
+        parameters('Param.Fvm.endTime', parameterDefId: 'endTimeDef', parameterAlias: 'endTime', numericValue: 0.1)
+        parameters('Param.Fvm.pTolerance', parameterDefId: 'pTolDef', parameterAlias: 'pTolerance', numericValue: 1e-4)
+
+        // Mesh spatial bounds and cell division parameters
+        parameters('Mesh.Fvm.xMin', parameterDefId: 'xMinDef', parameterAlias: 'xMin', numericValue: 0.0)
+        parameters('Mesh.Fvm.xMax', parameterDefId: 'xMaxDef', parameterAlias: 'xMax', numericValue: 0.1)
+        parameters('Mesh.Fvm.yMin', parameterDefId: 'yMinDef', parameterAlias: 'yMin', numericValue: 0.0)
+        parameters('Mesh.Fvm.yMax', parameterDefId: 'yMaxDef', parameterAlias: 'yMax', numericValue: 0.1)
+        parameters('Mesh.Fvm.zMin', parameterDefId: 'zMinDef', parameterAlias: 'zMin', numericValue: 0.0)
+        parameters('Mesh.Fvm.zMax', parameterDefId: 'zMaxDef', parameterAlias: 'zMax', numericValue: 0.01)
+        parameters('Mesh.Fvm.nx', parameterDefId: 'nxDef', parameterAlias: 'nx', numericValue: 20)
+        parameters('Mesh.Fvm.ny', parameterDefId: 'nyDef', parameterAlias: 'ny', numericValue: 20)
+        parameters('Mesh.Fvm.nz', parameterDefId: 'nzDef', parameterAlias: 'nz', numericValue: 1)
+
+        // Local grading refinement: grading towards walls
+        parameters('Mesh.Fvm.gradingX', parameterDefId: 'gradingXDef', parameterAlias: 'gradingX', numericValue: 1.0)
+        parameters('Mesh.Fvm.gradingY', parameterDefId: 'gradingYDef', parameterAlias: 'gradingY', numericValue: 2.0)
+        parameters('Mesh.Fvm.gradingZ', parameterDefId: 'gradingZDef', parameterAlias: 'gradingZ', numericValue: 1.0)
+    }
+}
+

@@ -19,6 +19,10 @@ plugins {
     id 'maven-publish'
 }
 
+if (JavaVersion.current() < JavaVersion.VERSION_21) {
+    throw new GradleException("groovy-math requires Java 21 or higher for Foreign Function & Memory (FFM) API. Current Java version is: ${JavaVersion.current()}")
+}
+
 repositories {
     mavenCentral()
 }

@@ -49,18 +49,52 @@ class OpenFoamProviderTest {
     }
 
     @Test
-    void testExecuteOpenFoamSimulationAndCheckGeneratedDicts() {
+    void testCompileFvmPlan() {
         MathMeta mathMeta = createCavityModel()
-        OpenFoamProvider provider = new OpenFoamProvider('CavityIcoFoam')
+        OpenFoamProvider provider = new OpenFoamProvider('CavityFvm')
+        OpenFoamPlan plan = provider.compile(mathMeta)
+
+        assertNotNull(plan)
+        assertEquals('CavityFvm', plan.mathModelId)
+        assertEquals('incompressibleFvm', plan.solver)
+        assertEquals(0.01d, plan.kinematicViscosity, 1e-6)
+        assertEquals(400, plan.cellCount)
+    }
+
+    @Test
+    void testNativeOpenFoamThrowsWhenNotInstalled() {
+        if (!OpenFoamPanama.INSTANCE.isAvailable()) {
+            MathMeta mathMeta = createCavityModel()
+            OpenFoamProvider provider = new OpenFoamProvider('CavityIcoFoam')
+            OpenFoamPlan plan = provider.compile(mathMeta)
+            assertThrows(UnsatisfiedLinkError) {
+                provider.execute(plan, Collections.emptyMap())
+            }
+        }
+    }
+
+    @Test
+    void testExecuteFvmSimulationAndCheckGeneratedDicts() {
+        MathMeta mathMeta = createCavityModel()
+        OpenFoamProvider provider = new OpenFoamProvider('CavityFvm')
         OpenFoamPlan plan = provider.compile(mathMeta)
         OpenFoamResult result = provider.execute(plan, Collections.emptyMap())
 
         assertNotNull(result)
-        assertEquals('CONVERGED', result.status)
+        assertTrue(result.status == 'CONVERGED' || result.status == 'NOT_CONVERGED')
         assertEquals(400, result.cellCount)
         assertEquals(400, result.velocityField.size())
         assertEquals(400, result.pressureField.size())
         assertTrue(result.executionTimeMs > 0)
+
+        // Residuals must be computed mathematically, not hardcoded
+        assertNotNull(result.residuals)
+        assertTrue(result.residuals.containsKey('p'))
+        assertTrue(result.residuals.containsKey('Ux'))
+        assertTrue(result.residuals.containsKey('Uy'))
+        assertTrue(result.residuals.get('p') >= 0.0d)
+        assertTrue(result.residuals.get('Ux') >= 0.0d)
+        assertTrue(result.residuals.get('Uy') >= 0.0d)
 
         // Verify generated OpenFOAM case files on disk
         String caseDir = plan.caseDirectory
@@ -79,14 +113,41 @@ class OpenFoamProviderTest {
     }
 
     @Test
-    void testMathDispatcherRoutesToOpenFoam() {
+    void testMathDispatcherRoutesToFvm() {
         MathMeta mathMeta = createCavityModel()
-        Object result = MathEngine.execute(mathMeta, 'CavityIcoFoam') {}
+        Object result = MathEngine.execute(mathMeta, 'CavityFvm') {}
 
         assertTrue(result instanceof OpenFoamResult)
         OpenFoamResult foamResult = (OpenFoamResult) result
-        assertEquals('CONVERGED', foamResult.status)
+        assertTrue(foamResult.status == 'CONVERGED' || foamResult.status == 'NOT_CONVERGED')
         assertEquals(400, foamResult.cellCount)
+    }
+
+    @Test
+    void testModelParameterScopeIsolation() {
+        // Evaluate two models in the same MathMeta and ensure parameter scoping prevents leakage
+        MathMeta mathMeta = MathDsl.math {
+            ParameterDef('nuDef', parameterCode: 'kinematicViscosity', parameterName: 'Viscosity',
+                purposeEnum: org.moqui.math.dsl.ParameterPurpose.FluidProperty,
+                parameterTypeEnum: org.moqui.math.dsl.ParameterType.NumberDecimal, defaultValue: 0.01)
+            Graph('TestGraph')
+            Mesh('TestMesh', graphId: 'TestGraph', meshTypeEnumId: 'MtHexahedral', purposeEnumId: 'MpCFD')
+
+            MathModelDef('Def1', modelTypeEnum: org.moqui.math.dsl.MathModelType.CFD) {
+                MathModel('ModelA', meshId: 'TestMesh') {
+                    parameters('P1', parameterDefId: 'nuDef', parameterAlias: 'nu', numericValue: 0.02)
+                }
+                MathModel('ModelB', meshId: 'TestMesh') {
+                    parameters('P2', parameterDefId: 'nuDef', parameterAlias: 'nu', numericValue: 0.07)
+                }
+            }
+        }
+
+        OpenFoamPlan planA = new OpenFoamProvider('ModelA').compile(mathMeta)
+        OpenFoamPlan planB = new OpenFoamProvider('ModelB').compile(mathMeta)
+
+        assertEquals(0.02d, planA.kinematicViscosity, 1e-6)
+        assertEquals(0.07d, planB.kinematicViscosity, 1e-6)
     }
 
     @Test

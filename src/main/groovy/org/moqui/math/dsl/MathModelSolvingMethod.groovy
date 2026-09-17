@@ -8,6 +8,7 @@ package org.moqui.math.dsl
 enum MathModelSolvingMethod implements DslEnumValue {
     Simplex('MmsmSimplex'),
     InteriorPoint('MmsmInteriorPoint'),
+    Fvm('MmsmFvm'),
     OpenCv('MmsmOpenCv'),
     Jax('MmsmJax'),
     JaxJit('MmsmJaxJit'),

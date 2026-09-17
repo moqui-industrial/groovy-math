@@ -19,6 +19,8 @@ public final class PetscTaoPanama implements PetscTaoBackend {
 
     private final Linker linker;
     private final SymbolLookup symbols;
+    private final MethodHandle isAvailableHandle;
+    private final MethodHandle lastErrorHandle;
     private final MethodHandle createPlanHandle;
     private final MethodHandle solveHandle;
     private final MethodHandle destroyHandle;
@@ -27,16 +29,20 @@ public final class PetscTaoPanama implements PetscTaoBackend {
         this.linker = Linker.nativeLinker();
         this.symbols = loadSymbols();
 
+        this.lastErrorHandle = find("petsc_panama_last_error",
+            FunctionDescriptor.of(ValueLayout.ADDRESS));
+
         this.createPlanHandle = find("petsc_panama_create_bounded_quadratic_plan",
             FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT,
                 ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                 ValueLayout.ADDRESS, ValueLayout.ADDRESS));
 
         this.solveHandle = find("petsc_panama_solve",
-            FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+            FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
         this.destroyHandle = find("petsc_panama_destroy",
             FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG));
+        this.isAvailableHandle = null;
     }
 
     private static SymbolLookup loadSymbols() {
@@ -63,6 +69,17 @@ public final class PetscTaoPanama implements PetscTaoBackend {
         return seg;
     }
 
+    public String getLastError() {
+        if (lastErrorHandle == null) return null;
+        try {
+            MemorySegment seg = (MemorySegment) lastErrorHandle.invokeExact();
+            if (seg.equals(MemorySegment.NULL) || seg.address() == 0) return null;
+            return seg.reinterpret(4096).getUtf8String(0);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
     @Override
     public long createBoundedQuadraticPlan(int dimension, double[] hessian, double[] linear,
                                            double[] lowerBounds, double[] upperBounds,
@@ -76,10 +93,13 @@ public final class PetscTaoPanama implements PetscTaoBackend {
 
             long handle = (long) createPlanHandle.invokeExact(dimension, hessianSeg, linearSeg, lowerSeg, upperSeg, initialSeg);
             if (handle == 0L) {
-                throw new IllegalStateException("Failed to create PETSc/TAO bounded quadratic plan");
+                String err = getLastError();
+                throw new IllegalStateException("Failed to create PETSc/TAO bounded quadratic plan" +
+                    (err != null ? ": " + err : ""));
             }
             return handle;
         } catch (Throwable t) {
+            if (t instanceof RuntimeException) throw (RuntimeException) t;
             throw new RuntimeException(t);
         }
     }
@@ -90,9 +110,11 @@ public final class PetscTaoPanama implements PetscTaoBackend {
             int totalSize = dimension + 4;
             MemorySegment outSeg = arena.allocate((long) totalSize * Double.BYTES);
 
-            int status = (int) solveHandle.invokeExact(handle, outSeg);
+            int status = (int) solveHandle.invokeExact(handle, outSeg, outSeg.byteSize());
             if (status != 0) {
-                throw new IllegalStateException("PETSc/TAO solver failed with status code " + status);
+                String err = getLastError();
+                throw new IllegalStateException("PETSc/TAO solver failed with status code " + status +
+                    (err != null ? ": " + err : ""));
             }
 
             double[] solution = new double[dimension];
@@ -107,6 +129,7 @@ public final class PetscTaoPanama implements PetscTaoBackend {
 
             return new PetscTaoNativeResult(solution, objective, gradientNorm, iterations, reasonCode);
         } catch (Throwable t) {
+            if (t instanceof RuntimeException) throw (RuntimeException) t;
             throw new RuntimeException(t);
         }
     }

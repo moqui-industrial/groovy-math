@@ -29,6 +29,7 @@ public final class OnnxPanama {
     private final Linker linker;
     private final SymbolLookup symbols;
     private final MethodHandle isAvailableHandle;
+    private final MethodHandle lastErrorHandle;
     private final MethodHandle createSessionHandle;
     private final MethodHandle destroySessionHandle;
     private final MethodHandle runHandle;
@@ -52,6 +53,7 @@ public final class OnnxPanama {
 
         if (!hasSymbols) {
             this.isAvailableHandle = null;
+            this.lastErrorHandle = null;
             this.createSessionHandle = null;
             this.destroySessionHandle = null;
             this.runHandle = null;
@@ -60,6 +62,7 @@ public final class OnnxPanama {
         }
 
         this.isAvailableHandle = find("onnx_panama_is_available", FunctionDescriptor.of(ValueLayout.JAVA_INT));
+        this.lastErrorHandle = find("onnx_panama_last_error", FunctionDescriptor.of(ValueLayout.ADDRESS));
         this.createSessionHandle = find("onnx_panama_create_session",
             FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
         this.destroySessionHandle = find("onnx_panama_destroy_session",
@@ -73,7 +76,8 @@ public final class OnnxPanama {
                 ValueLayout.JAVA_LONG,    // input_rank
                 ValueLayout.ADDRESS,      // output_name
                 ValueLayout.ADDRESS,      // output_data
-                ValueLayout.JAVA_LONG     // output_size
+                ValueLayout.JAVA_LONG,    // output_size
+                ValueLayout.JAVA_LONG     // output_capacity_bytes
             ));
 
         boolean runtimeAvailable = false;
@@ -118,13 +122,31 @@ public final class OnnxPanama {
         return seg;
     }
 
+    public String getLastError() {
+        if (lastErrorHandle == null) return null;
+        try {
+            MemorySegment seg = (MemorySegment) lastErrorHandle.invokeExact();
+            if (seg.equals(MemorySegment.NULL) || seg.address() == 0) return null;
+            return seg.reinterpret(4096).getUtf8String(0);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
     public long createSession(String modelPath) {
         checkAvailable();
         if (modelPath == null || modelPath.isEmpty()) return 0L;
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment pathSeg = allocateCString(arena, modelPath);
-            return (long) createSessionHandle.invokeExact(pathSeg);
+            long handle = (long) createSessionHandle.invokeExact(pathSeg);
+            if (handle == 0L) {
+                String err = getLastError();
+                throw new RuntimeException("Failed to create ONNX session for model: " + modelPath +
+                    (err != null ? " (" + err + ")" : ""));
+            }
+            return handle;
         } catch (Throwable t) {
+            if (t instanceof RuntimeException) throw (RuntimeException) t;
             throw new RuntimeException("Failed to create ONNX session for model: " + modelPath, t);
         }
     }
@@ -143,6 +165,12 @@ public final class OnnxPanama {
         checkAvailable();
         if (sessionHandle == 0L) throw new IllegalArgumentException("Invalid ONNX session handle: 0");
 
+        long requiredBytes = outputSize * ValueLayout.JAVA_FLOAT.byteSize();
+        if (outputData.byteSize() < requiredBytes) {
+            throw new IllegalArgumentException("Output buffer capacity (" + outputData.byteSize() +
+                " bytes) is smaller than required output size (" + requiredBytes + " bytes)");
+        }
+
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment inNameSeg = inputName != null ? allocateCString(arena, inputName) : MemorySegment.NULL;
             MemorySegment outNameSeg = outputName != null ? allocateCString(arena, outputName) : MemorySegment.NULL;
@@ -160,11 +188,14 @@ public final class OnnxPanama {
                 (long) shape.length,
                 outNameSeg,
                 outputData,
-                outputSize
+                outputSize,
+                outputData.byteSize()
             );
 
             if (status != 0L) {
-                throw new RuntimeException("ONNX Runtime execution failed with status code: " + status);
+                String err = getLastError();
+                throw new RuntimeException("ONNX Runtime execution failed with status code: " + status +
+                    (err != null ? " (" + err + ")" : ""));
             }
         } catch (Throwable t) {
             if (t instanceof RuntimeException) throw (RuntimeException) t;

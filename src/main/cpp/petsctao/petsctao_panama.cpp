@@ -6,6 +6,7 @@
 #include <petsctao.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -13,6 +14,7 @@
 #include <mutex>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #if defined(PETSC_USE_COMPLEX)
@@ -32,6 +34,12 @@ struct Plan {
 
 std::once_flag petsc_initialization;
 std::mutex petsc_execution_mutex;
+
+static std::unordered_map<int64_t, std::unique_ptr<Plan>> g_plans;
+static std::mutex g_plans_mutex;
+static std::atomic<int64_t> g_next_plan_id{1};
+
+thread_local std::string g_last_error;
 
 void ensure_petsc() {
     std::call_once(petsc_initialization, [] {
@@ -58,11 +66,6 @@ void check(PetscErrorCode code, const char* operation) {
         throw std::runtime_error(std::string(operation) + " failed with PETSc error " +
                                  std::to_string(static_cast<long long>(code)));
     }
-}
-
-Plan& plan(int64_t handle) {
-    if (handle == 0) throw std::invalid_argument("native plan handle is zero");
-    return *reinterpret_cast<Plan*>(handle);
 }
 
 PetscErrorCode objective_gradient(Tao, Vec x, PetscReal* objective, Vec gradient,
@@ -136,6 +139,10 @@ void fill_vector(Vec vector, const std::vector<PetscScalar>& values) {
 
 extern "C" {
 
+const char* petsc_panama_last_error(void) {
+    return g_last_error.empty() ? nullptr : g_last_error.c_str();
+}
+
 int64_t petsc_panama_create_bounded_quadratic_plan(
         int32_t dimension,
         const double* hessian_data,
@@ -144,9 +151,16 @@ int64_t petsc_panama_create_bounded_quadratic_plan(
         const double* upper_data,
         const double* initial_data) {
     try {
+        g_last_error.clear();
         ensure_petsc();
-        if (dimension <= 0) return 0;
-        if (!hessian_data || !linear_data || !lower_data || !upper_data || !initial_data) return 0;
+        if (dimension <= 0) {
+            g_last_error = "dimension must be positive: " + std::to_string(dimension);
+            return 0;
+        }
+        if (!hessian_data || !linear_data || !lower_data || !upper_data || !initial_data) {
+            g_last_error = "null data pointer passed to petsc_panama_create_bounded_quadratic_plan";
+            return 0;
+        }
 
         auto result = std::make_unique<Plan>();
         result->dimension = static_cast<PetscInt>(dimension);
@@ -156,31 +170,62 @@ int64_t petsc_panama_create_bounded_quadratic_plan(
         result->upper.assign(upper_data, upper_data + dimension);
         result->initial.assign(initial_data, initial_data + dimension);
 
-        return reinterpret_cast<int64_t>(result.release());
+        int64_t handle = g_next_plan_id.fetch_add(1);
+        {
+            std::lock_guard<std::mutex> lock(g_plans_mutex);
+            g_plans[handle] = std::move(result);
+        }
+        return handle;
+    } catch (const std::exception& e) {
+        g_last_error = e.what();
+        return 0;
     } catch (...) {
+        g_last_error = "Unknown error in petsc_panama_create_bounded_quadratic_plan";
         return 0;
     }
 }
 
-int32_t petsc_panama_solve(int64_t handle, double* out_solution_and_meta) {
+int32_t petsc_panama_solve(int64_t handle, double* out_solution_and_meta, int64_t out_capacity_bytes) {
     try {
-        if (handle == 0 || !out_solution_and_meta) return -1;
+        g_last_error.clear();
+        if (handle == 0 || !out_solution_and_meta) {
+            g_last_error = "Invalid arguments: zero handle or null buffer";
+            return -1;
+        }
         ensure_petsc();
         std::lock_guard<std::mutex> execution_guard(petsc_execution_mutex);
-        Plan& target = plan(handle);
+
+        Plan* target = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(g_plans_mutex);
+            auto it = g_plans.find(handle);
+            if (it == g_plans.end()) {
+                g_last_error = "Invalid or expired PETSc plan handle: " + std::to_string(handle);
+                return -2;
+            }
+            target = it->second.get();
+        }
+
+        int64_t required_bytes = static_cast<int64_t>((target->dimension + 4) * sizeof(double));
+        if (out_capacity_bytes < required_bytes) {
+            g_last_error = "Output buffer overflow prevented: required " + std::to_string(required_bytes) +
+                           " bytes, capacity is " + std::to_string(out_capacity_bytes) + " bytes";
+            return -3;
+        }
+
         Objects objects;
 
-        check(VecCreateSeq(PETSC_COMM_SELF, target.dimension, &objects.solution), "VecCreateSeq");
+        check(VecCreateSeq(PETSC_COMM_SELF, target->dimension, &objects.solution), "VecCreateSeq");
         check(VecDuplicate(objects.solution, &objects.gradient), "VecDuplicate gradient");
         check(VecDuplicate(objects.solution, &objects.lower), "VecDuplicate lower bounds");
         check(VecDuplicate(objects.solution, &objects.upper), "VecDuplicate upper bounds");
-        fill_vector(objects.solution, target.initial);
-        fill_vector(objects.lower, target.lower);
-        fill_vector(objects.upper, target.upper);
+        fill_vector(objects.solution, target->initial);
+        fill_vector(objects.lower, target->lower);
+        fill_vector(objects.upper, target->upper);
 
-        check(MatCreateSeqDense(PETSC_COMM_SELF, target.dimension, target.dimension,
+        check(MatCreateSeqDense(PETSC_COMM_SELF, target->dimension, target->dimension,
                                 nullptr, &objects.hessian), "MatCreateSeqDense");
-        check(hessian(nullptr, nullptr, objects.hessian, objects.hessian, &target),
+        check(hessian(nullptr, nullptr, objects.hessian, objects.hessian, target),
               "Hessian assembly");
 
         check(TaoCreate(PETSC_COMM_SELF, &objects.tao), "TaoCreate");
@@ -189,10 +234,10 @@ int32_t petsc_panama_solve(int64_t handle, double* out_solution_and_meta) {
         check(TaoSetVariableBounds(objects.tao, objects.lower, objects.upper),
               "TaoSetVariableBounds");
         check(TaoSetObjectiveAndGradient(objects.tao, objects.gradient,
-                                         objective_gradient, &target),
+                                         objective_gradient, target),
               "TaoSetObjectiveAndGradient");
         check(TaoSetHessian(objects.tao, objects.hessian, objects.hessian,
-                            hessian, &target), "TaoSetHessian");
+                            hessian, target), "TaoSetHessian");
         check(TaoSetFromOptions(objects.tao), "TaoSetFromOptions");
         check(TaoSolve(objects.tao), "TaoSolve");
 
@@ -205,26 +250,34 @@ int32_t petsc_panama_solve(int64_t handle, double* out_solution_and_meta) {
 
         const PetscScalar* solution_values = nullptr;
         check(VecGetArrayRead(objects.solution, &solution_values), "VecGetArrayRead solution");
-        for (PetscInt index = 0; index < target.dimension; ++index) {
+        for (PetscInt index = 0; index < target->dimension; ++index) {
             out_solution_and_meta[index] = static_cast<double>(PetscRealPart(solution_values[index]));
         }
         check(VecRestoreArrayRead(objects.solution, &solution_values),
               "VecRestoreArrayRead solution");
 
-        out_solution_and_meta[target.dimension] = static_cast<double>(objective);
-        out_solution_and_meta[target.dimension + 1] = static_cast<double>(gradient_norm);
-        out_solution_and_meta[target.dimension + 2] = static_cast<double>(iterations);
-        out_solution_and_meta[target.dimension + 3] = static_cast<double>(reason);
+        out_solution_and_meta[target->dimension] = static_cast<double>(objective);
+        out_solution_and_meta[target->dimension + 1] = static_cast<double>(gradient_norm);
+        out_solution_and_meta[target->dimension + 2] = static_cast<double>(iterations);
+        out_solution_and_meta[target->dimension + 3] = static_cast<double>(reason);
 
         return 0; // Success
+    } catch (const std::exception& e) {
+        g_last_error = e.what();
+        return -1;
     } catch (...) {
+        g_last_error = "Unknown error during petsc_panama_solve";
         return -1;
     }
 }
 
 void petsc_panama_destroy(int64_t handle) {
-    if (handle != 0) {
-        delete reinterpret_cast<Plan*>(handle);
+    try {
+        if (handle != 0) {
+            std::lock_guard<std::mutex> lock(g_plans_mutex);
+            g_plans.erase(handle);
+        }
+    } catch (...) {
     }
 }
 

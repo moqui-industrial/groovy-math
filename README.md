@@ -49,11 +49,29 @@ Groovy Math DSL (Dynamic Seed or Type-Safe Fluent)
   +-----------------+-----------------+-----------------+-----------------+-----------------+
   |                 |                 |                 |                 |                 |
   v                 v                 v                 v                 v                 v
-LibTorch (C++)   JAX / OpenXLA    OpenFOAM (C++)   OpenCV (C++)     PETSc / TAO      Google OR-Tools
-(Deep Learning)  (Panama XLA)     (FVM CFD Solver) (Vision/Panama) (Quadratic/PDE)   (Linear/GLOP)
-                                                                          |
-                                                                          +-- Apache Jena (RDF/OWL/SPARQL)
+LibTorch (C++)   ONNX Runtime     OpenFOAM (C++)   OpenCV (C++)     PETSc / TAO      Google OR-Tools
+(Deep Learning)  (Panama FFM)     (FVM CFD Solver) (Vision/Panama) (Quadratic/PDE)   (Linear/GLOP)
+  |                 |                                                                       |
+  +-- JAX / OpenXLA +-----------------------------------------------------------------------+-- Apache Jena (RDF/OWL/SPARQL)
 ```
+
+---
+
+## Provider Matrix: Real Status & System Prerequisites
+
+The following matrix documents the exact technical status, integration mechanism, and system prerequisites for each computation engine:
+
+| Provider / Engine | Domain | Integration Type | Status | CI / Verification Task | System Prerequisites |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **LibTorch** | Deep Learning, Tensors, Autograd | Panama FFM (C++ direct) | **Production** | `./gradlew buildLibTorchNative nativeTest` | LibTorch 2.7.1+ C++ distribution (auto-downloaded by Gradle task `downloadLibTorch`) |
+| **ONNX Runtime** | Cross-Platform Neural Inference | Panama FFM (C++ direct) | **Production** | `./gradlew buildOnnxNative onnxNativeTest` | `libonnxruntime` (`.so`, `.dylib`, or `.dll`) on system path |
+| **OpenCV** | Vision, Filters, Affine Transforms | Panama FFM (C++ direct) | **Production** | `./gradlew buildOpenCvNative openCvNativeTest` | Python 3 with `numpy` and `opencv-python` / `cv2` |
+| **PETSc / TAO** | Bounded Quadratic & PDE Optimization | Panama FFM (C++ direct) | **Production** | `./gradlew buildPetscTaoNative petscTaoNativeTest` | PETSc 3.x real-scalar build + OpenMPI |
+| **Google JAX** | Accelerated Linear Algebra & JIT | Panama FFM (C++ direct) | **Preview** | `./gradlew buildJaxNative jaxNativeTest` | Python 3 with `jax`, `jaxlib`, `numpy` |
+| **Google OR-Tools** | Linear & Mixed Integer Programming (LP/MIP) | JVM In-Process (JNI wrapper) | **Production** | `./gradlew test --tests "*OrTools*"` | None (managed automatically by Maven dependencies) |
+| **Apache Jena** | Graph & Categorical RDF/OWL/SPARQL | JVM In-Process (Pure Java) | **Production** | `./gradlew test --tests "*Jena*"` | None (managed automatically by Maven dependencies) |
+| **OpenFOAM** | Finite Volume Method (FVM) Fluid Dynamics | Pure Groovy FVM + Panama C++ Stub | **Stub (Native) / Preview (Groovy)** | `./gradlew buildOpenFoamNative openFoamNativeTest` | CMake & Ninja (native stub); zero dependencies for Groovy FVM solver |
+
 
 ---
 
@@ -217,9 +235,9 @@ This guide provides simple, step-by-step instructions so that any Java or Groovy
 
 ### 1. System Requirements
 
-* **Java Development Kit (JDK)**: Java 25 (LTS) or newer (OpenJDK, Temurin, Corretto, Azul, etc.).
-  The build declares a Java 25 toolchain and provisions one automatically if the machine has none,
-  so this is a requirement for running the artifacts, not for building the project.
+* **Java Development Kit (JDK)**: Java 21 (LTS) or newer (OpenJDK, Temurin, Corretto, Azul, etc.).
+  The build declares a Java 21 toolchain with `--enable-preview` and `--enable-native-access=ALL-UNNAMED`
+  for Project Panama Foreign Function & Memory (FFM) API access.
   Verify with:
   ```bash
   java -version
@@ -350,7 +368,7 @@ Downstream applications (such as **Moqui Framework**, Spring Boot, or Quarkus) c
 
 ### 8. Troubleshooting Tips
 
-* **Native access**: the Foreign Function & Memory API is final from Java 22, so no `--enable-preview` is needed anywhere. Java 24 does restrict native access: code that actually loads a backend shared library needs `--enable-native-access=ALL-UNNAMED`, which `build.gradle` already passes to the test and exec tasks. Using the DSL without a native backend needs no flag.
+* **Native access**: Project Panama Foreign Function & Memory API requires `--enable-preview` on JDK 21 (preview JEP 442) and `--enable-native-access=ALL-UNNAMED` to load native shared libraries. These flags are already pre-configured in `build.gradle` for all compilation, execution, and test tasks. Using the DSL in pure JVM mode without native execution requires no extra flags.
 * **Gradle Daemon / File Locks**: When developing inside IDEs (like VS Code or IntelliJ), background indexing can occasionally lock Gradle files. Pass `--no-daemon` if you need to run in completely isolated environments:
   ```bash
   ./gradlew --no-daemon check

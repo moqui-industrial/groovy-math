@@ -26,6 +26,7 @@ public final class OpenCvPanama {
     private final SymbolLookup symbols;
 
     private final MethodHandle createPlanHandle;
+    private final MethodHandle lastErrorHandle;
     private final MethodHandle destroyHandle;
     private final MethodHandle outputWidthHandle;
     private final MethodHandle outputHeightHandle;
@@ -59,6 +60,7 @@ public final class OpenCvPanama {
 
         if (!hasSymbols) {
             this.createPlanHandle = null;
+            this.lastErrorHandle = null;
             this.destroyHandle = null;
             this.outputWidthHandle = null;
             this.outputHeightHandle = null;
@@ -73,6 +75,9 @@ public final class OpenCvPanama {
             this.warpAffineDirectHandle = null;
             return;
         }
+
+        this.lastErrorHandle = find("opencv_panama_last_error",
+            FunctionDescriptor.of(ValueLayout.ADDRESS));
 
         this.createPlanHandle = find("opencv_panama_create_plan",
             FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
@@ -105,7 +110,7 @@ public final class OpenCvPanama {
             FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
 
         this.executeHandle = find("opencv_panama_execute",
-            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
 
         this.filter2dDirectHandle = find("opencv_panama_filter2d_direct",
             FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
@@ -160,13 +165,29 @@ public final class OpenCvPanama {
      */
     private final ConcurrentMap<Long, Long> planInputPixels = new ConcurrentHashMap<>();
 
+    public String getLastError() {
+        if (lastErrorHandle == null) return null;
+        try {
+            MemorySegment seg = (MemorySegment) lastErrorHandle.invokeExact();
+            if (seg.equals(MemorySegment.NULL) || seg.address() == 0) return null;
+            return seg.reinterpret(4096).getUtf8String(0);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
     public long createPlan(int width, int height) {
         checkAvailable();
         try {
             long handle = (long) createPlanHandle.invokeExact(width, height);
-            if (handle != 0L) planInputPixels.put(handle, (long) width * height);
+            if (handle == 0L) {
+                String err = getLastError();
+                throw new RuntimeException("Failed to create OpenCV plan" + (err != null ? ": " + err : ""));
+            }
+            planInputPixels.put(handle, (long) width * height);
             return handle;
         } catch (Throwable t) {
+            if (t instanceof RuntimeException) throw (RuntimeException) t;
             throw new RuntimeException(t);
         }
     }
@@ -199,7 +220,12 @@ public final class OpenCvPanama {
     public void seal(long handle, int outputWidth, int outputHeight) {
         try {
             sealHandle.invokeExact(handle, outputWidth, outputHeight);
+            String err = getLastError();
+            if (err != null && !err.isEmpty()) {
+                throw new IllegalStateException("Failed to seal OpenCV plan: " + err);
+            }
         } catch (Throwable t) {
+            if (t instanceof RuntimeException) throw (RuntimeException) t;
             throw new RuntimeException(t);
         }
     }
@@ -253,9 +279,14 @@ public final class OpenCvPanama {
             int outH = outputHeight(handle);
             MemorySegment inSeg = allocateFloats(arena, input);
             MemorySegment outSeg = allocateFloatBuffer(arena, (long) outW * outH);
-            executeHandle.invokeExact(handle, inSeg, outSeg);
+            executeHandle.invokeExact(handle, inSeg, outSeg, outSeg.byteSize());
+            String err = getLastError();
+            if (err != null && !err.isEmpty()) {
+                throw new RuntimeException("OpenCV execution failed: " + err);
+            }
             return outSeg.toArray(ValueLayout.JAVA_FLOAT);
         } catch (Throwable t) {
+            if (t instanceof RuntimeException) throw (RuntimeException) t;
             throw new RuntimeException(t);
         }
     }
@@ -269,8 +300,13 @@ public final class OpenCvPanama {
         TensorValidator.validateSegmentCapacity("opencv:" + handle, "output", outSeg,
                 (long) outputWidth(handle) * outputHeight(handle), TensorDescriptor.DTYPE_FLOAT32);
         try {
-            executeHandle.invokeExact(handle, inSeg, outSeg);
+            executeHandle.invokeExact(handle, inSeg, outSeg, outSeg.byteSize());
+            String err = getLastError();
+            if (err != null && !err.isEmpty()) {
+                throw new RuntimeException("OpenCV execution failed: " + err);
+            }
         } catch (Throwable t) {
+            if (t instanceof RuntimeException) throw (RuntimeException) t;
             throw new RuntimeException(t);
         }
     }

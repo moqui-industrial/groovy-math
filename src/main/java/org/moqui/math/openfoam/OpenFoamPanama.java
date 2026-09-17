@@ -30,7 +30,13 @@ public final class OpenFoamPanama {
         boolean isAvail = false;
         try {
             loaded = loadSymbols();
-            isAvail = loaded.find("openfoam_panama_run_solver").isPresent();
+            if (loaded != null && loaded.find("openfoam_panama_is_available").isPresent()) {
+                MethodHandle isAvailH = linker.downcallHandle(
+                    loaded.find("openfoam_panama_is_available").get(),
+                    FunctionDescriptor.of(ValueLayout.JAVA_INT));
+                int res = (int) isAvailH.invokeExact();
+                isAvail = (res == 1);
+            }
         } catch (Throwable ignored) {
             isAvail = false;
         }
