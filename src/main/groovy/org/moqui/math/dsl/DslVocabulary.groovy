@@ -285,7 +285,7 @@ final class DslVocabulary {
             }
             return pref.name
         }
-        enumId
+        null
     }
 
     boolean hasEntity(final String name) {
