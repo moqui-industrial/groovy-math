@@ -61,6 +61,7 @@ class OpenFoamProvider implements MathProvider<OpenFoamPlan, OpenFoamResult> {
         double writeInterval = 0.1d
         double pTolerance = 1e-4d
         double uTolerance = 1e-4d
+        double lidVelocity = 1.0d
 
         // Check ParameterDef defaults first
         for (ModelValue paramDef : mathMeta.entity('ParameterDef')) {
@@ -81,6 +82,8 @@ class OpenFoamProvider implements MathProvider<OpenFoamPlan, OpenFoamResult> {
                     case 'residualToleranceP': pTolerance = val; break
                     case 'uTolerance':
                     case 'residualToleranceU': uTolerance = val; break
+                    case 'lidVelocity':
+                    case 'lidVelocityX': lidVelocity = val; break
                 }
             }
         }
@@ -89,9 +92,17 @@ class OpenFoamProvider implements MathProvider<OpenFoamPlan, OpenFoamResult> {
             String mId = param.get('mathModelId') as String
             if (mId != mathModelId) continue
             String alias = (param.get('parameterAlias') ?: '') as String
+            String paramDefId = param.get('parameterDefId') as String
+            ModelValue pDef = (paramDefId && mathMeta.hasEntity('ParameterDef')) ? mathMeta.entity('ParameterDef').findByName(paramDefId) : null
+            String pCode = pDef ? (pDef.get('parameterCode') as String) : null
+
             Number num = param.get('numericValue') as Number
             if (num == null) continue
             double val = num.doubleValue()
+
+            if (alias == 'lidVelocity' || alias == 'lidVelocityX' || pCode == 'lidVelocityX' || pCode == 'lidVelocity') {
+                lidVelocity = val
+            }
 
             switch (alias) {
                 case 'nu':
@@ -119,6 +130,15 @@ class OpenFoamProvider implements MathProvider<OpenFoamPlan, OpenFoamResult> {
 
         if (deltaT <= 0.0d) {
             throw new IllegalArgumentException("deltaT must be strictly positive, got: ${deltaT}")
+        }
+        double totalDuration = endTime - startTime
+        if (totalDuration < 0.0d) {
+            throw new IllegalArgumentException("endTime (${endTime}) must be greater than or equal to startTime (${startTime})")
+        }
+        double stepRatio = totalDuration / deltaT
+        long roundedSteps = Math.round(stepRatio)
+        if (Math.abs(roundedSteps * deltaT - totalDuration) > 1e-9d * Math.max(1.0d, totalDuration)) {
+            throw new IllegalArgumentException("endTime - startTime (${totalDuration}) must be an exact multiple of deltaT (${deltaT})")
         }
 
         // 2. Resolve Mesh & Adaptation
@@ -180,7 +200,7 @@ class OpenFoamProvider implements MathProvider<OpenFoamPlan, OpenFoamResult> {
             // Standard OpenFOAM Cavity boundary configuration
             Map<String, Object> movingWall = new LinkedHashMap<>()
             movingWall.put('type', 'fixedValue')
-            movingWall.put('velocity', [1.0d, 0.0d, 0.0d])
+            movingWall.put('velocity', [lidVelocity, 0.0d, 0.0d])
             movingWall.put('pressure', 'zeroGradient')
             boundaryPatches.put('movingWall', movingWall)
 
@@ -201,7 +221,7 @@ class OpenFoamProvider implements MathProvider<OpenFoamPlan, OpenFoamResult> {
             nx, ny, nz, grading, adaptationType,
             boundaryPatches, nu, rho,
             startTime, endTime, deltaT, writeInterval,
-            pTolerance, uTolerance)
+            pTolerance, uTolerance, lidVelocity)
     }
 
     @Override
@@ -238,9 +258,18 @@ class OpenFoamProvider implements MathProvider<OpenFoamPlan, OpenFoamResult> {
             Map<String, Double> residuals = (Map<String, Double>) fvmRun.get('residuals')
             String executionStatus = fvmRun.get('status') as String
 
+            Object actualItersObj = fvmRun.get('actualIters')
+            if (actualItersObj == null) {
+                throw new IllegalStateException("FVM solver failed to report actual iterations")
+            }
+            int totalIters = ((Number) actualItersObj).intValue()
+
+            Object actualTimeObj = fvmRun.get('actualTime')
+            if (actualTimeObj == null) {
+                throw new IllegalStateException("FVM solver failed to report actual simulation time")
+            }
+            double simulatedTime = ((Number) actualTimeObj).doubleValue()
             double elapsedMs = (System.nanoTime() - startNano) / 1_000_000.0d
-            int totalIters = (fvmRun.get('actualIters') ?: (int) Math.round((plan.endTime - plan.startTime) / plan.deltaT)) as int
-            double simulatedTime = (fvmRun.get('actualTime') ?: plan.endTime) as double
 
             return new OpenFoamResult(
                 plan.mathModelId,
@@ -578,7 +607,7 @@ boundaryField
         double[][] v = new double[ny + 2][nx + 2]
         double[][] p = new double[ny + 2][nx + 2]
 
-        double lidVelocity = 1.0d
+        double lidVelocity = plan.lidVelocity
         Map<String, Object> moving = plan.boundaryPatches.get('movingWall')
         if (moving != null && moving.get('velocity') instanceof List) {
             List<?> velList = (List<?>) moving.get('velocity')
@@ -587,7 +616,7 @@ boundaryField
             }
         }
 
-        int steps = Math.max(10, (int) Math.round((plan.endTime - plan.startTime) / dt))
+        int steps = (int) Math.round((plan.endTime - plan.startTime) / dt)
         double maxVel = Math.max(Math.abs(lidVelocity), 1e-6d)
         double cfl = (maxVel / dx) * dt
 

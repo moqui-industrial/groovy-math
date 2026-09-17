@@ -33,6 +33,7 @@ class OpenFoamPlan {
     final double writeInterval
     final double pTolerance
     final double uTolerance
+    final double lidVelocity
 
     OpenFoamPlan(String mathModelId, String solver, String caseDirectory,
                  double xMin, double xMax, double yMin, double yMax, double zMin, double zMax,
@@ -40,7 +41,7 @@ class OpenFoamPlan {
                  Map<String, Map<String, Object>> boundaryPatches,
                  double kinematicViscosity, double density,
                  double startTime, double endTime, double deltaT, double writeInterval,
-                 double pTolerance, double uTolerance) {
+                 double pTolerance, double uTolerance, double lidVelocity = 1.0d) {
         this.mathModelId = mathModelId
         this.solver = solver
         this.caseDirectory = caseDirectory
@@ -64,6 +65,7 @@ class OpenFoamPlan {
         this.writeInterval = writeInterval
         this.pTolerance = pTolerance
         this.uTolerance = uTolerance
+        this.lidVelocity = lidVelocity
     }
 
     int getCellCount() {

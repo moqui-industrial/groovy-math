@@ -78,21 +78,7 @@ class MathDslSandboxCustomizer extends CompilationCustomizer {
 
     @Override
     void call(SourceUnit source, GeneratorContext context, ClassNode classNode) {
-        checkAnnotations(source, classNode)
         new Visitor(source, classNode.name).visitClass(classNode)
-    }
-
-    private static void checkAnnotations(SourceUnit source, ClassNode classNode) {
-        if (classNode.annotations) {
-            for (AnnotationNode ann : classNode.annotations) {
-                String annName = ann.classNode?.name
-                if (annName != null && (annName.contains('Grab') || annName.contains('Grapes'))) {
-                    source.addError(new org.codehaus.groovy.syntax.SyntaxException(
-                        "Security error: Annotation '@${annName}' is forbidden in Math DSL scripts.",
-                        ann.lineNumber, ann.columnNumber))
-                }
-            }
-        }
     }
 
     private static boolean isAllowedClass(String name, String scriptClassName, SourceUnit sourceUnit) {

@@ -14,6 +14,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -140,7 +141,7 @@ class OpenFoamProviderTest {
         assertEquals(400, foamResult.cellCount)
     }
 
-    private static MathMeta createCustomCavityModel(double nu, double deltaT, double endTime = 0.5d) {
+    private static MathMeta createCustomCavityModel(double nu, double deltaT, double endTime = 0.5d, double lidVelocity = 1.0d, double pTolerance = 1e-4d) {
         MathDsl.math {
             ParameterDef('nuDef', parameterCode: 'kinematicViscosity', parameterName: 'Viscosity',
                 purposeEnum: org.moqui.math.dsl.ParameterPurpose.FluidProperty,
@@ -151,6 +152,12 @@ class OpenFoamProviderTest {
             ParameterDef('endDef', parameterCode: 'endTime', parameterName: 'End time',
                 purposeEnum: org.moqui.math.dsl.ParameterPurpose.SolverControl,
                 parameterTypeEnum: org.moqui.math.dsl.ParameterType.NumberDecimal, defaultValue: endTime)
+            ParameterDef('lidDef', parameterCode: 'lidVelocityX', parameterName: 'Lid velocity',
+                purposeEnum: org.moqui.math.dsl.ParameterPurpose.BoundaryCondition,
+                parameterTypeEnum: org.moqui.math.dsl.ParameterType.NumberDecimal, defaultValue: lidVelocity)
+            ParameterDef('pTolDef', parameterCode: 'residualToleranceP', parameterName: 'P Tol',
+                purposeEnum: org.moqui.math.dsl.ParameterPurpose.NumericalScheme,
+                parameterTypeEnum: org.moqui.math.dsl.ParameterType.NumberDecimal, defaultValue: pTolerance)
 
             Graph('TestGraph')
             Mesh('CavityMesh', graphId: 'TestGraph', meshTypeEnumId: 'MtHexahedral', purposeEnumId: 'MpCFD')
@@ -162,9 +169,68 @@ class OpenFoamProviderTest {
                     parameters('P_nu', parameterDefId: 'nuDef', parameterAlias: 'nu', numericValue: nu)
                     parameters('P_dt', parameterDefId: 'dtDef', parameterAlias: 'deltaT', numericValue: deltaT)
                     parameters('P_end', parameterDefId: 'endDef', parameterAlias: 'endTime', numericValue: endTime)
+                    parameters('P_lid', parameterDefId: 'lidDef', parameterAlias: 'lidVelocityX', numericValue: lidVelocity)
+                    parameters('P_tol', parameterDefId: 'pTolDef', parameterAlias: 'pTolerance', numericValue: pTolerance)
                 }
             }
         }
+    }
+
+    @Test
+    void testDiscriminantLidStopped() {
+        // §B.5 Test 1: Coperchio fermo (lidVelocityX = 0): residui <= 1e-15, stato CONVERGED, iterations == 1
+        OpenFoamResult res = new OpenFoamProvider('CustomCavity').run(createCustomCavityModel(0.01, 0.005, 0.05, 0.0d))
+        assertEquals('CONVERGED', res.status)
+        assertEquals(1, res.iterations)
+        assertTrue(res.residuals.get('continuity') <= 1e-15, "Continuity residual with stopped lid must be <= 1e-15, got: ${res.residuals.get('continuity')}")
+        assertTrue(res.residuals.get('Ux') <= 1e-15, "Ux residual with stopped lid must be <= 1e-15, got: ${res.residuals.get('Ux')}")
+        assertTrue(res.residuals.get('Uy') <= 1e-15, "Uy residual with stopped lid must be <= 1e-15, got: ${res.residuals.get('Uy')}")
+    }
+
+    @Test
+    void testDiscriminantMovingLidSingleStep() {
+        // §B.5 Test 2: Coperchio in moto con tolleranze 1e-12 ed endTime = deltaT: Ux > 0, stato NOT_CONVERGED, iterations == 1, finalTime == endTime
+        double dt = 0.005d
+        OpenFoamResult res = new OpenFoamProvider('CustomCavity').run(createCustomCavityModel(0.01, dt, dt, 1.0d, 1e-12d))
+        assertEquals('NOT_CONVERGED', res.status)
+        assertEquals(1, res.iterations)
+        assertEquals(dt, res.finalTime, 1e-9)
+        double topUx = res.velocityField[19 * 20 + 10][0]
+        assertTrue(topUx > 0.0d, "Horizontal velocity near moving lid must be positive, got: ${topUx}")
+    }
+
+    @Test
+    void testDiscriminantTwoStepsShortSimulation() {
+        // §B.5 Test 3: Simulazione breve (endTime = 2*deltaT): iterations == 2, finalTime == endTime
+        double dt = 0.005d
+        double end = 2 * dt
+        OpenFoamResult res = new OpenFoamProvider('CustomCavity').run(createCustomCavityModel(0.01, dt, end, 1.0d, 1e-12d))
+        assertEquals(2, res.iterations)
+        assertEquals(end, res.finalTime, 1e-9)
+    }
+
+    @Test
+    void testDiscriminantNonMultipleEndTimeThrows() {
+        // §B.5 Test 4: endTime non multiplo di deltaT: errore di validazione esplicito
+        double dt = 0.005d
+        double nonMultipleEnd = 0.007d
+        assertThrows(IllegalArgumentException) {
+            new OpenFoamProvider('CustomCavity').compile(createCustomCavityModel(0.01, dt, nonMultipleEnd))
+        }
+    }
+
+    @Test
+    void testDiscriminantResidualsVaryWithLidVelocity() {
+        // §B.5 Test 5: Residui calcolati dai campi: due valori diversi di lidVelocityX producono residui diversi
+        OpenFoamResult res1 = new OpenFoamProvider('CustomCavity').run(createCustomCavityModel(0.01, 0.005, 0.02, 0.5d))
+        OpenFoamResult res2 = new OpenFoamProvider('CustomCavity').run(createCustomCavityModel(0.01, 0.005, 0.02, 1.0d))
+
+        double cont1 = res1.residuals.get('continuity')
+        double cont2 = res2.residuals.get('continuity')
+        assertNotEquals(cont1, cont2, "Residuals must be computed from fields and differ with lidVelocity")
+        double ux1 = res1.residuals.get('Ux')
+        double ux2 = res2.residuals.get('Ux')
+        assertNotEquals(ux1, ux2, "Ux residuals must differ with lidVelocity")
     }
 
     @Test

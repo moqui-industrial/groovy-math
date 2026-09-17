@@ -72,7 +72,7 @@ LibTorch (C++)   ONNX Runtime     OpenFOAM (C++)   OpenCV (C++)     PETSc / TAO 
 | **OpenCV** | Vision, Filters, Affine Transforms | Panama FFM via embedded CPython (`cv2`) | **Production** | `./gradlew buildOpenCvNative openCvNativeTest` | Python 3 with `numpy` and `opencv-python` / `cv2` |
 | **PETSc / TAO** | Bounded Quadratic & PDE Optimization | Panama FFM (C++ direct) | **Production** | `./gradlew buildPetscTaoNative petscTaoNativeTest` | PETSc 3.x real-scalar build + OpenMPI |
 | **Google JAX** | Accelerated Linear Algebra | Panama FFM via embedded CPython (`jax.numpy`) | **Preview** | `./gradlew buildJaxNative jaxNativeTest` | Python 3 with `jax`, `jaxlib`, `numpy` |
-| **Google OR-Tools** | Linear & Mixed Integer Programming (LP/MIP) | In-process GLOP (`MmtLp`, via OR-Tools Java bindings) | **Production** | `./gradlew test --tests "*OrTools*"` | None (managed automatically by Maven dependencies) |
+| **Google OR-Tools** | Linear Programming (LP) | In-process GLOP (`MmtLp`, via OR-Tools Java bindings) | **Production** | `./gradlew test --tests "*OrTools*"` | None (managed automatically by Maven dependencies) |
 | **Apache Jena** | Graph & Categorical RDF/OWL/SPARQL | JVM In-Process (Pure Java) | **Production** | `./gradlew test --tests "*Jena*"` | None (managed automatically by Maven dependencies) |
 | **OpenFOAM** | Finite Volume Method (FVM) Fluid Dynamics | Reference Groovy FVM solver + Native Panama Stub | **Stub (Native) / Preview (Groovy)** | `./gradlew buildOpenFoamNative openFoamNativeTest` | CMake & Ninja (native stub); zero dependencies for Groovy FVM solver |
 

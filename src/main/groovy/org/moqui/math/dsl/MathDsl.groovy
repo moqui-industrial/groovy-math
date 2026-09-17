@@ -112,6 +112,8 @@ final class MathDsl {
         ]
         secure.indirectImportCheckEnabled = true
         configuration.addCompilationCustomizers(secure)
+        configuration.disabledGlobalASTTransformations = ['groovy.grape.GrabAnnotationTransformation'] as Set
+        configuration.addCompilationCustomizers(new MathDslAnnotationBlocker())
         configuration.addCompilationCustomizers(new MathDslTransformCustomizer())
         configuration.addCompilationCustomizers(new MathDslSandboxCustomizer())
         GroovyShell shell = new GroovyShell(MathDsl.classLoader, new Binding(), configuration)
