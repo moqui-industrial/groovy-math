@@ -125,8 +125,20 @@ final class CanonicalDump {
             return "\"" + s + "\""
         }
         if (val instanceof Number) {
-            if (val instanceof Float || val instanceof Double) {
-                return String.format(Locale.US, "%.6f", ((Number) val).doubleValue())
+            if (val instanceof Double) {
+                Double d = (Double) val
+                if (d.isNaN()) return "NaN"
+                if (d.isInfinite()) return d > 0 ? "Infinity" : "-Infinity"
+                return BigDecimal.valueOf(d).stripTrailingZeros().toPlainString()
+            }
+            if (val instanceof Float) {
+                Float f = (Float) val
+                if (f.isNaN()) return "NaN"
+                if (f.isInfinite()) return f > 0 ? "Infinity" : "-Infinity"
+                return BigDecimal.valueOf(f.doubleValue()).stripTrailingZeros().toPlainString()
+            }
+            if (val instanceof BigDecimal) {
+                return ((BigDecimal) val).stripTrailingZeros().toPlainString()
             }
             return val.toString()
         }

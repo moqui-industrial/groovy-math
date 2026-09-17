@@ -651,8 +651,38 @@ class MatrixBuilder {
     MatrixBuilder matrixType(MatrixType t) { this.matrixType = t; this }
     MatrixBuilder type(MatrixType t) { this.matrixType = t; this }
     MatrixBuilder purpose(MatrixPurpose p) { this.purpose = p; this }
+    MatrixBuilder purpose(Object p) {
+        if (p instanceof MatrixPurpose) this.purpose = (MatrixPurpose) p
+        else if (p instanceof org.moqui.math.dsl.DslSymbol) {
+            String symName = ((org.moqui.math.dsl.DslSymbol) p).name
+            this.purpose = MatrixPurpose.values().find { it.name() == symName || it.id == ((org.moqui.math.dsl.DslSymbol) p).id }
+        } else if (p instanceof String) {
+            this.purpose = MatrixPurpose.values().find { it.name() == p || it.id == p }
+        }
+        this
+    }
     MatrixBuilder domainSpace(MathSpace s) { this.domainSpace = s; this }
+    MatrixBuilder domainSpace(Object s) {
+        if (s instanceof MathSpace) this.domainSpace = (MathSpace) s
+        else if (s instanceof org.moqui.math.dsl.DslSymbol) {
+            String symName = ((org.moqui.math.dsl.DslSymbol) s).name
+            this.domainSpace = MathSpace.values().find { it.name() == symName || it.id == ((org.moqui.math.dsl.DslSymbol) s).id }
+        } else if (s instanceof String) {
+            this.domainSpace = MathSpace.values().find { it.name() == s || it.id == s }
+        }
+        this
+    }
     MatrixBuilder codomainSpace(MathSpace s) { this.codomainSpace = s; this }
+    MatrixBuilder codomainSpace(Object s) {
+        if (s instanceof MathSpace) this.codomainSpace = (MathSpace) s
+        else if (s instanceof org.moqui.math.dsl.DslSymbol) {
+            String symName = ((org.moqui.math.dsl.DslSymbol) s).name
+            this.codomainSpace = MathSpace.values().find { it.name() == symName || it.id == ((org.moqui.math.dsl.DslSymbol) s).id }
+        } else if (s instanceof String) {
+            this.codomainSpace = MathSpace.values().find { it.name() == s || it.id == s }
+        }
+        this
+    }
     MatrixBuilder componentArray(String s) { this.componentArray = s; this }
     MatrixBuilder componentArray(Object obj) {
         this.componentArray = obj instanceof String ? (String) obj : JsonOutput.toJson(obj)
@@ -687,9 +717,9 @@ class MatrixBuilder {
     MatrixBuilder applyArgs(Map<String, Object> args) {
         if (args.containsKey('rows')) rows(args.rows as Number)
         if (args.containsKey('cols')) cols(args.cols as Number)
-        if (args.containsKey('purpose')) purpose(args.purpose as MatrixPurpose)
-        if (args.containsKey('domainSpace')) domainSpace(args.domainSpace as MathSpace)
-        if (args.containsKey('codomainSpace')) codomainSpace(args.codomainSpace as MathSpace)
+        if (args.containsKey('purpose')) purpose(args.purpose)
+        if (args.containsKey('domainSpace')) domainSpace(args.domainSpace)
+        if (args.containsKey('codomainSpace')) codomainSpace(args.codomainSpace)
         if (args.containsKey('componentArray')) componentArray(args.componentArray)
         if (args.containsKey('data')) data(args.data)
         if (args.containsKey('contentLocation')) contentLocation(args.contentLocation as String)
@@ -989,6 +1019,16 @@ class TransformationBuilder {
     TransformationBuilder symbol(String s) { this.symbol = s; this }
     TransformationBuilder description(String d) { this.description = d; this }
     TransformationBuilder type(TransformationType t) { this.type = t; this }
+    TransformationBuilder type(Object t) {
+        if (t instanceof TransformationType) this.type = (TransformationType) t
+        else if (t instanceof org.moqui.math.dsl.DslSymbol) {
+            String symName = ((org.moqui.math.dsl.DslSymbol) t).name
+            this.type = TransformationType.values().find { it.name() == symName || it.id == ((org.moqui.math.dsl.DslSymbol) t).id }
+        } else if (t instanceof String) {
+            this.type = TransformationType.values().find { it.name() == t || it.id == t }
+        }
+        this
+    }
     TransformationBuilder purpose(TransformationPurpose p) { this.purpose = p; this }
     TransformationBuilder parentTransformation(String pId) { this.parentTransformationId = pId; this }
     TransformationBuilder parentTransformation(EntityRef<Transformation> ref) { this.parentTransformationId = ref.id; this }

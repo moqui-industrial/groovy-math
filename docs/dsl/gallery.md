@@ -4,19 +4,19 @@ Questo documento presenta la galleria comparativa della sintassi matematica Groo
 
 ---
 
-## Tabella Riassuntiva delle Metriche
+## Tabella Riassuntiva delle Metriche (Calcolata Programmaticamente dai File Reali)
 
 | Esempio | Linee Prima | Linee Dopo | Δ Linee (%) | Caratteri Prima | Caratteri Dopo | Δ Caratteri (%) | Enum Eliminati | ID Duplicati Eliminati | Simboli Nudi Introdotti |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **1. `matrix-product.groovy`** | 40 | 40 | 0.0% | 1.641 | 1.375 | -16.2% | 5 | 6 | `LinearAlgebra`, `Inference`, `MatrixProduct`, `Manual`, `R2`, `R3` |
-| **2. `matrix-product-plan.groovy`** | 29 | 26 | -10.3% | 927 | 742 | -19.9% | 2 | 6 | `MatrixProduct`, `R2`, `R3` |
-| **3. `matrix-decomposition-plan.groovy`** | 70 | 58 | -17.1% | 2.427 | 1.980 | -18.4% | 5 (+ 5 imports) | 0 | `Svd`, `Upper`, `Matrix`, `MatFrobenius`, `Tucker` |
-| **4. `production-plan.groovy`** | 76 | 54 | -28.9% | 3.315 | 2.250 | -32.1% | 9 | 4 | `LinearProgram`, `Optimisation`, `Simplex`, `Manual`, `maximise`, `Rectangular`, `R2`, `DecisionVariables`, `CostVector`, `RightHandSide`, `VariableBounds` |
-| **5. `energy-dispatch.groovy`** | 76 | 54 | -28.9% | 3.324 | 2.260 | -32.0% | 9 | 4 | `QuadraticProgram`, `Optimisation`, `InteriorPoint`, `Manual`, `minimise`, `Symmetric`, `Rectangular`, `R2`, `Hessian`, `CostVector`, `InitialCondition` |
-| **6. `opencv-vision-pipeline.groovy`** | 35 | 30 | -14.3% | 1.486 | 1.140 | -23.3% | 5 | 2 | `ComputerVision`, `Inference`, `OpenCv`, `GaussianBlur`, `Sobel`, `R2` |
-| **7. `openfoam-cavity.groovy`** | 184 | 145 | -21.2% | 11.818 | 8.200 | -30.6% | 25 (+ 7 imports) | 0 | `CFD`, `OpenFoamIcoFoam`, `Fvm`, `Hexahedral`, `CFD`, `RRefinement`, `FluidProperty`, `BoundaryCondition`, `SolverControl`, `NumericalScheme`, `Mesh` |
-| **8. `jena-knowledge-graph.groovy`** | 42 | 36 | -14.3% | 2.242 | 1.720 | -23.3% | 0 | 0 | Verbi minuscoli idiomatici (`graph`, `vertex`, `edge`), alias `from`/`to` |
-| **Totale Complessivo** | **552** | **443** | **-19.7%** | **27.180** | **19.667** | **-27.6%** | **60+** | **22** | **35+ simboli nativi** |
+| **1. `matrix-product.groovy`** | 40 | 35 | -12.5% | 1.375 | 1.267 | -7.9% | 5 | 6 | `LinearAlgebra`, `Inference`, `MatrixProduct`, `Manual`, `R2`, `R3` |
+| **2. `matrix-product-plan.groovy`** | 29 | 22 | -24.1% | 927 | 658 | -29.0% | 2 | 0 | `MatrixProduct`, `R2`, `R3` |
+| **3. `matrix-decomposition-plan.groovy`** | 70 | 47 | -32.9% | 2.427 | 1.407 | -42.0% | 5 (+ 5 imports) | 0 | `Svd`, `Upper`, `MatFrobenius` |
+| **4. `production-plan.groovy`** | 76 | 71 | -6.6% | 3.315 | 2.885 | -13.0% | 9 | 0 | `TextShort`, `LinearProgram`, `Optimisation`, `Simplex`, `Manual`, `R2`, `DecisionVariables`, `CostVector`, `RightHandSide`, `VariableBounds` |
+| **5. `energy-dispatch.groovy`** | 76 | 71 | -6.6% | 3.324 | 2.915 | -12.3% | 9 | 0 | `TextShort`, `QuadraticProgram`, `Optimisation`, `InteriorPoint`, `Manual`, `Symmetric`, `Rectangular`, `R2`, `DecisionVariables`, `CostVector`, `InitialCondition` |
+| **6. `opencv-vision-pipeline.groovy`** | 35 | 30 | -14.3% | 1.486 | 1.198 | -19.4% | 5 | 0 | `ComputerVision`, `Inference`, `OpenCv`, `GaussianBlur`, `Sobel`, `R2` |
+| **7. `openfoam-cavity.groovy`** | 184 | 137 | -25.5% | 11.818 | 8.517 | -27.9% | 25 (+ 7 imports) | 0 | `OpenFoamIcoFoam`, `Fvm`, `Hexahedral`, `RRefinement`, `FluidProperty`, `SolverControl`, `NumericalScheme` |
+| **8. `jena-knowledge-graph.groovy`** | 42 | 37 | -11.9% | 2.242 | 1.905 | -15.0% | 0 | 0 | Verbi minuscoli idiomatici (`graph`, `vertex`, `edge`), alias `from`/`to` |
+| **Totale Complessivo** | **552** | **450** | **-18.5%** | **26.914** | **20.752** | **-22.9%** | **55+** | **6** | **25+ simboli nativi** |
 
 ---
 
