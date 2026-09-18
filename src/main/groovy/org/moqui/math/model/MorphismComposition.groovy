@@ -25,6 +25,12 @@ class MorphismComposition implements Serializable {
     /** compositionTypeEnumId */
     String compositionTypeEnumId
 
+    /** iterateContextPath */
+    String iterateContextPath
+
+    /** collectContextPath */
+    String collectContextPath
+
     Morphism morphism
 
     List<MorphismCompositionComponent> components = new ArrayList<>()
@@ -35,6 +41,8 @@ class MorphismComposition implements Serializable {
         if (args != null) {
             if (args.containsKey('morphismId')) this.morphismId = args.get('morphismId')?.toString()
             if (args.containsKey('compositionTypeEnumId')) this.compositionTypeEnumId = args.get('compositionTypeEnumId')?.toString()
+            if (args.containsKey('iterateContextPath')) this.iterateContextPath = args.get('iterateContextPath')?.toString()
+            if (args.containsKey('collectContextPath')) this.collectContextPath = args.get('collectContextPath')?.toString()
         }
     }
 
@@ -45,6 +53,16 @@ class MorphismComposition implements Serializable {
 
     MorphismComposition compositionTypeEnumId(String value) {
         this.compositionTypeEnumId = value
+        return this;
+    }
+
+    MorphismComposition iterateContextPath(String value) {
+        this.iterateContextPath = value
+        return this;
+    }
+
+    MorphismComposition collectContextPath(String value) {
+        this.collectContextPath = value
         return this;
     }
 
@@ -62,6 +80,8 @@ class MorphismComposition implements Serializable {
         Map<String, Object> map = new LinkedHashMap<>();
         if (this.morphismId != null) map.put('morphismId', this.morphismId);
         if (this.compositionTypeEnumId != null) map.put('compositionTypeEnumId', this.compositionTypeEnumId);
+        if (this.iterateContextPath != null) map.put('iterateContextPath', this.iterateContextPath);
+        if (this.collectContextPath != null) map.put('collectContextPath', this.collectContextPath);
         return map;
     }
 }

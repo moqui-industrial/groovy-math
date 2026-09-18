@@ -18,10 +18,14 @@ final class OrToolsPlan implements AutoCloseable {
     final int constraintCount
     private MPSolver solver
     private final List<MPVariable> variables
+    private final List<com.google.ortools.linearsolver.MPConstraint> constraints
+    private final List<String> constraintNames
 
     OrToolsPlan(final String mathModelId, final String solverId, final String objectiveSense,
                 final List<String> variableNames, final int constraintCount,
-                final MPSolver solver, final List<MPVariable> variables) {
+                final MPSolver solver, final List<MPVariable> variables,
+                final List<com.google.ortools.linearsolver.MPConstraint> constraints = Collections.emptyList(),
+                final List<String> constraintNames = Collections.emptyList()) {
         this.mathModelId = mathModelId
         this.solverId = solverId
         this.objectiveSense = objectiveSense
@@ -29,21 +33,36 @@ final class OrToolsPlan implements AutoCloseable {
         this.constraintCount = constraintCount
         this.solver = Objects.requireNonNull(solver, 'OR-Tools solver must not be null')
         this.variables = Collections.unmodifiableList(new ArrayList<>(variables))
+        this.constraints = Collections.unmodifiableList(new ArrayList<>(constraints))
+        this.constraintNames = Collections.unmodifiableList(new ArrayList<>(constraintNames))
     }
 
     synchronized OrToolsResult solve() {
         if (solver == null) throw new IllegalStateException('OR-Tools plan is closed')
         MPSolver.ResultStatus status = solver.solve()
         LinkedHashMap<String, Double> values = new LinkedHashMap<>()
+        LinkedHashMap<String, Double> reducedCosts = new LinkedHashMap<>()
+        LinkedHashMap<String, Double> duals = new LinkedHashMap<>()
         boolean solved = status == MPSolver.ResultStatus.OPTIMAL || status == MPSolver.ResultStatus.FEASIBLE
         if (solved) {
             for (int index = 0; index < variables.size(); index++) {
                 values.put(variableNames[index], variables[index].solutionValue())
+                try {
+                    reducedCosts.put(variableNames[index], variables[index].reducedCost())
+                } catch (Throwable ignored) {
+                }
+            }
+            for (int index = 0; index < constraints.size(); index++) {
+                String name = index < constraintNames.size() ? constraintNames[index] : "constraint_${index}"
+                try {
+                    duals.put(name, constraints[index].dualValue())
+                } catch (Throwable ignored) {
+                }
             }
         }
         double objectiveValue = solved ? solver.objective().value() : Double.NaN
         new OrToolsResult(mathModelId, status.name(), objectiveValue, values,
-            solver.wallTime(), solver.iterations())
+            solver.wallTime(), solver.iterations(), reducedCosts, duals)
     }
 
     @Override

@@ -1,38 +1,65 @@
 /*
- * This software is in the public domain under CC0 1.0 Universal plus a
- * Grant of Patent License.
- *
- * To the extent possible under law, the author(s) have dedicated all
- * copyright and related and neighboring rights to this software to the
- * public domain worldwide. This software is distributed without any
- * warranty.
- *
- * You should have received a copy of the CC0 Public Domain Dedication
- * along with this software (see the LICENSE.md file). If not, see
- * <http://creativecommons.org/publicdomain/zero/1.0/>.
+ * Generated domain enum for Moqui Math Metamodel
+ * EnumerationType: MatrixPurpose
  */
-
 package org.moqui.math.dsl
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 enum MatrixPurpose implements DslEnumValue {
-    Original('MpOriginal'),
-    Approximate('MpApproximate'),
-    Block('MpBlock'),
-    SvdU('MpSvdU'),
-    SvdSigma('MpSvdSigma'),
-    SvdV('MpSvdV'),
-    LuL('MpLuL'),
-    LuU('MpLuU'),
-    State('MpState'),
-    Input('MpInput'),
-    Output('MpOutput'),
-    Feedforward('MpFeedforward'),
-    FeedbackGain('MpFeedbackGain'),
-    ObserverGain('MpObserverGain')
+    Original('MpOriginal', '', 'Original Matrix', ''),
+    Approximate('MpApproximate', '', 'Approximate Matrix', ''),
+    Block('MpBlock', '', 'Block Matrix', ''),
+    SvdU('MpSvdU', '', 'SVD U Matrix', ''),
+    SvdSigma('MpSvdSigma', '', 'SVD Σ Matrix', ''),
+    SvdV('MpSvdV', '', 'SVD V Matrix', ''),
+    LuL('MpLuL', '', 'LU L Matrix', ''),
+    LuU('MpLuU', '', 'LU U Matrix', ''),
+    State('MpState', '', 'Dynamic State Transition Matrix (A)', ''),
+    Input('MpInput', '', 'Control Input Matrix (B)', ''),
+    Output('MpOutput', '', 'Measurement Output Matrix (C)', ''),
+    Feedforward('MpFeedforward', '', 'Direct Transmission Feedforward Matrix (D)', ''),
+    FeedbackGain('MpFeedbackGain', '', 'State Feedback Gain Matrix (K)', ''),
+    ObserverGain('MpObserverGain', '', 'Observer or Kalman Gain Matrix (L)', '');
 
     final String id
+    final String enumCode
+    final String description
+    final String parentEnumId
 
-    MatrixPurpose(final String id) {
+    MatrixPurpose(final String id, final String enumCode = null, final String description = null, final String parentEnumId = null) {
         this.id = id
+        this.enumCode = enumCode
+        this.description = description
+        this.parentEnumId = parentEnumId
+    }
+
+    @Override
+    String getId() { id }
+
+    @Override
+    String getEnumCode() { enumCode }
+
+    @Override
+    String getDescription() { description }
+
+    @Override
+    String getParentEnumId() { parentEnumId }
+
+    static MatrixPurpose fromId(final String id) {
+        if (id == null) return null
+        for (MatrixPurpose val : values()) {
+            if (val.id == id) return val
+        }
+        null
+    }
+
+    static MatrixPurpose fromCode(final String code) {
+        if (code == null) return null
+        for (MatrixPurpose val : values()) {
+            if (val.enumCode == code) return val
+        }
+        null
     }
 }

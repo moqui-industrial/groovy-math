@@ -1,27 +1,63 @@
 /*
- * This software is in the public domain under CC0 1.0 Universal plus a
- * Grant of Patent License.
- *
- * To the extent possible under law, the author(s) have dedicated all
- * copyright and related and neighboring rights to this software to the
- * public domain worldwide. This software is distributed without any
- * warranty.
- *
- * You should have received a copy of the CC0 Public Domain Dedication
- * along with this software (see the LICENSE.md file). If not, see
- * <http://creativecommons.org/publicdomain/zero/1.0/>.
+ * Generated domain enum for Moqui Math Metamodel
+ * EnumerationType: MatrixType
  */
-
 package org.moqui.math.dsl
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 enum MatrixType implements DslEnumValue {
-    Dense('MtDense'),
-    Rectangular('MtRectangular'),
-    Symmetric('MtSymmetric')
+    Zero('MtZero', '', 'Zero Matrix', ''),
+    Rectangular('MtRectangular', '', 'Rectangular Matrix', ''),
+    Square('MtSquare', '', 'Square Matrix', ''),
+    Diagonal('MtDiagonal', '', 'Diagonal Matrix', ''),
+    Identity('MtIdentity', '', 'Identity Matrix', ''),
+    Symmetric('MtSymmetric', '', 'Symmetric Matrix', ''),
+    Orthogonal('MtOrthogonal', '', 'Orthogonal Matrix', ''),
+    Sparse('MtSparse', '', 'Sparse Matrix', ''),
+    Triangular('MtTriangular', '', 'Triangular Matrix', ''),
+    Permutation('MtPermutation', '', 'Permutation Matrix', ''),
+    Hermitian('MtHermitian', '', 'Hermitian Matrix', ''),
+    Dense('MtDense', 'DENSE', 'Dense Matrix', '');
 
     final String id
+    final String enumCode
+    final String description
+    final String parentEnumId
 
-    MatrixType(final String id) {
+    MatrixType(final String id, final String enumCode = null, final String description = null, final String parentEnumId = null) {
         this.id = id
+        this.enumCode = enumCode
+        this.description = description
+        this.parentEnumId = parentEnumId
+    }
+
+    @Override
+    String getId() { id }
+
+    @Override
+    String getEnumCode() { enumCode }
+
+    @Override
+    String getDescription() { description }
+
+    @Override
+    String getParentEnumId() { parentEnumId }
+
+    static MatrixType fromId(final String id) {
+        if (id == null) return null
+        for (MatrixType val : values()) {
+            if (val.id == id) return val
+        }
+        null
+    }
+
+    static MatrixType fromCode(final String code) {
+        if (code == null) return null
+        for (MatrixType val : values()) {
+            if (val.enumCode == code) return val
+        }
+        null
     }
 }

@@ -51,7 +51,7 @@ class MoquiSchemaInspectorTest {
         ModelDefinition model = MoquiSchemaInspector.inspect(VENDORED_MATH_ENTITIES)
 
         assert model.entities.size() == 90
-        assert model.extensionCount == 4
+        assert model.extensionCount == 1
         assert model.entity('MathModel').relationships.data.relatedEntityName == 'moqui.math.MathModelData'
         assert model.entity('MathModelDefPipeline').relationships.transformation.relatedEntityName == 'moqui.math.Transformation'
         assert model.entity('MathModelDef').relationships.pipeline.relatedEntityName == 'moqui.math.MathModelDefPipeline'
@@ -65,11 +65,11 @@ class MoquiSchemaInspectorTest {
 
         assert model.entities.size() == 103
         assert model.entities.keySet().count { String name -> name.startsWith('moqui.math') } == 90
-        assert model.extensionCount == 4
+        assert model.extensionCount == 1
         // Raw element count across the three sources; unique ids are fewer because MathData.xml
         // is allowed to redeclare a value from MathEntities.xml.
-        assert model.enumerationCount == 1205
-        assert model.enumerations.size() == 1164
+        assert model.enumerationCount == 1218
+        assert model.enumerations.size() == 1177
 
         // The moqui.basic allowlist: the enum catalogue, the status-flow family and units.
         assert model.entities.keySet().findAll { String name -> name.startsWith('moqui.basic') } as Set ==

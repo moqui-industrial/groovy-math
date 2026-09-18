@@ -1,17 +1,53 @@
 /*
- * This software is in the public domain under CC0 1.0 Universal plus a
- * Grant of Patent License.
+ * Generated domain enum for Moqui Math Metamodel
+ * EnumerationType: TriangularExtractionType
  */
-
 package org.moqui.math.dsl
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 enum TriangularExtractionType implements DslEnumValue {
-    Upper('TetUpper'),
-    Lower('TetLower')
+    Upper('TetUpper', '', 'Upper Triangular', ''),
+    Lower('TetLower', '', 'Lower Triangular', '');
 
     final String id
+    final String enumCode
+    final String description
+    final String parentEnumId
 
-    TriangularExtractionType(final String id) {
+    TriangularExtractionType(final String id, final String enumCode = null, final String description = null, final String parentEnumId = null) {
         this.id = id
+        this.enumCode = enumCode
+        this.description = description
+        this.parentEnumId = parentEnumId
+    }
+
+    @Override
+    String getId() { id }
+
+    @Override
+    String getEnumCode() { enumCode }
+
+    @Override
+    String getDescription() { description }
+
+    @Override
+    String getParentEnumId() { parentEnumId }
+
+    static TriangularExtractionType fromId(final String id) {
+        if (id == null) return null
+        for (TriangularExtractionType val : values()) {
+            if (val.id == id) return val
+        }
+        null
+    }
+
+    static TriangularExtractionType fromCode(final String code) {
+        if (code == null) return null
+        for (TriangularExtractionType val : values()) {
+            if (val.enumCode == code) return val
+        }
+        null
     }
 }

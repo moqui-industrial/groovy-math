@@ -1,25 +1,65 @@
 /*
- * This software is in the public domain under CC0 1.0 Universal plus a
- * Grant of Patent License.
- *
- * To the extent possible under law, the author(s) have dedicated all
- * copyright and related and neighboring rights to this software to the
- * public domain worldwide. This software is distributed without any
- * warranty.
- *
- * You should have received a copy of the CC0 Public Domain Dedication
- * along with this software (see the LICENSE.md file). If not, see
- * <http://creativecommons.org/publicdomain/zero/1.0/>.
+ * Generated domain enum for Moqui Math Metamodel
+ * EnumerationType: CategoryObjectType
  */
-
 package org.moqui.math.dsl
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 enum CategoryObjectType implements DslEnumValue {
-    Generic('CotGeneric')
+    Generic('CotGeneric', '', 'Generic object', ''),
+    Type('CotType', '', 'Type', ''),
+    Context('CotContext', '', 'Typing Context', ''),
+    Proposition('CotProposition', '', 'Proposition as Type', 'CotType'),
+    Universe('CotUniverse', '', 'Universe of Types', 'CotType'),
+    AlgebraicStruct('CotAlgebraicStruct', '', 'Algebraic Structure (one-object category)', ''),
+    Monoid('CotMonoid', '', 'Monoid', 'CotAlgebraicStruct'),
+    Group('CotGroup', '', 'Group', 'CotAlgebraicStruct'),
+    AbGroup('CotAbGroup', '', 'Abelian group', 'CotGroup'),
+    Ring('CotRing', '', 'Ring', 'CotAlgebraicStruct'),
+    Field('CotField', '', 'Field', 'CotAlgebraicStruct'),
+    Module('CotModule', '', 'Module', 'CotAlgebraicStruct'),
+    Specification('CotSpecification', '', 'Specification or Observable Predicate', 'CotProposition'),
+    OperationalState('CotOperationalState', '', 'Operational State Specification', 'CotSpecification');
 
     final String id
+    final String enumCode
+    final String description
+    final String parentEnumId
 
-    CategoryObjectType(final String id) {
+    CategoryObjectType(final String id, final String enumCode = null, final String description = null, final String parentEnumId = null) {
         this.id = id
+        this.enumCode = enumCode
+        this.description = description
+        this.parentEnumId = parentEnumId
+    }
+
+    @Override
+    String getId() { id }
+
+    @Override
+    String getEnumCode() { enumCode }
+
+    @Override
+    String getDescription() { description }
+
+    @Override
+    String getParentEnumId() { parentEnumId }
+
+    static CategoryObjectType fromId(final String id) {
+        if (id == null) return null
+        for (CategoryObjectType val : values()) {
+            if (val.id == id) return val
+        }
+        null
+    }
+
+    static CategoryObjectType fromCode(final String code) {
+        if (code == null) return null
+        for (CategoryObjectType val : values()) {
+            if (val.enumCode == code) return val
+        }
+        null
     }
 }

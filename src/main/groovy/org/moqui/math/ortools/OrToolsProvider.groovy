@@ -35,6 +35,16 @@ final class OrToolsProvider implements MathProvider<OrToolsPlan, OrToolsResult> 
     String getProviderId() { 'ortools' }
 
     @Override
+    Set<String> capabilities() {
+        Collections.unmodifiableSet([
+            'moqui.math.MathModel', 'MmtLp', 'MmsmSimplex', 'MmdpDecisionVars',
+            'MmdpCostVector', 'MmdpConstraintMatrix', 'MmdpRhsVector', 'MmdpVarBounds',
+            'MmdpVariableDomain', 'MmdpDualValue', 'MmdpReducedCost',
+            'VdContinuous', 'VdInteger', 'VdBinary', 'TtLessEqual', 'TtGreaterEqual', 'TtEquality'
+        ] as Set<String>)
+    }
+
+    @Override
     OrToolsPlan compile(final MathMeta mathMeta) {
         Objects.requireNonNull(mathMeta, 'Math metadata must not be null').freeze()
         ModelValue model = mathMeta.entity('MathModel').findByName(mathModelId)
@@ -77,10 +87,17 @@ final class OrToolsProvider implements MathProvider<OrToolsPlan, OrToolsResult> 
             throw new IllegalStateException('Variable bounds must be a 2 x N or N x 2 matrix: [lower, upper]')
         }
 
+        ModelValue domainData = optionalVector(mathMeta, modelData, 'MmdpVariableDomain')
+        List<String> domains = domainData != null ? stringVector(domainData, 'variable domains') : null
+        boolean hasIntegers = domains != null && domains.any { it == 'VdInteger' || it == 'Integer' || it == 'VdBinary' || it == 'Binary' }
+
         String objectiveSense = objectiveSense(mathMeta)
         Loader.loadNativeLibraries()
-        MPSolver solver = MPSolver.createSolver('GLOP')
-        if (solver == null) throw new IllegalStateException('OR-Tools GLOP solver is not available')
+        String solverType = hasIntegers ? 'SCIP' : 'GLOP'
+        MPSolver solver = MPSolver.createSolver(solverType)
+        if (solver == null && hasIntegers) solver = MPSolver.createSolver('CBC')
+        if (solver == null) solver = MPSolver.createSolver('GLOP')
+        if (solver == null) throw new IllegalStateException("OR-Tools solver (${solverType}) is not available")
         try {
             List<MPVariable> variables = []
             for (int column = 0; column < variableNames.size(); column++) {
@@ -89,24 +106,36 @@ final class OrToolsProvider implements MathProvider<OrToolsPlan, OrToolsResult> 
                 if (lower > upper) {
                     throw new IllegalStateException("Variable '${variableNames[column]}' has lower bound ${lower} greater than upper bound ${upper}")
                 }
-                variables.add(solver.makeNumVar(lower, upper, variableNames[column]))
+                String dom = domains != null && domains.size() > column ? domains[column] : 'VdContinuous'
+                if (dom == 'VdBinary' || dom == 'Binary') {
+                    variables.add(solver.makeBoolVar(variableNames[column]))
+                } else if (dom == 'VdInteger' || dom == 'Integer') {
+                    variables.add(solver.makeIntVar(lower, upper, variableNames[column]))
+                } else {
+                    variables.add(solver.makeNumVar(lower, upper, variableNames[column]))
+                }
             }
 
+            List<MPConstraint> constraints = []
+            List<String> constraintNames = []
             for (int row = 0; row < constraintCoefficients.length; row++) {
                 String sense = senses != null && senses.size() > row ? senses[row] : 'LE'
+                String cName = "constraint_${row}"
+                constraintNames.add(cName)
                 MPConstraint constraint
-                if (sense == 'LE' || sense == 'OpLe' || sense == '<=') {
-                    constraint = solver.makeConstraint(Double.NEGATIVE_INFINITY, constraintRhs[row], "constraint_${row}")
-                } else if (sense == 'GE' || sense == 'OpGe' || sense == '>=') {
-                    constraint = solver.makeConstraint(constraintRhs[row], Double.POSITIVE_INFINITY, "constraint_${row}")
-                } else if (sense == 'EQ' || sense == 'OpEq' || sense == '==') {
-                    constraint = solver.makeConstraint(constraintRhs[row], constraintRhs[row], "constraint_${row}")
+                if (sense == 'LE' || sense == 'OpLe' || sense == '<=' || sense == 'TtLessEqual') {
+                    constraint = solver.makeConstraint(Double.NEGATIVE_INFINITY, constraintRhs[row], cName)
+                } else if (sense == 'GE' || sense == 'OpGe' || sense == '>=' || sense == 'TtGreaterEqual') {
+                    constraint = solver.makeConstraint(constraintRhs[row], Double.POSITIVE_INFINITY, cName)
+                } else if (sense == 'EQ' || sense == 'OpEq' || sense == '==' || sense == 'TtEquality') {
+                    constraint = solver.makeConstraint(constraintRhs[row], constraintRhs[row], cName)
                 } else {
-                    constraint = solver.makeConstraint(Double.NEGATIVE_INFINITY, constraintRhs[row], "constraint_${row}")
+                    constraint = solver.makeConstraint(Double.NEGATIVE_INFINITY, constraintRhs[row], cName)
                 }
                 for (int column = 0; column < variables.size(); column++) {
                     constraint.setCoefficient(variables[column], constraintCoefficients[row][column])
                 }
+                constraints.add(constraint)
             }
 
             MPObjective objective = solver.objective()
@@ -116,8 +145,8 @@ final class OrToolsProvider implements MathProvider<OrToolsPlan, OrToolsResult> 
             if (objectiveSense == MAXIMIZE) objective.setMaximization()
             else objective.setMinimization()
 
-            new OrToolsPlan(mathModelId, 'GLOP', objectiveSense, variableNames,
-                constraintCoefficients.length, solver, variables)
+            new OrToolsPlan(mathModelId, solverType, objectiveSense, variableNames,
+                constraintCoefficients.length, solver, variables, constraints, constraintNames)
         } catch (Throwable failure) {
             solver.delete()
             throw failure

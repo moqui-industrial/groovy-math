@@ -229,6 +229,16 @@ class Matrix implements Serializable {
         return this;
     }
 
+    Matrix contentLocation(String value) {
+        this.contentLocation = value
+        return this;
+    }
+
+    Matrix contentTypeEnumId(String value) {
+        this.contentTypeEnumId = value
+        return this;
+    }
+
     Matrix parent(Matrix item) {
         this.parent = item;
         return this;
@@ -267,6 +277,8 @@ class Matrix implements Serializable {
         if (this.conditionNormEnumId != null) map.put('conditionNormEnumId', this.conditionNormEnumId);
         if (this.componentArray != null) map.put('componentArray', this.componentArray);
         if (this.componentBlob != null) map.put('componentBlob', this.componentBlob);
+        if (this.contentLocation != null) map.put('contentLocation', this.contentLocation);
+        if (this.contentTypeEnumId != null) map.put('contentTypeEnumId', this.contentTypeEnumId);
         return map;
     }
 }

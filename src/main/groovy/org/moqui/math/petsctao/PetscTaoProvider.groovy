@@ -11,6 +11,22 @@ import org.moqui.math.dsl.MathMeta
 import org.moqui.math.entity.ModelValue
 import org.moqui.math.spi.MathProvider
 
+/**
+ * PETSc/TAO Quadratic Programming (QP) Provider.
+ *
+ * <p>Solves bounded quadratic minimization problems using the TAO BQPIP (interior-point) solver:
+ * <pre>
+ *   minimize    1/2 * x^T * H * x + c^T * x
+ *   subject to  l <= x <= u
+ * </pre>
+ * where:
+ * <ul>
+ *   <li>{@code H} is the symmetric Hessian matrix ({@code MmdpHessian})</li>
+ *   <li>{@code c} is the linear cost vector ({@code MmdpCostVector})</li>
+ *   <li>{@code l, u} are the lower and upper bounds ({@code MmdpVarBounds})</li>
+ *   <li>{@code x0} is the initial point ({@code MmdpInitialCondition})</li>
+ * </ul>
+ */
 @CompileStatic
 final class PetscTaoProvider implements MathProvider<PetscTaoPlan, PetscTaoResult> {
     private static final String QUADRATIC_PROGRAM = 'MmtQp'
@@ -32,6 +48,14 @@ final class PetscTaoProvider implements MathProvider<PetscTaoPlan, PetscTaoResul
 
     @Override
     String getProviderId() { 'petsc-tao' }
+
+    @Override
+    Set<String> capabilities() {
+        Collections.unmodifiableSet([
+            'moqui.math.MathModel', 'MmtQp', 'MmsmInteriorPoint', 'MmdpHessian',
+            'MmdpCostVector', 'MmdpVarBounds', 'MmdpInitialCondition'
+        ] as Set<String>)
+    }
 
     @Override
     PetscTaoPlan compile(final MathMeta mathMeta) {

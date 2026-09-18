@@ -127,6 +127,42 @@ class EnumCatalogueTest {
         assert problems.isEmpty() : "Examples referencing undeclared enumerations:\n${problems.join('\n')}"
     }
 
+    @Test
+    void allDeclaredEnumerationTypesHaveDslEnumClasses() {
+        ModelDefinition model = MoquiSchemaInspector.embedded()
+        List<Class<?>> enums = dslEnumClasses()
+
+        assert enums.size() >= 86 : "Expected at least 86 DSL enum classes, found ${enums.size()}"
+
+        Set<String> classNames = enums.collect { it.simpleName } as Set
+        List<String> missingTypes = []
+        model.enumerationTypes.each { String typeId ->
+            if (!classNames.contains(typeId) && !classNames.contains(typeId.replaceAll(/[^a-zA-Z0-9_]/, '_'))) {
+                missingTypes.add(typeId)
+            }
+        }
+        assert missingTypes.isEmpty() : "Missing DSL enum classes for schema EnumerationTypes: ${missingTypes}"
+    }
+
+    @Test
+    void generatedEnumClassesSupportBidirectionalLookup() {
+        MatrixType dense = MatrixType.fromId('MtDense')
+        assert dense == MatrixType.Dense
+        assert dense.id == 'MtDense'
+        assert dense.enumCode == 'DENSE'
+
+        MatrixType fromCode = MatrixType.fromCode('DENSE')
+        assert fromCode == MatrixType.Dense
+
+        TransformationType matrixProd = TransformationType.fromId('TtMatrixProduct')
+        assert matrixProd != null
+        assert matrixProd.id == 'TtMatrixProduct'
+
+        VariableDomain vdContinuous = VariableDomain.fromId('VdContinuous')
+        assert vdContinuous == VariableDomain.Continuous
+        assert vdContinuous.id == 'VdContinuous'
+    }
+
     private static List<Class<?>> dslEnumClasses() {
         List<Class<?>> found = []
         new File('src/main/groovy/org/moqui/math/dsl').listFiles()
@@ -141,7 +177,7 @@ class EnumCatalogueTest {
                 }
                 if (type.isEnum() && DslEnumValue.isAssignableFrom(type)) found.add(type)
             }
-        assert found.size() > 20 : 'DSL enum classes were not found; has the package moved?'
+        assert found.size() >= 86 : 'DSL enum classes were not found; has the package moved?'
         found
     }
 

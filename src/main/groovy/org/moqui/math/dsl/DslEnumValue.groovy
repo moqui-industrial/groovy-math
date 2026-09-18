@@ -15,5 +15,8 @@
 package org.moqui.math.dsl
 
 interface DslEnumValue {
-    String getId()
+    default String getId() { null }
+    default String getEnumCode() { null }
+    default String getDescription() { null }
+    default String getParentEnumId() { null }
 }

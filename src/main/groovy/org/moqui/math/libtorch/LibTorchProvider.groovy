@@ -36,6 +36,17 @@ final class LibTorchProvider implements MathProvider<LibTorchPlan, LibTorchResul
     @Override
     String getProviderId() { 'libtorch' }
 
+    @Override
+    Set<String> capabilities() {
+        Collections.unmodifiableSet([
+            'moqui.math.Transformation', 'moqui.math.Tensor', 'moqui.math.Matrix',
+            'TtMatrixProduct', 'TtTensorReLu', 'TtTensorSigmoid', 'TtTensorGelu',
+            'TtTensorSilu', 'TtTensorTanh', 'TtTensorSoftmax', 'TtLayerNorm',
+            'TtRMSNorm', 'TtBatchNorm', 'TtConv1d', 'TtConv2d', 'TtMaxPool2d',
+            'TtAvgPool2d', 'TtAdaptiveAvgPool2d', 'TtScaledDotProductAttention'
+        ] as Set<String>)
+    }
+
     void configureThreads(final int intraOpThreads, final int interOpThreads) {
         if (intraOpThreads <= 0 || interOpThreads <= 0) {
             throw new IllegalArgumentException('Thread counts must be positive')

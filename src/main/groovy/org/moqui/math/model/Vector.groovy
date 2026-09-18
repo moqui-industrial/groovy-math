@@ -157,6 +157,16 @@ class Vector implements Serializable {
         return this;
     }
 
+    Vector contentLocation(String value) {
+        this.contentLocation = value
+        return this;
+    }
+
+    Vector contentTypeEnumId(String value) {
+        this.contentTypeEnumId = value
+        return this;
+    }
+
     Vector parent(Vector item) {
         this.parent = item;
         return this;
@@ -187,6 +197,8 @@ class Vector implements Serializable {
         if (this.magnitude != null) map.put('magnitude', this.magnitude);
         if (this.componentArray != null) map.put('componentArray', this.componentArray);
         if (this.componentBlob != null) map.put('componentBlob', this.componentBlob);
+        if (this.contentLocation != null) map.put('contentLocation', this.contentLocation);
+        if (this.contentTypeEnumId != null) map.put('contentTypeEnumId', this.contentTypeEnumId);
         return map;
     }
 }

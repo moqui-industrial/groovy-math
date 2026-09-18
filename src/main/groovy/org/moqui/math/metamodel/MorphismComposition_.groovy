@@ -14,4 +14,6 @@ class MorphismComposition_ {
 
     public static final Attribute<MorphismComposition, String> morphismId = new Attribute<>('morphismId', MorphismComposition.class, String.class, true, true)
     public static final Attribute<MorphismComposition, String> compositionTypeEnumId = new Attribute<>('compositionTypeEnumId', MorphismComposition.class, String.class, false, false)
+    public static final Attribute<MorphismComposition, String> iterateContextPath = new Attribute<>('iterateContextPath', MorphismComposition.class, String.class, false, false)
+    public static final Attribute<MorphismComposition, String> collectContextPath = new Attribute<>('collectContextPath', MorphismComposition.class, String.class, false, false)
 }

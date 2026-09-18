@@ -25,6 +25,8 @@ interface MathProvider<P, R> {
     P compile(MathMeta mathMeta)
     R execute(P plan, Map<String, ?> inputs)
 
+    default Set<String> capabilities() { Collections.emptySet() }
+
     default R run(final MathMeta mathMeta) {
         run(mathMeta, Collections.emptyMap())
     }

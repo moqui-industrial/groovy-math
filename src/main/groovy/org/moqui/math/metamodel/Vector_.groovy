@@ -25,4 +25,6 @@ class Vector_ {
     public static final Attribute<Vector, BigDecimal> magnitude = new Attribute<>('magnitude', Vector.class, BigDecimal.class, false, false)
     public static final Attribute<Vector, String> componentArray = new Attribute<>('componentArray', Vector.class, String.class, false, false)
     public static final Attribute<Vector, byte[]> componentBlob = new Attribute<>('componentBlob', Vector.class, byte[].class, false, false)
+    public static final Attribute<Vector, String> contentLocation = new Attribute<>('contentLocation', Vector.class, String.class, false, false)
+    public static final Attribute<Vector, String> contentTypeEnumId = new Attribute<>('contentTypeEnumId', Vector.class, String.class, false, false)
 }

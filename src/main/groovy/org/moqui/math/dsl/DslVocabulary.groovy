@@ -106,42 +106,109 @@ final class DslVocabulary {
         }
     }
 
-    private void indexSymbols() {
-        // 1. Registered DSL enums implementing DslEnumValue
-        List<Class<?>> dslEnums = [
-            MathModelType, DataType, OptimizationObjectiveSense, MathModelSolvingMethod,
-            DeviceType, MatrixType, MatrixPurpose, ParameterPurpose, ParameterType,
-            TensorPurpose, TransformationType, MeshType, MorphismType, NormDomain, NormOrder,
-            MathSpace, MathModelUsageContext, MathModelSource, MathModelDataType,
-            MathModelDataPurpose, CategoryType, CategoryObjectType, MeshAdaptationType,
-            MeshPurpose, TensorDecompMethod, TransformationPurpose, TriangularExtractionType
-        ]
+    boolean isDeclaredEntity(final String entityName) {
+        if (!entityName) return false
+        modelDefinition.hasEntity(entityName)
+    }
 
-        Map<String, Class<?>> enumClassByType = new LinkedHashMap<>()
-        for (Class<?> cls : dslEnums) {
-            String typeName = cls.simpleName
-            enumClassByType.put(typeName, cls)
-            if (typeName == 'OptimizationObjectiveSense') enumClassByType.put('ObjectiveSense', cls)
-            if (typeName == 'DataType') enumClassByType.put('TensorDataType', cls)
-            if (typeName == 'DeviceType') enumClassByType.put('TensorDevice', cls)
-            if (typeName == 'MathSpace') {
-                enumClassByType.put('DomainVectorSpace', cls)
-                enumClassByType.put('CodomainVectorSpace', cls)
+    boolean isDeclaredField(final String entityName, final String fieldName) {
+        if (!entityName || !fieldName) return false
+        EntityDefinition ed = entityKeywords.get(entityName)
+        if (ed == null && modelDefinition.hasEntity(entityName)) {
+            ed = modelDefinition.entity(entityName)
+        }
+        ed != null && ed.fields.containsKey(fieldName)
+    }
+
+    boolean isDeclaredRelationship(final String entityName, final String relName) {
+        if (!entityName || !relName) return false
+        EntityDefinition ed = entityKeywords.get(entityName)
+        if (ed == null && modelDefinition.hasEntity(entityName)) {
+            ed = modelDefinition.entity(entityName)
+        }
+        if (ed == null) return false
+        ed.relationships.containsKey(relName) ||
+            ed.relationships.values().any { it.name == relName || it.relatedEntityName.endsWith('.' + relName) }
+    }
+
+    boolean isDeclaredEnum(final String enumId) {
+        if (!enumId) return false
+        modelDefinition.enumeration(enumId) != null
+    }
+
+    boolean isDeclaredEnumType(final String enumTypeId) {
+        if (!enumTypeId) return false
+        modelDefinition.isDeclaredEnumerationType(enumTypeId)
+    }
+
+    boolean isDeclaredStatus(final String statusId) {
+        if (!statusId) return false
+        modelDefinition.statuses.containsKey(statusId)
+    }
+
+    Set<String> allEntityNames() {
+        modelDefinition.entities.keySet()
+    }
+
+    Set<String> allEnumTypes() {
+        modelDefinition.enumerationTypes
+    }
+
+    Set<String> allEnumValues() {
+        modelDefinition.enumerations.keySet()
+    }
+
+    List<EnumerationDefinition> enumValuesForType(final String enumTypeId) {
+        if (!enumTypeId) return Collections.emptyList()
+        modelDefinition.enumerationsOfType(enumTypeId)
+    }
+
+    private void indexSymbols() {
+        // 1. Registered DSL enums implementing DslEnumValue from generated classes
+        for (String typeId : modelDefinition.enumerationTypes) {
+            try {
+                Class<?> cls = Class.forName("org.moqui.math.dsl.${typeId}")
+                if (Enum.isAssignableFrom(cls) && DslEnumValue.isAssignableFrom(cls)) {
+                    for (Object constant : cls.enumConstants) {
+                        Enum<?> e = (Enum<?>) constant
+                        if (e instanceof DslEnumValue) {
+                            String id = ((DslEnumValue) e).id
+                            addSymbol(e.name(), id, typeId)
+                            addSymbol(uncapitalize(e.name()), id, typeId)
+                            enumIdToPreferredSymbol.putIfAbsent(id, new DslSymbol(e.name(), id, typeId))
+                        }
+                    }
+                }
+            } catch (ClassNotFoundException ignored) {
             }
         }
 
-        for (Class<?> cls : dslEnums) {
-            if (Enum.isAssignableFrom(cls)) {
-                for (Object constant : cls.enumConstants) {
-                    Enum<?> e = (Enum<?>) constant
-                    if (e instanceof DslEnumValue) {
-                        String id = ((DslEnumValue) e).id
-                        String typeName = cls.simpleName
-                        addSymbol(e.name(), id, typeName)
-                        addSymbol(uncapitalize(e.name()), id, typeName)
-                        enumIdToPreferredSymbol.putIfAbsent(id, new DslSymbol(e.name(), id, typeName))
+        // Compatibility wrappers
+        for (String aliasTypeName : ['DataType', 'DeviceType', 'MathSpace']) {
+            try {
+                Class<?> cls = Class.forName("org.moqui.math.dsl.${aliasTypeName}")
+                if (Enum.isAssignableFrom(cls) && DslEnumValue.isAssignableFrom(cls)) {
+                    for (Object constant : cls.enumConstants) {
+                        Enum<?> e = (Enum<?>) constant
+                        if (e instanceof DslEnumValue) {
+                            String id = ((DslEnumValue) e).id
+                            addSymbol(e.name(), id, aliasTypeName)
+                            addSymbol(uncapitalize(e.name()), id, aliasTypeName)
+                            enumIdToPreferredSymbol.putIfAbsent(id, new DslSymbol(e.name(), id, aliasTypeName))
+                        }
                     }
                 }
+            } catch (ClassNotFoundException ignored) {
+            }
+        }
+
+        for (Object constant : OptimizationObjectiveSense.enumConstants) {
+            Enum<?> e = (Enum<?>) constant
+            if (e instanceof DslEnumValue) {
+                String id = ((DslEnumValue) e).id
+                addSymbol(e.name(), id, 'OptimizationObjectiveSense')
+                addSymbol(uncapitalize(e.name()), id, 'OptimizationObjectiveSense')
+                enumIdToPreferredSymbol.putIfAbsent(id, new DslSymbol(e.name(), id, 'OptimizationObjectiveSense'))
             }
         }
 
@@ -372,6 +439,11 @@ final class DslVocabulary {
             if (typeSymbols.containsKey(symbolName)) return typeSymbols.get(symbolName)
             if (typeSymbols.containsKey(uncapitalize(symbolName))) return typeSymbols.get(uncapitalize(symbolName))
             if (typeSymbols.containsKey(symbolName.toUpperCase())) return typeSymbols.get(symbolName.toUpperCase())
+
+            // Try matching enumId directly
+            for (DslSymbol sym : typeSymbols.values()) {
+                if (sym.id == symbolName) return sym
+            }
 
             // Try case-insensitive matching
             for (Map.Entry<String, DslSymbol> entry : typeSymbols.entrySet()) {
