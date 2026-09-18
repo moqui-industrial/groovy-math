@@ -24,7 +24,7 @@ final class OnnxProviderFactory implements MathProviderFactory {
     boolean claims(final MathMeta mathMeta, final DeclaredModel model) {
         if (model.solvingMethod == 'MmsmOnnx' || model.solvingMethod == 'SmOnnx') return true
         def mathModel = mathMeta.entity('MathModel').findByName(model.mathModelId)
-        String loc = (mathModel?.get('location') ?: mathModel?.get('contentLocation')) as String
+        String loc = mathModel?.get('location') as String
         if (loc != null && loc.endsWith('.onnx')) return true
         false
     }

@@ -477,8 +477,6 @@ class MathModelBuilder {
     String alias
     String description
     String location
-    String contentLocation
-    String contentTypeEnumId
     MathModelSolvingMethod solvingMethod
     private int dataSequence = 1
 
@@ -491,8 +489,6 @@ class MathModelBuilder {
     MathModelBuilder alias(String alias) { this.alias = alias; this }
     MathModelBuilder description(String desc) { this.description = desc; this }
     MathModelBuilder location(String loc) { this.location = loc; this }
-    MathModelBuilder contentLocation(String loc) { this.contentLocation = loc; this }
-    MathModelBuilder contentType(String type) { this.contentTypeEnumId = type; this }
     MathModelBuilder solvingMethod(MathModelSolvingMethod method) { this.solvingMethod = method; this }
 
     EntityRef<Matrix> matrix(final Map<String, Object> args, final String matrixId = null,
@@ -635,8 +631,6 @@ class MathModelBuilder {
         if (alias) values.put('modelAlias', alias)
         if (description) values.put('description', description)
         if (location) values.put('location', location)
-        if (contentLocation) values.put('contentLocation', contentLocation)
-        if (contentTypeEnumId) values.put('contentTypeEnumId', contentTypeEnumId)
         mathMeta.declare('moqui.math.MathModel', modelId, values)
         new EntityRef<>(modelId, MathModel.class, values)
     }
@@ -817,9 +811,6 @@ class MatrixBuilder {
         values.put('domainSpaceEnumId', domainSpace ? domainSpace.id : 'Eng2DEuclideanSpace')
         values.put('codomainSpaceEnumId', codomainSpace ? codomainSpace.id : 'Eng2DEuclideanSpace')
         if (componentArray) values.put('componentArray', componentArray)
-        if (contentLocation) values.put('contentLocation', contentLocation)
-        if (contentType) values.put('contentTypeEnumId', contentType.id)
-        else if (contentTypeEnumId) values.put('contentTypeEnumId', contentTypeEnumId)
         if (name) values.put('name', name)
         else if (matrixId) values.put('name', matrixId)
         if (symbol) values.put('symbol', symbol)
@@ -919,9 +910,6 @@ class VectorBuilder {
         values.put('purposeEnumId', purpose ? purpose.id : 'VpOriginal')
         values.put('vectorSpaceEnumId', domainSpace ? domainSpace.id : 'Eng2DEuclideanSpace')
         if (componentArray) values.put('componentArray', componentArray)
-        if (contentLocation) values.put('contentLocation', contentLocation)
-        if (contentType) values.put('contentTypeEnumId', contentType.id)
-        else if (contentTypeEnumId) values.put('contentTypeEnumId', contentTypeEnumId)
         if (name) values.put('name', name)
         else if (vectorId) values.put('name', vectorId)
         if (symbol) values.put('symbol', symbol)
@@ -1043,14 +1031,22 @@ class TensorBuilder {
         if (purpose) values.put('purposeEnumId', purpose.id)
         if (dataType) values.put('dataTypeEnumId', dataType.id)
         if (device) values.put('deviceEnumId', device.id)
-        if (contentLocation) values.put('contentLocation', contentLocation)
-        if (contentType) values.put('contentTypeEnumId', contentType.id)
-        else if (contentTypeEnumId) values.put('contentTypeEnumId', contentTypeEnumId)
         if (name) values.put('name', name)
         else if (tensorId) values.put('name', tensorId)
         if (symbol) values.put('symbol', symbol)
         if (description) values.put('description', description)
         mathMeta.declare('moqui.math.Tensor', tensorId, values)
+        if (contentLocation) {
+            Map<String, Object> contentValues = new LinkedHashMap<>()
+            String contentId = "${tensorId}_Content"
+            contentValues.put('tensorContentId', contentId)
+            contentValues.put('tensorId', tensorId)
+            contentValues.put('contentLocation', contentLocation)
+            if (contentType) contentValues.put('contentTypeEnumId', contentType.id)
+            else if (contentTypeEnumId) contentValues.put('contentTypeEnumId', contentTypeEnumId)
+            else if (contentLocation.endsWith('.npy')) contentValues.put('contentTypeEnumId', 'TCntNpy')
+            mathMeta.declare('moqui.math.TensorContent', contentId, contentValues)
+        }
         new EntityRef<>(tensorId, Tensor.class, values)
     }
 }

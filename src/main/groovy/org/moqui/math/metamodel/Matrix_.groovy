@@ -33,6 +33,4 @@ class Matrix_ {
     public static final Attribute<Matrix, String> conditionNormEnumId = new Attribute<>('conditionNormEnumId', Matrix.class, String.class, false, false)
     public static final Attribute<Matrix, String> componentArray = new Attribute<>('componentArray', Matrix.class, String.class, false, false)
     public static final Attribute<Matrix, byte[]> componentBlob = new Attribute<>('componentBlob', Matrix.class, byte[].class, false, false)
-    public static final Attribute<Matrix, String> contentLocation = new Attribute<>('contentLocation', Matrix.class, String.class, false, false)
-    public static final Attribute<Matrix, String> contentTypeEnumId = new Attribute<>('contentTypeEnumId', Matrix.class, String.class, false, false)
 }

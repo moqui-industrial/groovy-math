@@ -40,7 +40,7 @@ final class OnnxRuntimeProvider implements MathProvider<OnnxPlan, Map<String, Ob
         if (!model) {
             for (String name : mathMeta.entity('MathModel').getNames()) {
                 ModelValue candidate = mathMeta.entity('MathModel').findByName(name)
-                String loc = (candidate?.get('location') ?: candidate?.get('contentLocation')) as String
+                String loc = candidate?.get('location') as String
                 if (loc?.endsWith('.onnx') || candidate?.get('solvingMethod') == 'MmsmOnnx' || candidate?.get('solvingMethodEnumId') == 'MmsmOnnx' || candidate?.get('solvingMethod') == 'SmOnnx') {
                     model = candidate
                     break
@@ -48,7 +48,7 @@ final class OnnxRuntimeProvider implements MathProvider<OnnxPlan, Map<String, Ob
             }
         }
 
-        String modelPath = (model?.get('location') ?: model?.get('contentLocation')) as String
+        String modelPath = model?.get('location') as String
         if (!modelPath) {
             throw new IllegalArgumentException("No ONNX model location specified for model: ${mathModelId}")
         }

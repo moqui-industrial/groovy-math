@@ -82,12 +82,6 @@ class Matrix implements Serializable {
     /** componentBlob */
     byte[] componentBlob
 
-    /** contentLocation */
-    String contentLocation
-
-    /** contentTypeEnumId */
-    String contentTypeEnumId
-
     Matrix parent
 
     CoordinateSystem coordSystem
@@ -119,8 +113,6 @@ class Matrix implements Serializable {
             if (args.containsKey('conditionNormEnumId')) this.conditionNormEnumId = args.get('conditionNormEnumId')?.toString()
             if (args.containsKey('componentArray')) this.componentArray = args.get('componentArray')?.toString()
             if (args.containsKey('componentBlob')) this.componentBlob = (byte[]) args.get('componentBlob')
-            if (args.containsKey('contentLocation')) this.contentLocation = args.get('contentLocation')?.toString()
-            if (args.containsKey('contentTypeEnumId')) this.contentTypeEnumId = args.get('contentTypeEnumId')?.toString()
         }
     }
 
@@ -229,16 +221,6 @@ class Matrix implements Serializable {
         return this;
     }
 
-    Matrix contentLocation(String value) {
-        this.contentLocation = value
-        return this;
-    }
-
-    Matrix contentTypeEnumId(String value) {
-        this.contentTypeEnumId = value
-        return this;
-    }
-
     Matrix parent(Matrix item) {
         this.parent = item;
         return this;
@@ -277,8 +259,6 @@ class Matrix implements Serializable {
         if (this.conditionNormEnumId != null) map.put('conditionNormEnumId', this.conditionNormEnumId);
         if (this.componentArray != null) map.put('componentArray', this.componentArray);
         if (this.componentBlob != null) map.put('componentBlob', this.componentBlob);
-        if (this.contentLocation != null) map.put('contentLocation', this.contentLocation);
-        if (this.contentTypeEnumId != null) map.put('contentTypeEnumId', this.contentTypeEnumId);
         return map;
     }
 }

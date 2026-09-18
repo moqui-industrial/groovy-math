@@ -44,24 +44,27 @@ try {
 
     println "Generated test .npy files in ${tempDir}"
 
-    // 2. Define entities using Fluent DSL pointing to external files
+    // 2. Define entities using Fluent DSL
     MathMeta meta = MathDsl.fluent {
         matrix('Weights') {
             matrixType MatrixType.Dense
             purpose MatrixPurpose.Original
             domainSpace MathSpace.R3
             codomainSpace MathSpace.R2
-            contentLocation matrixFile.toAbsolutePath().toString()
+            rows 2L
+            cols 3L
+            componentArray "[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]"
         }
 
         vector('Bias') {
             domainSpace MathSpace.R2
-            contentLocation vectorFile.toAbsolutePath().toString()
+            size 2L
+            componentArray "[0.5, -0.5]"
         }
 
         tensor('FeatureMap') {
             contentLocation tensorFile.toAbsolutePath().toString()
-            contentType 'Npy'
+            contentType 'TCntNpy'
         }
     }
 
@@ -69,16 +72,18 @@ try {
     println " - Matrix: Weights -> ${meta.entity('Matrix').findByName('Weights') != null}"
     println " - Vector: Bias -> ${meta.entity('Vector').findByName('Bias') != null}"
     println " - Tensor: FeatureMap -> ${meta.entity('Tensor').findByName('FeatureMap') != null}"
+    println " - TensorContent: FeatureMap_Content -> ${meta.entity('TensorContent').findByName('FeatureMap_Content') != null}"
 
     // 3. Map entities off-heap zero-copy using Panama FFM Arena
     try (Arena arena = Arena.ofConfined()) {
         Matrix matrix = new Matrix(meta.entity('Matrix').findByName('Weights').toMap())
         Vector vector = new Vector(meta.entity('Vector').findByName('Bias').toMap())
         Tensor tensor = new Tensor(meta.entity('Tensor').findByName('FeatureMap').toMap())
+        org.moqui.math.model.TensorContent tensorContent = new org.moqui.math.model.TensorContent(meta.entity('TensorContent').findByName('FeatureMap_Content').toMap())
 
         MemorySegment matrixSegment = NativeMemoryMapper.mapMatrix(arena, matrix)
         MemorySegment vectorSegment = NativeMemoryMapper.mapVector(arena, vector)
-        MemorySegment tensorSegment = NativeMemoryMapper.mapTensor(arena, tensor)
+        MemorySegment tensorSegment = NativeMemoryMapper.mapTensor(arena, tensor, null, tensorContent)
 
         println "\nOff-heap Memory Mappings created:"
         println " Matrix rows: ${matrix.rows}, cols: ${matrix.cols}, bytes: ${matrixSegment.byteSize()}"

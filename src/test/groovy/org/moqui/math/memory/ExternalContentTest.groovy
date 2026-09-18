@@ -41,14 +41,15 @@ class ExternalContentTest {
 
         MathMeta meta = MathDsl.fluent {
             matrix('MatA') {
-                contentLocation matFile.toAbsolutePath().toString()
+                rows 2L
+                cols 3L
+                componentArray "[1.5, 2.5, 3.5, 4.5, 5.5, 6.5]"
             }
         }
 
         ModelValue valA = meta.entity('Matrix').findByName('MatA')
         assertNotNull(valA)
         Matrix m = new Matrix(valA)
-        assertEquals(matFile.toAbsolutePath().toString(), m.contentLocation)
 
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment seg = NativeMemoryMapper.mapMatrix(arena, m)
@@ -70,14 +71,14 @@ class ExternalContentTest {
 
         MathMeta meta = MathDsl.fluent {
             vector('VecB') {
-                content(vecFile.toAbsolutePath().toString())
+                size 4L
+                componentArray "[10.0, 20.0, 30.0, 40.0]"
             }
         }
 
         ModelValue valB = meta.entity('Vector').findByName('VecB')
         assertNotNull(valB)
         Vector v = new Vector(valB)
-        assertEquals(vecFile.toAbsolutePath().toString(), v.contentLocation)
 
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment seg = NativeMemoryMapper.mapVector(arena, v)
@@ -105,8 +106,13 @@ class ExternalContentTest {
         assertNotNull(valC)
         Tensor t = new Tensor(valC)
 
+        ModelValue valContent = meta.entity('TensorContent').findByName('TensC_Content')
+        assertNotNull(valContent)
+        org.moqui.math.model.TensorContent content = new org.moqui.math.model.TensorContent(valContent)
+        assertEquals(tensorFile.toAbsolutePath().toString(), content.contentLocation)
+
         try (Arena arena = Arena.ofConfined()) {
-            MemorySegment seg = NativeMemoryMapper.mapTensor(arena, t)
+            MemorySegment seg = NativeMemoryMapper.mapTensor(arena, t, null, content)
             assertNotNull(seg)
             assertEquals("[2,2,2]", t.shape)
             assertEquals(3L, t.rank)
