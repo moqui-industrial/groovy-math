@@ -8,9 +8,9 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 enum EnumGroup implements DslEnumValue {
-    Eng3DEuclideanSpace('Eng3DEuclideanSpace', 'R3', '3D Euclidean Space', ''),
-    SpaceTime('EngSpaceTime', '', 'Space Time', ''),
-    Eng2DEuclideanSpace('Eng2DEuclideanSpace', 'R2', '2D Euclidean Space', '');
+    R3('Eng3DEuclideanSpace', 'R3', '3D Euclidean Space', ''),
+    EngSpaceTime('EngSpaceTime', '', 'Space Time', ''),
+    R2('Eng2DEuclideanSpace', 'R2', '2D Euclidean Space', '');
 
     final String id
     final String enumCode

@@ -8,23 +8,23 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 enum MorphismType implements DslEnumValue {
-    General('MtGeneral', '', 'General Morphism', ''),
-    tIso('MtIso', '', 'Isomorphism', ''),
-    Endo('MtEndo', '', 'Endomorphism', ''),
-    tEpi('MtEpi', '', 'Epimorphism', ''),
-    tMono('MtMono', '', 'Monomorphism', ''),
-    tId('MtId', '', 'Identity morphism; may have a composite implementation', ''),
-    phZero('MphZero', '', 'Zero morphism', ''),
-    tTerm('MtTerm', '', 'Typed Term from a Context to a Type', ''),
-    tDisplayMap('MtDisplayMap', '', 'Display Map representing a Dependent Type', ''),
-    tRetract('MtRetract', '', 'Retract (split epi)', ''),
-    tSection('MtSection', '', 'Section (split mono)', ''),
-    tLeftInv('MtLeftInv', '', 'Retraction left-inverse', ''),
-    tRightInv('MtRightInv', '', 'Section right-inverse', ''),
-    tLaw('MtLaw', '', 'Structure-Preserving Law', ''),
-    tLawGroupHom('MtLawGroupHom', '', 'Group Homomorphism', 'MtLaw'),
-    tLawRingHom('MtLawRingHom', '', 'Ring Homomorphism', 'MtLaw'),
-    tLawLinear('MtLawLinear', '', 'Linear Map (Vector Space)', 'MtLaw');
+    MtGeneral('MtGeneral', '', 'General Morphism', ''),
+    MtIso('MtIso', '', 'Isomorphism', ''),
+    MtEndo('MtEndo', '', 'Endomorphism', ''),
+    MtEpi('MtEpi', '', 'Epimorphism', ''),
+    MtMono('MtMono', '', 'Monomorphism', ''),
+    MtId('MtId', '', 'Identity morphism; may have a composite implementation', ''),
+    MphZero('MphZero', '', 'Zero morphism', ''),
+    MtTerm('MtTerm', '', 'Typed Term from a Context to a Type', ''),
+    MtDisplayMap('MtDisplayMap', '', 'Display Map representing a Dependent Type', ''),
+    MtRetract('MtRetract', '', 'Retract (split epi)', ''),
+    MtSection('MtSection', '', 'Section (split mono)', ''),
+    MtLeftInv('MtLeftInv', '', 'Retraction left-inverse', ''),
+    MtRightInv('MtRightInv', '', 'Section right-inverse', ''),
+    MtLaw('MtLaw', '', 'Structure-Preserving Law', ''),
+    MtLawGroupHom('MtLawGroupHom', '', 'Group Homomorphism', 'MtLaw'),
+    MtLawRingHom('MtLawRingHom', '', 'Ring Homomorphism', 'MtLaw'),
+    MtLawLinear('MtLawLinear', '', 'Linear Map (Vector Space)', 'MtLaw');
 
     final String id
     final String enumCode

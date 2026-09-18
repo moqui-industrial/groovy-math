@@ -10,7 +10,7 @@ ParameterDef('QuadraticObjectiveSense',
     parameterName: 'Quadratic optimization objective sense')
 
 MathModelDef('QuadraticEnergyDispatch',
-    modelTypeEnum: MathModelType.QuadraticProgram,
+    modelTypeEnum: MathModelType.Qp,
     usageContextEnum: MathModelUsageContext.Optimisation,
     modelName: 'Bounded quadratic energy dispatch',
     description: 'Allocate two energy sources by minimizing convex operating cost') {
@@ -31,7 +31,7 @@ MathModelDef('QuadraticEnergyDispatch',
 
         data('EnergySourceVariablesData',
             dataTypeEnum: MathModelDataType.Vector,
-            purposeEnum: MathModelDataPurpose.DecisionVariables,
+            purposeEnum: MathModelDataPurpose.DecisionVars,
             vectorId: 'EnergySourceVariables', sequenceNum: 0) {
             Vector('EnergySourceVariables', name: 'Energy source outputs', dimension: 2,
                 componentArray: '["GridPower","StoredEnergy"]')
@@ -57,7 +57,7 @@ MathModelDef('QuadraticEnergyDispatch',
 
         data('DispatchBoundsData',
             dataTypeEnum: MathModelDataType.Matrix,
-            purposeEnum: MathModelDataPurpose.VariableBounds,
+            purposeEnum: MathModelDataPurpose.VarBounds,
             matrixId: 'DispatchBounds', sequenceNum: 3) {
             Matrix('DispatchBounds', matrixTypeEnum: MatrixType.Rectangular,
                 domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,

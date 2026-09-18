@@ -31,6 +31,10 @@ final class ModelDefinition {
     final List<StatusTransitionDefinition> statusTransitions = []
     /** statusFlowId values declared as moqui.basic.StatusFlow. */
     final LinkedHashSet<String> statusFlows = new LinkedHashSet<>()
+    /** Every declared moqui.basic.StatusFlowItem. */
+    final LinkedHashMap<String, StatusFlowItemDefinition> statusFlowItems = new LinkedHashMap<>()
+    /** Every declared moqui.basic.UomConversion. */
+    final List<UomConversionDefinition> uomConversions = []
     int extensionCount
     /** Number of Enumeration elements parsed, including any that redeclare an existing id. */
     int enumerationCount
@@ -76,6 +80,16 @@ final class ModelDefinition {
         if (statusFlowId) statusFlows.add(statusFlowId)
     }
 
+    void addStatusFlowItem(final StatusFlowItemDefinition item) {
+        Objects.requireNonNull(item, 'Status flow item must not be null')
+        statusFlowItems.put("${item.statusFlowId}:${item.statusId}".toString(), item)
+    }
+
+    void addUomConversion(final UomConversionDefinition conversion) {
+        Objects.requireNonNull(conversion, 'UOM conversion must not be null')
+        uomConversions.add(conversion)
+    }
+
     /** The declared status for this id, or null. */
     StatusDefinition status(final String statusId) {
         statuses.get(statusId)
@@ -93,11 +107,50 @@ final class ModelDefinition {
         found
     }
 
+    /** Alias for statusesOfType, matching Moqui service semantics. */
+    List<StatusDefinition> statusItemsByType(final String statusTypeId) {
+        statusesOfType(statusTypeId)
+    }
+
+    /**
+     * Resolves the initial status of a status flow (from StatusFlowItem.isInitial, or flow transitions).
+     */
+    String initialStatus(final String statusFlowId) {
+        if (!statusFlowId) return null
+        for (StatusFlowItemDefinition item : statusFlowItems.values()) {
+            if (item.statusFlowId == statusFlowId && (item.isInitial == 'Y' || item.isInitial == 'true')) {
+                return item.statusId
+            }
+        }
+        List<StatusFlowItemDefinition> flowItems = statusFlowItems.values().findAll { it.statusFlowId == statusFlowId } as List<StatusFlowItemDefinition>
+        if (!flowItems.isEmpty()) {
+            flowItems.sort { StatusFlowItemDefinition a, StatusFlowItemDefinition b ->
+                int seqA = a.sequenceNum != null ? a.sequenceNum : Integer.MAX_VALUE
+                int seqB = b.sequenceNum != null ? b.sequenceNum : Integer.MAX_VALUE
+                seqA <=> seqB
+            }
+            return flowItems.first().statusId
+        }
+        // Fallback: look at transitions for this flow
+        List<StatusTransitionDefinition> trans = statusTransitions.findAll { it.statusFlowId == statusFlowId }
+        if (!trans.isEmpty()) {
+            Set<String> toStatuses = trans.collect { it.toStatusId } as Set<String>
+            StatusTransitionDefinition initialCandidate = trans.find { !toStatuses.contains(it.statusId) }
+            if (initialCandidate != null) return initialCandidate.statusId
+            return trans.first().statusId
+        }
+        null
+    }
+
     /**
      * Transitions out of a status. With no flow given the search spans every flow, which is what
      * Moqui's own validity check does; naming a flow narrows it the way automatic advancement does.
      */
     List<StatusTransitionDefinition> transitionsFrom(final String statusId, final String statusFlowId = null) {
+        // If statusId looks like a statusFlowId and statusFlowId is a valid statusId, handle inverted order gracefully
+        if (statusFlowId != null && statusFlows.contains(statusId) && statuses.containsKey(statusFlowId)) {
+            return transitionsFrom(statusFlowId, statusId)
+        }
         List<StatusTransitionDefinition> found = new ArrayList<StatusTransitionDefinition>(
             statusTransitions.findAll { StatusTransitionDefinition value ->
                 value.statusId == statusId && (statusFlowId == null || value.statusFlowId == statusFlowId)
@@ -113,6 +166,87 @@ final class ModelDefinition {
     /** The declared enumeration for this id, or null. */
     EnumerationDefinition enumeration(final String enumId) {
         enumerations.get(enumId)
+    }
+
+    /** Alias for enumerationsOfType matching find#Enumeration. */
+    List<EnumerationDefinition> enumerationsByType(final String enumTypeId) {
+        enumerationsOfType(enumTypeId)
+    }
+
+    /** Alias for enumerationsUnder matching find#EnumerationByParent. */
+    List<EnumerationDefinition> enumerationsByParent(final String parentEnumId,
+                                                    final boolean includeParent = true,
+                                                    final boolean includeNested = false) {
+        enumerationsUnder(parentEnumId, includeParent, includeNested)
+    }
+
+    /**
+     * Converts a numeric amount from one UOM to another following convert#Uom service semantics:
+     * - if uomId == toUomId, returns amount unchanged.
+     * - finds valid UomConversion at effectiveDate, ordered by -fromDate.
+     * - direct: (amount * factor) + offset
+     * - inverse: (amount - offset) / factor
+     * - throws exception if conversion cannot be performed.
+     */
+    BigDecimal uomConvert(final Number amount, final String uomId, final String toUomId, final Object effectiveDate = null) {
+        if (amount == null) return null
+        BigDecimal amt = amount instanceof BigDecimal ? (BigDecimal) amount : new BigDecimal(amount.toString())
+        if (uomId == null || toUomId == null) {
+            throw new IllegalArgumentException("uomId and toUomId must not be null (got uomId=${uomId}, toUomId=${toUomId})")
+        }
+        if (uomId == toUomId) return amt
+
+        java.sql.Timestamp effectiveTime
+        if (effectiveDate instanceof java.sql.Timestamp) {
+            effectiveTime = (java.sql.Timestamp) effectiveDate
+        } else if (effectiveDate instanceof java.util.Date) {
+            effectiveTime = new java.sql.Timestamp(((java.util.Date) effectiveDate).getTime())
+        } else if (effectiveDate instanceof CharSequence) {
+            effectiveTime = java.sql.Timestamp.valueOf(effectiveDate.toString())
+        } else {
+            effectiveTime = new java.sql.Timestamp(System.currentTimeMillis())
+        }
+
+        // 1. Direct conversion
+        List<UomConversionDefinition> directCandidates = uomConversions.findAll { UomConversionDefinition conv ->
+            conv.uomId == uomId && conv.toUomId == toUomId &&
+            (conv.fromDate == null || conv.fromDate.time <= effectiveTime.time) &&
+            (conv.thruDate == null || conv.thruDate.time >= effectiveTime.time)
+        }
+        if (!directCandidates.isEmpty()) {
+            directCandidates.sort { UomConversionDefinition left, UomConversionDefinition right ->
+                long lTime = left.fromDate != null ? left.fromDate.time : Long.MIN_VALUE
+                long rTime = right.fromDate != null ? right.fromDate.time : Long.MIN_VALUE
+                rTime <=> lTime // -fromDate
+            }
+            UomConversionDefinition best = directCandidates.first()
+            BigDecimal factor = best.conversionFactor != null ? BigDecimal.valueOf(best.conversionFactor) : BigDecimal.ONE
+            BigDecimal offset = best.conversionOffset != null ? best.conversionOffset : BigDecimal.ZERO
+            return (amt.multiply(factor)).add(offset)
+        }
+
+        // 2. Inverse conversion
+        List<UomConversionDefinition> inverseCandidates = uomConversions.findAll { UomConversionDefinition conv ->
+            conv.uomId == toUomId && conv.toUomId == uomId &&
+            (conv.fromDate == null || conv.fromDate.time <= effectiveTime.time) &&
+            (conv.thruDate == null || conv.thruDate.time >= effectiveTime.time)
+        }
+        if (!inverseCandidates.isEmpty()) {
+            inverseCandidates.sort { UomConversionDefinition left, UomConversionDefinition right ->
+                long lTime = left.fromDate != null ? left.fromDate.time : Long.MIN_VALUE
+                long rTime = right.fromDate != null ? right.fromDate.time : Long.MIN_VALUE
+                rTime <=> lTime // -fromDate
+            }
+            UomConversionDefinition best = inverseCandidates.first()
+            BigDecimal factor = best.conversionFactor != null ? BigDecimal.valueOf(best.conversionFactor) : BigDecimal.ONE
+            BigDecimal offset = best.conversionOffset != null ? best.conversionOffset : BigDecimal.ZERO
+            if (factor.compareTo(BigDecimal.ZERO) == 0) {
+                throw new ArithmeticException("Cannot convert UOM: conversion factor is zero for ${toUomId} -> ${uomId}")
+            }
+            return (amt.subtract(offset)).divide(factor, java.math.MathContext.DECIMAL64)
+        }
+
+        throw new IllegalArgumentException("No UOM conversion found from ${uomId} to ${toUomId}")
     }
 
     /**

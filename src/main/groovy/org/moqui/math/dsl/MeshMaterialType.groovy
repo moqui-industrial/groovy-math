@@ -8,21 +8,21 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 enum MeshMaterialType implements DslEnumValue {
-    mtLambert('MmtLambert', '', 'Lambert Material', ''),
-    mtStandard('MmtStandard', '', 'Standard (PBR) Material', ''),
-    mtPhong('MmtPhong', '', 'Phong Material', ''),
-    mtToon('MmtToon', '', 'Toon Material', ''),
-    mtShader('MmtShader', '', 'Custom ShaderMaterial', ''),
-    atSteel('MatSteel', '', 'Steel', 'MmtStandard'),
-    atAluminum('MatAluminum', '', 'Aluminum', 'MmtStandard'),
-    atGlass('MatGlass', '', 'Glass', 'MmtStandard'),
-    atWood('MatWood', '', 'Wood', 'MmtStandard'),
-    atConcrete('MatConcrete', '', 'Concrete', 'MmtStandard'),
-    atPlastic('MatPlastic', '', 'Plastic', 'MmtStandard'),
-    atRubber('MatRubber', '', 'Rubber', 'MmtStandard'),
-    atCopper('MatCopper', '', 'Copper', 'MmtStandard'),
-    atTitanium('MatTitanium', '', 'Titanium', 'MmtStandard'),
-    atCarbonFiber('MatCarbonFiber', '', 'Carbon fiber', 'MmtStandard');
+    MmtLambert('MmtLambert', '', 'Lambert Material', ''),
+    MmtStandard('MmtStandard', '', 'Standard (PBR) Material', ''),
+    MmtPhong('MmtPhong', '', 'Phong Material', ''),
+    MmtToon('MmtToon', '', 'Toon Material', ''),
+    MmtShader('MmtShader', '', 'Custom ShaderMaterial', ''),
+    MatSteel('MatSteel', '', 'Steel', 'MmtStandard'),
+    MatAluminum('MatAluminum', '', 'Aluminum', 'MmtStandard'),
+    MatGlass('MatGlass', '', 'Glass', 'MmtStandard'),
+    MatWood('MatWood', '', 'Wood', 'MmtStandard'),
+    MatConcrete('MatConcrete', '', 'Concrete', 'MmtStandard'),
+    MatPlastic('MatPlastic', '', 'Plastic', 'MmtStandard'),
+    MatRubber('MatRubber', '', 'Rubber', 'MmtStandard'),
+    MatCopper('MatCopper', '', 'Copper', 'MmtStandard'),
+    MatTitanium('MatTitanium', '', 'Titanium', 'MmtStandard'),
+    MatCarbonFiber('MatCarbonFiber', '', 'Carbon fiber', 'MmtStandard');
 
     final String id
     final String enumCode

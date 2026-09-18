@@ -728,6 +728,12 @@ final class DslRecordDelegate {
         }
 
         RelationshipDefinition relationship = record.definition.relationships.get(name)
+        if (relationship == null) {
+            if (name == 'vertex') relationship = record.definition.relationships.get('vertices')
+            else if (name == 'edge') relationship = record.definition.relationships.get('edges')
+            else if (name == 'object') relationship = record.definition.relationships.get('objects')
+            else if (name == 'morphism') relationship = record.definition.relationships.get('morphisms')
+        }
         if (relationship != null) {
             if (arguments.length == 1 && arguments[0] instanceof Closure) {
                 return new DslRelationshipDelegate(root, record, relationship)

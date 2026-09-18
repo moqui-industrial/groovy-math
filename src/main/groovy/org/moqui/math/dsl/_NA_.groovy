@@ -8,7 +8,7 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 enum _NA_ implements DslEnumValue {
-    NA_('_NA_', '', 'Not Applicable', '');
+    A_('_NA_', '', 'Not Applicable', '');
 
     final String id
     final String enumCode

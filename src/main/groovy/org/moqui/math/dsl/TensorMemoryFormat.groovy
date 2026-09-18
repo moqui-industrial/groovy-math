@@ -8,9 +8,9 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 enum TensorMemoryFormat implements DslEnumValue {
-    ontig('TmfContig', '', 'Contiguous', ''),
-    hLast2('TmfChLast2', '', 'Channels-Last 2-D (NHWC)', ''),
-    hLast3('TmfChLast3', '', 'Channels-Last 3-D (NDHWC)', '');
+    Contig('TmfContig', '', 'Contiguous', ''),
+    ChLast2('TmfChLast2', '', 'Channels-Last 2-D (NHWC)', ''),
+    ChLast3('TmfChLast3', '', 'Channels-Last 3-D (NDHWC)', '');
 
     final String id
     final String enumCode

@@ -22,10 +22,11 @@ final class MathDslPrettyPrinter {
         StringBuilder sb = new StringBuilder()
 
         // 1. ParameterDef declarations
-        if (meta.hasEntity('ParameterDef')) {
-            NamedModelContainer paramDefs = meta.entity('ParameterDef')
+        if (meta.hasEntity('MathParameterDef') || meta.hasEntity('ParameterDef')) {
+            String pDefEntity = meta.hasEntity('MathParameterDef') ? 'MathParameterDef' : 'ParameterDef'
+            NamedModelContainer paramDefs = meta.entity(pDefEntity)
             paramDefs.each { ModelValue pd ->
-                sb.append("parameterDef('").append(pd.modelKey).append("'")
+                sb.append("MathParameterDef('").append(pd.modelKey).append("'")
                 appendAttributes(sb, pd, vocab, ['parameterDefId', 'parameterId'], "    ")
                 sb.append(")\n\n")
             }
@@ -35,7 +36,7 @@ final class MathDslPrettyPrinter {
         if (meta.hasEntity('MathModelDef')) {
             NamedModelContainer modelDefs = meta.entity('MathModelDef')
             modelDefs.each { ModelValue md ->
-                sb.append("modelDef('").append(md.modelKey).append("'")
+                sb.append("MathModelDef('").append(md.modelKey).append("'")
                 appendAttributes(sb, md, vocab, ['mathModelDefId'], "    ")
                 sb.append(") {\n")
 
@@ -78,14 +79,14 @@ final class MathDslPrettyPrinter {
                 if (meta.hasEntity('MathModel')) {
                     NamedModelContainer models = meta.entity('MathModel')
                     models.findAll { ModelValue m -> m.get('mathModelDefId') == md.modelKey || true }.each { ModelValue m ->
-                        sb.append("    model('").append(m.modelKey).append("'")
+                        sb.append("    MathModel('").append(m.modelKey).append("'")
                         appendAttributes(sb, m, vocab, ['mathModelId', 'mathModelDefId'], "        ")
                         sb.append(") {\n")
 
                         // Parameters
                         if (meta.hasEntity('Parameter')) {
                             meta.entity('Parameter').findAll { ModelValue p -> p.get('mathModelId') == m.modelKey }.each { ModelValue p ->
-                                sb.append("        parameters('").append(p.modelKey).append("'")
+                                sb.append("        Parameter('").append(p.modelKey).append("'")
                                 appendAttributes(sb, p, vocab, ['parameterId', 'mathModelId'], "            ")
                                 sb.append(")\n")
                             }
@@ -164,8 +165,6 @@ final class MathDslPrettyPrinter {
         if (val == null) return "null"
         if (val instanceof String) {
             String s = (String) val
-            if (s.equals("MINIMIZE")) return "minimise"
-            if (s.equals("MAXIMIZE")) return "maximise"
             String sym = vocab.preferredSymbolForId(s)
             if (sym != null) return sym
             return "'" + s.replace("'", "\\'") + "'"

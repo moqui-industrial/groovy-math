@@ -58,7 +58,7 @@ class OrToolsProviderTest {
 
     private static MathMeta productionPlan() {
         MathDsl.math(modelDefinition()) {
-            MathModelDef('LinearProductionPlanning', modelTypeEnum: MathModelType.LinearProgram)
+            MathModelDef('LinearProductionPlanning', modelTypeEnum: MathModelType.Lp)
             MathModel('ProductionPlan', mathModelDefId: 'LinearProductionPlanning',
                 solvingMethodEnum: MathModelSolvingMethod.Simplex)
             Parameter('ObjectiveSense', mathModelId: 'ProductionPlan',
@@ -73,15 +73,15 @@ class OrToolsProviderTest {
                 componentArray: '[[0,0],[40,50]]')
 
             MathModelData('variables', mathModelId: 'ProductionPlan',
-                purposeEnum: MathModelDataPurpose.DecisionVariables, vectorId: 'ProductionVariables')
+                purposeEnum: MathModelDataPurpose.DecisionVars, vectorId: 'ProductionVariables')
             MathModelData('costs', mathModelId: 'ProductionPlan',
                 purposeEnum: MathModelDataPurpose.CostVector, vectorId: 'UnitMargin')
             MathModelData('constraints', mathModelId: 'ProductionPlan',
                 purposeEnum: MathModelDataPurpose.ConstraintMatrix, matrixId: 'MachineCapacityCoefficients')
             MathModelData('rhs', mathModelId: 'ProductionPlan',
-                purposeEnum: MathModelDataPurpose.RightHandSide, vectorId: 'MachineCapacity')
+                purposeEnum: MathModelDataPurpose.RhsVector, vectorId: 'MachineCapacity')
             MathModelData('bounds', mathModelId: 'ProductionPlan',
-                purposeEnum: MathModelDataPurpose.VariableBounds, matrixId: 'ProductionBounds')
+                purposeEnum: MathModelDataPurpose.VarBounds, matrixId: 'ProductionBounds')
         }
     }
 

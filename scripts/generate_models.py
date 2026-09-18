@@ -232,55 +232,30 @@ for eid, edata in enums.items():
     if tid in types:
         types[tid]['enums'].append(edata)
 
-# Legacy known constant mappings for backwards compatibility
-legacy_mappings = {
-    'CategoryObjectType': {'CotGeneric': 'Generic'},
-    'CategoryType': {'CtSmall': 'Small'},
-    'DataType': {'DtFloat32': 'Float32', 'DtFloat64': 'Float64', 'DtInt32': 'Int32', 'DtInt64': 'Int64', 'DtComplex64': 'Complex64', 'DtComplex128': 'Complex128'},
-    'DeviceType': {'DevCpu': 'CPU', 'DevCuda': 'CUDA', 'DevMps': 'MPS', 'DevRocm': 'ROCM'},
-    'MathModelDataPurpose': {'MmdpDecisionVars': 'DecisionVariables', 'MmdpCostVector': 'CostVector', 'MmdpConstraintMatrix': 'ConstraintMatrix', 'MmdpRhsVector': 'RightHandSide', 'MmdpVarBounds': 'VariableBounds', 'MmdpLowerBounds': 'LowerBounds', 'MmdpUpperBounds': 'UpperBounds', 'MmdpInitialState': 'InitialState', 'MmdpInitialCondition': 'InitialCondition', 'MmdpHessian': 'Hessian', 'MmdpDualValue': 'DualValue', 'MmdpReducedCost': 'ReducedCost', 'MmdpSensitivity': 'Sensitivity', 'MmdpVariableDomain': 'VariableDomain'},
-    'MathModelDataType': {'MmdtMatrix': 'Matrix', 'MmdtTensor': 'Tensor', 'MmdtVector': 'Vector'},
-    'MathModelDefContentPurpose': {'MmdcpWeights': 'Weights', 'MmdcpArchitecture': 'Architecture', 'MmdcpPipeline': 'Pipeline', 'MmdcpFullModel': 'FullModel', 'MmdcpCheckpoint': 'Checkpoint', 'MmdcpConfig': 'Config', 'MmdcpTokenizer': 'Tokenizer'},
-    'MathModelDefContentType': {'MmCntOnnx': 'Onnx', 'MmCntTorchScript': 'TorchScript', 'MmCntTensorFlow': 'TensorFlow', 'MmCntOpenVINO': 'OpenVINO', 'MmCntJAX': 'JAX', 'MmCntGGUF': 'GGUF', 'MmCntPMML': 'PMML', 'MmCntCustom': 'Custom'},
-    'MathModelSolvingMethod': {'MmsmSimplex': 'Simplex', 'MmsmInteriorPoint': 'InteriorPoint', 'MmsmFvm': 'Fvm', 'MmsmFem': 'Fem', 'MmsmAdam': 'Adam', 'MmsmSgd': 'Sgd', 'MmsmJax': 'Jax', 'MmsmJaxJit': 'JaxJit', 'MmsmJaxGrad': 'JaxGrad', 'MmsmJaxVmap': 'JaxVmap', 'MmsmOpenFoam': 'OpenFoam', 'MmsmOpenFoamIcoFoam': 'OpenFoamIcoFoam', 'MmsmOpenFoamSimpleFoam': 'OpenFoamSimpleFoam', 'MmsmLibTorch': 'LibTorch'},
-    'MathModelSource': {'MmsManual': 'Manual'},
-    'MathModelType': {'MmtLinearAlgebra': 'LinearAlgebra', 'MmtDlFeedforward': 'DlFeedforward', 'MmtLp': 'LinearProgram', 'MmtQp': 'QuadraticProgram', 'MmtSat': 'Sat', 'MmtCsp': 'Csp'},
-    'MathModelUsageContext': {'MmucInference': 'Inference', 'MmucOptimisation': 'Optimisation'},
-    'MathSpace': {'Eng2DEuclideanSpace': 'R2', 'Eng3DEuclideanSpace': 'R3'},
-    'MatrixPurpose': {'MpOriginal': 'Original', 'MpApproximate': 'Approximate', 'MpBlock': 'Block', 'MpPreconditioner': 'Preconditioner', 'MpCovariance': 'Covariance', 'MpStiffness': 'Stiffness', 'MpMass': 'Mass', 'MpDamping': 'Damping', 'MpStateTransition': 'StateTransition', 'MpControlInput': 'ControlInput', 'MpObservation': 'Observation', 'MpProcessNoise': 'ProcessNoise', 'MpMeasurementNoise': 'MeasurementNoise', 'MpSensitivity': 'Sensitivity'},
-    'MatrixType': {'MtDense': 'Dense', 'MtRectangular': 'Rectangular', 'MtSymmetric': 'Symmetric'},
-    'MeshAdaptationType': {'MatNone': 'None', 'MatHRefinement': 'HRefinement', 'MatHDerefinement': 'HDerefinement', 'MatPRefinement': 'PRefinement', 'MatPDerefinement': 'PDerefinement', 'MatRRefinement': 'RRefinement', 'MatAnisotropic': 'Anisotropic', 'MatBoundaryLayer': 'BoundaryLayer', 'MatFeatureBased': 'FeatureBased'},
-    'MeshPurpose': {'MpFEM': 'FEM', 'MpFVM': 'FVM', 'MpCFD': 'CFD', 'MpStructural': 'Structural'},
-    'MeshType': {'MtTriangle': 'Triangle', 'MtQuad': 'Quad', 'MtPolygon': 'Polygon', 'MtTetrahedron': 'Tetrahedron', 'MtHexahedron': 'Hexahedron'},
-    'MorphismType': {'MtEndo': 'Endo', 'MtGeneral': 'General'},
-    'NormDomain': {'NdVector': 'Vector', 'NdMatrix': 'Matrix', 'NdTensor': 'Tensor'},
-    'NormOrder': {'NoVecDefault': 'VecDefault', 'NoVec0': 'Vec0', 'NoVec1': 'Vec1', 'NoVec2': 'Vec2', 'NoVecInf': 'VecInf', 'NoVecNegInf': 'VecNegInf', 'NoMatFrobenius': 'MatFrobenius', 'NoMat1': 'Mat1', 'NoMat2': 'Mat2', 'NoMatInf': 'MatInf'},
-    'ParameterPurpose': {'PpMathModel': 'MathModel', 'PpPhysical': 'Physical', 'PpFluidProperty': 'FluidProperty', 'PpBoundaryCondition': 'BoundaryCondition', 'PpSolverControl': 'SolverControl', 'PpNumericalScheme': 'NumericalScheme', 'PpMesh': 'Mesh', 'PpControl': 'Control', 'PpMlHyperparameter': 'MlHyperparameter', 'PpLearningRate': 'LearningRate', 'PpWeightDecay': 'WeightDecay', 'PpBatchSize': 'BatchSize', 'PpEpochs': 'Epochs', 'PpMomentum': 'Momentum', 'PpDropoutRate': 'DropoutRate'},
-    'ParameterType': {'PtTextShort': 'TextShort', 'PtNumberDecimal': 'NumberDecimal', 'PtNumberInteger': 'NumberInteger', 'PtEnumeration': 'Enumeration', 'PtVector': 'Vector', 'PtMatrix': 'Matrix'},
-    'TensorDecompMethod': {'TdmHosvd': 'Hosvd', 'TdmCP': 'CP', 'TdmTucker': 'Tucker', 'TdmTT': 'TensorTrain', 'TdmHT': 'HierarchicalTucker'},
-    'TensorPurpose': {'TpOriginal': 'Original', 'TpGradient': 'Gradient', 'TpHessian': 'Hessian', 'TpStress': 'Stress', 'Strain': 'Strain', 'Inertia': 'Inertia', 'ModelParams': 'ModelParams', 'ImageRep': 'ImageRep', 'PhysicalState': 'PhysicalState', 'FuncSampling': 'FuncSampling', 'Covariance': 'Covariance', 'StateMatrix': 'StateMatrix', 'InputMatrix': 'InputMatrix', 'OutputMatrix': 'OutputMatrix', 'FeedforwardMatrix': 'FeedforwardMatrix', 'StateVector': 'StateVector', 'ControlVector': 'ControlVector', 'FeedbackGain': 'FeedbackGain', 'ObserverGain': 'ObserverGain', 'CovarianceProcess': 'CovarianceProcess', 'CovarianceMeasurement': 'CovarianceMeasurement'},
-    'TransformationOperandType': {'TotLeftMatrix': 'LeftMatrix', 'TotRightMatrix': 'RightMatrix', 'TotLeftTensor': 'LeftTensor', 'TotKernelTensor': 'KernelTensor', 'TotBiasTensor': 'BiasTensor', 'TotSingle': 'Single'},
-    'TransformationPurpose': {'TpCoordTransform': 'CoordTransform', 'TpGeometricModeling': 'GeometricModeling', 'TpSymbolicSimplification': 'SymbolicSimplification', 'TpFrameChange': 'FrameChange', 'TpDataCompression': 'DataCompression', 'TpEigenAnalysis': 'EigenAnalysis', 'TpEquation': 'Equation', 'TpConstraint': 'Constraint', 'TpPredicate': 'Predicate', 'TpTypeJudgement': 'TypeJudgement'},
-    'TransformationType': {'TtMatrixProduct': 'MatrixProduct', 'TtTensorReLu': 'TensorReLu', 'TtTensorSigmoid': 'TensorSigmoid', 'TtTensorGelu': 'TensorGelu', 'TtTensorSilu': 'TensorSilu', 'TtTensorTanh': 'TensorTanh', 'TtTensorLeakyReLu': 'TensorLeakyReLu', 'TtTensorElu': 'TensorElu', 'TtTensorSoftmax': 'TensorSoftmax', 'TtTensorLogSoftmax': 'TensorLogSoftmax', 'TtLayerNorm': 'LayerNorm', 'TtRMSNorm': 'RMSNorm', 'TtBatchNorm': 'BatchNorm', 'TtGroupNorm': 'GroupNorm', 'TtAffine': 'Affine', 'GaussianBlur': 'GaussianBlur', 'Sobel': 'Sobel', 'Canny': 'Canny', 'WarpAffine': 'WarpAffine', 'WarpPerspective': 'WarpPerspective', 'Filter2D': 'Filter2D', 'Conv1d': 'Conv1d', 'Conv2d': 'Conv2d', 'MaxPool2d': 'MaxPool2d', 'AvgPool2d': 'AvgPool2d', 'AdaptiveAvgPool2d': 'AdaptiveAvgPool2d', 'AttentionMask': 'AttentionMask', 'ScaledDotProductAttention': 'ScaledDotProductAttention', 'Embedding': 'Embedding', 'TensorAdd': 'TensorAdd', 'TensorSub': 'TensorSub', 'TensorMul': 'TensorMul', 'TensorDiv': 'TensorDiv', 'TensorPow': 'TensorPow', 'TensorConcat': 'TensorConcat', 'TensorSplit': 'TensorSplit', 'TensorSqueeze': 'TensorSqueeze', 'TensorUnsqueeze': 'TensorUnsqueeze', 'TensorSum': 'TensorSum', 'TensorMean': 'TensorMean', 'TensorMax': 'TensorMax', 'TensorMin': 'TensorMin', 'LossMse': 'LossMse', 'LossCrossEntropy': 'LossCrossEntropy', 'LossBceWithLogits': 'LossBceWithLogits', 'LossL1': 'LossL1', 'OptimizerSgd': 'OptimizerSgd', 'OptimizerAdam': 'OptimizerAdam', 'OptimizerAdamW': 'OptimizerAdamW', 'Svd': 'Svd', 'LuDecomp': 'LuDecomp', 'QrDecomp': 'QrDecomp', 'CholeskyDecomp': 'CholeskyDecomp', 'EigenvalueDecomp': 'EigenvalueDecomp', 'DiagExtract': 'DiagExtract', 'TtMatrixUpperTriang': 'UpperTriangExtract', 'TtMatrixLowerTriang': 'LowerTriangExtract', 'TtMatrixBandExtract': 'BandExtract', 'TtBlockMatrixExtr': 'BlockMatrixExtract', 'Norm': 'Norm', 'Composition': 'Composition', 'TensorDecomp': 'TensorDecomp'},
-    'TriangularExtractionType': {'TetUpper': 'Upper', 'TetLower': 'Lower'},
-    'VariableDomain': {'VdContinuous': 'Continuous', 'VdInteger': 'Integer', 'VdBinary': 'Binary', 'VdSemiContinuous': 'SemiContinuous'}
-}
+def is_valid_ident(s):
+    return bool(re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', s)) and s not in reserved
 
-def compute_lcp(strings):
-    if not strings: return ''
-    if len(strings) == 1:
-        s = strings[0]
-        for i in range(1, len(s)):
-            if s[i].isupper(): return s[:i]
-        return ''
-    prefix = strings[0]
-    for s in strings[1:]:
+def compute_word_boundary_prefix(ids):
+    if not ids: return ''
+    p = ids[0]
+    for s in ids[1:]:
         j = 0
-        while j < len(prefix) and j < len(s) and prefix[j] == s[j]:
+        while j < len(p) and j < len(s) and p[j] == s[j]:
             j += 1
-        prefix = prefix[:j]
-        if not prefix: break
-    return prefix
+        p = p[:j]
+        if not p: break
+    
+    for k in range(len(p), -1, -1):
+        sub_p = p[:k]
+        ok = True
+        for s in ids:
+            rem = s[len(sub_p):]
+            if not rem or not rem[0].isupper() or not is_valid_ident(rem):
+                ok = False
+                break
+        if ok:
+            return sub_p
+    return ''
 
 def clean_identifier(name):
     clean = re.sub(r'[^a-zA-Z0-9_]', '_', name)
@@ -298,17 +273,18 @@ def generate_enum_class(type_id, enum_list, out_class_name=None):
     if not clean_identifier(cname) == cname:
         cname = clean_identifier(cname)
     
-    known = legacy_mappings.get(type_id, {})
-    if cname in legacy_mappings:
-        known = {**legacy_mappings[cname], **known}
-    if type_id == 'TensorDataType' and 'DataType' in legacy_mappings:
-        known = {**legacy_mappings['DataType'], **known}
-    if type_id == 'TensorDevice' and 'DeviceType' in legacy_mappings:
-        known = {**legacy_mappings['DeviceType'], **known}
-    if type_id == 'SpaceDimension' and 'MathSpace' in legacy_mappings:
-        known = {**legacy_mappings['MathSpace'], **known}
+    ids = [e['enumId'] for e in enum_list]
+    prefix = compute_word_boundary_prefix(ids)
+    can_strip = bool(prefix)
+    if can_strip:
+        rem_set = set()
+        for e in enum_list:
+            rem = e['enumId'][len(prefix):]
+            if rem in rem_set:
+                can_strip = False
+                break
+            rem_set.add(rem)
 
-    lcp = compute_lcp([e['enumId'] for e in enum_list])
     seen = set()
     constants = []
 
@@ -319,17 +295,31 @@ def generate_enum_class(type_id, enum_list, out_class_name=None):
         parent = e.get('parentEnumId', '')
         
         name = None
-        if eid in known:
-            name = known[eid]
-        elif lcp and eid.startswith(lcp) and len(eid) > len(lcp) and eid[len(lcp)].isalpha():
-            cand = eid[len(lcp):]
-            if cand not in seen:
-                name = cand
+        # Rule 1: stripped word-boundary prefix if valid and unique for all items
+        if can_strip:
+            rem = eid[len(prefix):]
+            if rem and rem[0].isupper() and is_valid_ident(rem) and rem not in seen:
+                name = rem
+        # Rule 2: enumCode if present, valid and starts with uppercase
+        elif code and is_valid_ident(code) and code[0].isupper() and code not in seen:
+            name = code
+        # Rule 3: full enumId
         if not name:
-            name = eid
+            if is_valid_ident(eid) and eid[0].isupper() and eid not in seen:
+                name = eid
+            else:
+                cleaned = clean_identifier(eid)
+                if not cleaned[0].isupper():
+                    cleaned = cleaned.capitalize()
+                name = cleaned
 
-        name = clean_identifier(name)
-        if name in seen:
+        # Rule 4: description normalized in CamelCase as last resort if needed
+        if not name or name in seen:
+            desc_camel = ''.join(w.capitalize() for w in re.split(r'[^a-zA-Z0-9]+', desc) if w)
+            if desc_camel and is_valid_ident(desc_camel) and desc_camel[0].isupper() and desc_camel not in seen:
+                name = desc_camel
+
+        if not name:
             name = clean_identifier(eid)
         if name in seen:
             name = f"{name}_{clean_identifier(eid)}"

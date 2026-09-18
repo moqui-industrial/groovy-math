@@ -8,12 +8,12 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 enum MeshContentType implements DslEnumValue {
-    ntCustom('MCntCustom', 'Custom', 'Custom', ''),
-    tnGltf('MCtnGltf', 'Gltf', 'GLTF Binary (GLB)', ''),
-    ntObj('MCntObj', 'Obj', 'Wavefront OBJ Compressed (gzip)', ''),
-    ntVtk('MCntVtk', 'Vtk', 'VTK / VTU Binary', ''),
-    ntStl('MCntStl', 'Stl', 'STL Binary', ''),
-    ntPly('MCntPly', 'Ply', 'PLY Binary Little Endian', '');
+    CntCustom('MCntCustom', 'Custom', 'Custom', ''),
+    CtnGltf('MCtnGltf', 'Gltf', 'GLTF Binary (GLB)', ''),
+    CntObj('MCntObj', 'Obj', 'Wavefront OBJ Compressed (gzip)', ''),
+    CntVtk('MCntVtk', 'Vtk', 'VTK / VTU Binary', ''),
+    CntStl('MCntStl', 'Stl', 'STL Binary', ''),
+    CntPly('MCntPly', 'Ply', 'PLY Binary Little Endian', '');
 
     final String id
     final String enumCode

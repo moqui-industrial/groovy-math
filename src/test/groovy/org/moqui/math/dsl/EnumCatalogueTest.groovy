@@ -163,6 +163,30 @@ class EnumCatalogueTest {
         assert vdContinuous.id == 'VdContinuous'
     }
 
+    @Test
+    void constantNamesAreWellFormedAndDerivedFromSchema() {
+        ModelDefinition model = MoquiSchemaInspector.embedded()
+        List<String> malformed = []
+
+        dslEnumClasses().each { Class<?> type ->
+            type.enumConstants.each { Object constant ->
+                String name = ((Enum) constant).name()
+                if (!Character.isUpperCase(name.charAt(0))) {
+                    malformed.add("${type.simpleName}.${name} does not start with uppercase".toString())
+                }
+                for (int i = 0; i < name.length(); i++) {
+                    char c = name.charAt(i)
+                    if (i == 0 && !Character.isJavaIdentifierStart(c)) {
+                        malformed.add("${type.simpleName}.${name} invalid identifier start".toString())
+                    } else if (!Character.isJavaIdentifierPart(c)) {
+                        malformed.add("${type.simpleName}.${name} invalid character '${c}'".toString())
+                    }
+                }
+            }
+        }
+        assert malformed.isEmpty() : "Malformed constant names in generated enums:\n${malformed.join('\n')}"
+    }
+
     private static List<Class<?>> dslEnumClasses() {
         List<Class<?>> found = []
         new File('src/main/groovy/org/moqui/math/dsl').listFiles()

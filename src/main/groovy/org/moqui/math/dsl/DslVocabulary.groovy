@@ -48,36 +48,10 @@ final class DslVocabulary {
             entityKeywords.put(ed.name, ed)
             entityKeywords.put(uncapitalize(ed.name), ed)
 
-            if (ed.name.startsWith('Math') && ed.name.length() > 4) {
-                String stripped = ed.name.substring(4)
-                entityKeywords.putIfAbsent(stripped, ed)
-                entityKeywords.putIfAbsent(uncapitalize(stripped), ed)
-            }
-            if (ed.name.startsWith('Graph') && ed.name.length() > 5) {
-                String stripped = ed.name.substring(5)
-                entityKeywords.putIfAbsent(stripped, ed)
-                entityKeywords.putIfAbsent(uncapitalize(stripped), ed)
-            }
             if (ed.shortAlias) {
                 entityKeywords.putIfAbsent(ed.shortAlias, ed)
                 entityKeywords.putIfAbsent(uncapitalize(ed.shortAlias), ed)
             }
-        }
-
-        if (modelDefinition.hasEntity('moqui.math.ct.CategoryObject')) {
-            EntityDefinition ed = modelDefinition.entity('moqui.math.ct.CategoryObject')
-            entityKeywords.put('object', ed)
-            entityKeywords.put('Object', ed)
-        }
-        if (modelDefinition.hasEntity('moqui.math.GraphVertex')) {
-            EntityDefinition ed = modelDefinition.entity('moqui.math.GraphVertex')
-            entityKeywords.put('vertex', ed)
-            entityKeywords.put('Vertex', ed)
-        }
-        if (modelDefinition.hasEntity('moqui.math.GraphEdge')) {
-            EntityDefinition ed = modelDefinition.entity('moqui.math.GraphEdge')
-            entityKeywords.put('edge', ed)
-            entityKeywords.put('Edge', ed)
         }
     }
 
@@ -220,7 +194,7 @@ final class DslVocabulary {
         }
 
         byType.each { String type, List<EnumerationDefinition> list ->
-            String lcp = computeLongestCommonPrefix(list.collect { it.enumId })
+            String lcp = computeWordBoundaryPrefix(list.collect { it.enumId })
 
             // Check if stripped prefix produces unique names within this enumTypeId
             Map<String, Integer> strippedCounts = new LinkedHashMap<>()
@@ -297,12 +271,6 @@ final class DslVocabulary {
             }
         }
 
-        // Common domain aliases & synonyms
-        addSymbol('minimise', 'MINIMIZE', 'OptimizationObjectiveSense')
-        addSymbol('minimize', 'MINIMIZE', 'OptimizationObjectiveSense')
-        addSymbol('maximise', 'MAXIMIZE', 'OptimizationObjectiveSense')
-        addSymbol('maximize', 'MAXIMIZE', 'OptimizationObjectiveSense')
-
         // Status items (MathModelStatus, etc.)
         for (StatusDefinition sd : modelDefinition.statuses.values()) {
             String type = sd.statusTypeId ?: 'Status'
@@ -327,28 +295,40 @@ final class DslVocabulary {
         }
     }
 
-    private static String computeLongestCommonPrefix(final List<String> strings) {
-        if (!strings || strings.isEmpty()) return ''
-        if (strings.size() == 1) {
-            String single = strings[0]
-            for (int i = 1; i < single.length(); i++) {
-                if (Character.isUpperCase(single.charAt(i))) {
-                    return single.substring(0, i)
+    private static List<String> splitCamelWords(final String s) {
+        if (!s) return []
+        List<String> words = []
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile(/[A-Z](?:[A-Z0-9]+(?=[A-Z][a-z0-9]|$)|[a-z0-9]*)|\d+/).matcher(s)
+        while (m.find()) {
+            words.add(m.group())
+        }
+        if (words.isEmpty()) words.add(s)
+        words
+    }
+
+    private static String computeWordBoundaryPrefix(final List<String> strings) {
+        if (!strings || strings.size() < 2) return ''
+        List<List<String>> allWords = strings.collect { splitCamelWords(it) }
+        List<String> firstWords = allWords[0]
+        int matchCount = 0
+        for (int w = 0; w < firstWords.size(); w++) {
+            String candidateWord = firstWords[w]
+            boolean allMatch = true
+            for (int i = 1; i < allWords.size(); i++) {
+                List<String> words = allWords[i]
+                if (words.size() <= w || words[w] != candidateWord) {
+                    allMatch = false
+                    break
                 }
             }
-            return ''
-        }
-        String prefix = strings[0]
-        for (int i = 1; i < strings.size(); i++) {
-            String current = strings[i]
-            int j = 0
-            while (j < prefix.length() && j < current.length() && prefix.charAt(j) == current.charAt(j)) {
-                j++
+            if (allMatch) {
+                matchCount++
+            } else {
+                break
             }
-            prefix = prefix.substring(0, j)
-            if (prefix.isEmpty()) break
         }
-        prefix
+        if (matchCount == 0) return ''
+        firstWords.take(matchCount).join('')
     }
 
     private static String toCamelCase(final String s) {

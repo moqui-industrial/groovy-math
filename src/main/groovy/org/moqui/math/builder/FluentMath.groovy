@@ -247,7 +247,7 @@ class FluentMath {
     EntityRef<TriangularExtraction> triangularExtraction(final Map<String, Object> args, final String transformationId = null,
                                                          @DelegatesTo(value = TriangularExtractionBuilder, strategy = Closure.DELEGATE_FIRST) final Closure<?> closure = null) {
         String id = transformationId ?: (args?.get('transformationId') as String) ?: (args?.get('id') as String)
-        ensureTransformation(id, args, TransformationType.UpperTriangExtract)
+        ensureTransformation(id, args, TransformationType.MatrixUpperTriang)
         TriangularExtractionBuilder builder = new TriangularExtractionBuilder(mathMeta, id)
         if (args) builder.applyArgs(args)
         if (closure) {
@@ -267,7 +267,7 @@ class FluentMath {
     EntityRef<BandExtraction> bandExtraction(final Map<String, Object> args, final String transformationId = null,
                                              @DelegatesTo(value = BandExtractionBuilder, strategy = Closure.DELEGATE_FIRST) final Closure<?> closure = null) {
         String id = transformationId ?: (args?.get('transformationId') as String) ?: (args?.get('id') as String)
-        ensureTransformation(id, args, TransformationType.BandExtract)
+        ensureTransformation(id, args, TransformationType.MatrixBandExtract)
         BandExtractionBuilder builder = new BandExtractionBuilder(mathMeta, id)
         if (args) builder.applyArgs(args)
         if (closure) {
@@ -287,7 +287,7 @@ class FluentMath {
     EntityRef<BlockMatrixExtraction> blockMatrixExtraction(final Map<String, Object> args, final String transformationId = null,
                                                            @DelegatesTo(value = BlockMatrixExtractionBuilder, strategy = Closure.DELEGATE_FIRST) final Closure<?> closure = null) {
         String id = transformationId ?: (args?.get('transformationId') as String) ?: (args?.get('id') as String)
-        ensureTransformation(id, args, TransformationType.BlockMatrixExtract)
+        ensureTransformation(id, args, TransformationType.BlockMatrixExtr)
         BlockMatrixExtractionBuilder builder = new BlockMatrixExtractionBuilder(mathMeta, id)
         if (args) builder.applyArgs(args)
         if (closure) {

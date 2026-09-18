@@ -14,16 +14,16 @@ class CanonicalDumpTest {
     @Test
     void testCanonicalDumpDeterminismAndEquality() {
         MathMeta meta1 = MathDsl.math {
-            modelDef('ModelDefA', modelType: LinearAlgebra) {
-                model('ModelA', description: 'Model A') {
+            MathModelDef('ModelDefA', modelType: LinearAlgebra) {
+                MathModel('ModelA', description: 'Model A') {
                     Matrix('Mat1', domainSpace: R2, codomainSpace: R2, rows: 2, cols: 2, name: 'Mat1', symbol: 'M1')
                 }
             }
         }
 
         MathMeta meta2 = MathDsl.math {
-            modelDef('ModelDefA', modelType: LinearAlgebra) {
-                model('ModelA', description: 'Model A') {
+            MathModelDef('ModelDefA', modelType: LinearAlgebra) {
+                MathModel('ModelA', description: 'Model A') {
                     Matrix('Mat1', domainSpace: R2, codomainSpace: R2, rows: 2, cols: 2, name: 'Mat1', symbol: 'M1')
                 }
             }
@@ -40,10 +40,10 @@ class CanonicalDumpTest {
     @Test
     void testNakedSymbolsInMathDsl() {
         MathMeta meta = MathDsl.math {
-            modelDef('QPModelDef', modelType: QuadraticProgram) {
-                model('QPModel', description: 'QP Model') {
+            MathModelDef('QPModelDef', modelType: QuadraticProgram) {
+                MathModel('QPModel', description: 'QP Model') {
                     Matrix('Q', matrixTypeEnum: MatrixType.Dense, domainSpace: R2, codomainSpace: R2, rows: 2, cols: 2, name: 'Q', symbol: 'Q')
-                    parameters('objSense', parameterDefId: 'OptDef', symbolicValue: minimise)
+                    parameters('objSense', parameterDefId: 'OptDef', symbolicValue: minimize)
                 }
             }
         }

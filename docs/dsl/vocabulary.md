@@ -17,14 +17,11 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `CategoryConstructionOperand` | `moqui.math.ct.CategoryConstructionOperand` | `-` |
 | `CategoryObject` | `moqui.math.ct.CategoryObject` | `-` |
 | `Comonad` | `moqui.math.ct.Comonad` | `-` |
-| `Content` | `moqui.math.GraphContent` | `-` |
 | `CoordinateSystem` | `moqui.math.CoordinateSystem` | `-` |
 | `CoordinateSystemBaseVector` | `moqui.math.CoordinateSystemBaseVector` | `-` |
 | `CoordinateSystemMetric` | `moqui.math.CoordinateSystemMetric` | `-` |
 | `CoordinateSystemTransformation` | `moqui.math.CoordinateSystemTransformation` | `-` |
 | `DiagonalExtraction` | `moqui.math.DiagonalExtraction` | `-` |
-| `Edge` | `moqui.math.GraphEdge` | `-` |
-| `EdgeMorphism` | `moqui.math.GraphEdgeMorphism` | `-` |
 | `EndofunctorAlgebra` | `moqui.math.ct.EndofunctorAlgebra` | `-` |
 | `EnumGroupMember` | `moqui.basic.EnumGroupMember` | `-` |
 | `Enumeration` | `moqui.basic.Enumeration` | `enums` |
@@ -65,15 +62,6 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `MeshKCellTexture` | `moqui.math.MeshKCellTexture` | `-` |
 | `MeshKCellVertex` | `moqui.math.MeshKCellVertex` | `-` |
 | `MeshQuality` | `moqui.math.MeshQuality` | `-` |
-| `Model` | `moqui.math.MathModel` | `-` |
-| `ModelData` | `moqui.math.MathModelData` | `-` |
-| `ModelDef` | `moqui.math.MathModelDef` | `-` |
-| `ModelDefContent` | `moqui.math.MathModelDefContent` | `-` |
-| `ModelDefIdentification` | `moqui.math.MathModelDefIdentification` | `-` |
-| `ModelDefPipeline` | `moqui.math.MathModelDefPipeline` | `-` |
-| `ModelEvent` | `moqui.math.MathModelEvent` | `-` |
-| `ModelPerf` | `moqui.math.MathModelPerf` | `-` |
-| `ModelRun` | `moqui.math.MathModelRun` | `-` |
 | `Monad` | `moqui.math.ct.Monad` | `-` |
 | `Morphism` | `moqui.math.ct.Morphism` | `-` |
 | `MorphismComposition` | `moqui.math.ct.MorphismComposition` | `-` |
@@ -84,7 +72,6 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `NaturalTransformationComponent` | `moqui.math.ct.NaturalTransformationComponent` | `-` |
 | `NaturalTransformationComposition` | `moqui.math.ct.NaturalTransformationComposition` | `-` |
 | `NormResult` | `moqui.math.NormResult` | `-` |
-| `Object` | `moqui.math.ct.CategoryObject` | `-` |
 | `Parameter` | `moqui.math.Parameter` | `parameters` |
 | `ParameterDef` | `moqui.math.ParameterDef` | `-` |
 | `ParameterLog` | `moqui.math.ParameterLog` | `parameterLog` |
@@ -124,8 +111,6 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `Vector` | `moqui.math.Vector` | `vectors` |
 | `VectorComponent` | `moqui.math.VectorComponent` | `-` |
 | `VectorContent` | `moqui.math.VectorContent` | `-` |
-| `Vertex` | `moqui.math.GraphVertex` | `-` |
-| `VertexCategoryObject` | `moqui.math.GraphVertexCategoryObject` | `-` |
 | `adjunction` | `moqui.math.ct.Adjunction` | `-` |
 | `approxFunctions` | `moqui.math.ApproximatedFunction` | `approxFunctions` |
 | `approximatedFunction` | `moqui.math.ApproximatedFunction` | `approxFunctions` |
@@ -138,14 +123,11 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `categoryConstructionOperand` | `moqui.math.ct.CategoryConstructionOperand` | `-` |
 | `categoryObject` | `moqui.math.ct.CategoryObject` | `-` |
 | `comonad` | `moqui.math.ct.Comonad` | `-` |
-| `content` | `moqui.math.GraphContent` | `-` |
 | `coordinateSystem` | `moqui.math.CoordinateSystem` | `-` |
 | `coordinateSystemBaseVector` | `moqui.math.CoordinateSystemBaseVector` | `-` |
 | `coordinateSystemMetric` | `moqui.math.CoordinateSystemMetric` | `-` |
 | `coordinateSystemTransformation` | `moqui.math.CoordinateSystemTransformation` | `-` |
 | `diagonalExtraction` | `moqui.math.DiagonalExtraction` | `-` |
-| `edge` | `moqui.math.GraphEdge` | `-` |
-| `edgeMorphism` | `moqui.math.GraphEdgeMorphism` | `-` |
 | `endofunctorAlgebra` | `moqui.math.ct.EndofunctorAlgebra` | `-` |
 | `enumGroupMember` | `moqui.basic.EnumGroupMember` | `-` |
 | `enumeration` | `moqui.basic.Enumeration` | `enums` |
@@ -189,15 +171,6 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `meshKCellTexture` | `moqui.math.MeshKCellTexture` | `-` |
 | `meshKCellVertex` | `moqui.math.MeshKCellVertex` | `-` |
 | `meshQuality` | `moqui.math.MeshQuality` | `-` |
-| `model` | `moqui.math.MathModel` | `-` |
-| `modelData` | `moqui.math.MathModelData` | `-` |
-| `modelDef` | `moqui.math.MathModelDef` | `-` |
-| `modelDefContent` | `moqui.math.MathModelDefContent` | `-` |
-| `modelDefIdentification` | `moqui.math.MathModelDefIdentification` | `-` |
-| `modelDefPipeline` | `moqui.math.MathModelDefPipeline` | `-` |
-| `modelEvent` | `moqui.math.MathModelEvent` | `-` |
-| `modelPerf` | `moqui.math.MathModelPerf` | `-` |
-| `modelRun` | `moqui.math.MathModelRun` | `-` |
 | `monad` | `moqui.math.ct.Monad` | `-` |
 | `moqui.basic.EnumGroupMember` | `moqui.basic.EnumGroupMember` | `-` |
 | `moqui.basic.Enumeration` | `moqui.basic.Enumeration` | `enums` |
@@ -313,7 +286,6 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `naturalTransformationComponent` | `moqui.math.ct.NaturalTransformationComponent` | `-` |
 | `naturalTransformationComposition` | `moqui.math.ct.NaturalTransformationComposition` | `-` |
 | `normResult` | `moqui.math.NormResult` | `-` |
-| `object` | `moqui.math.ct.CategoryObject` | `-` |
 | `parameter` | `moqui.math.Parameter` | `parameters` |
 | `parameterDef` | `moqui.math.ParameterDef` | `-` |
 | `parameterLog` | `moqui.math.ParameterLog` | `parameterLog` |
@@ -361,8 +333,6 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `vectorComponent` | `moqui.math.VectorComponent` | `-` |
 | `vectorContent` | `moqui.math.VectorContent` | `-` |
 | `vectors` | `moqui.math.Vector` | `vectors` |
-| `vertex` | `moqui.math.GraphVertex` | `-` |
-| `vertexCategoryObject` | `moqui.math.GraphVertexCategoryObject` | `-` |
 
 ## 2. Transformation Entities & Derived Functions
 
@@ -409,13 +379,13 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `AsZ3Group` | `AsZ3Group` | `asZ3Group`, `CyclicAbelianGroupOfIntegersModulo3UnderAddition`, `cyclicAbelianGroupOfIntegersModulo3UnderAddition` |
 | `AsZ5Field` | `AsZ5Field` | `asZ5Field`, `FiniteFieldOfIntegersModulo5`, `finiteFieldOfIntegersModulo5` |
 | `AsZ7Field` | `AsZ7Field` | `asZ7Field`, `FieldZ7Z`, `fieldZ7Z` |
-| `EuclideanSpace2D` | `EuclideanSpace2D` | `euclideanSpace2D`, `Euclidean2DSpace`, `euclidean2DSpace` |
-| `EuclideanSpace3D` | `EuclideanSpace3D` | `euclideanSpace3D`, `Euclidean3DSpace`, `euclidean3DSpace` |
-| `EuclideanSpaceND` | `EuclideanSpaceND` | `euclideanSpaceND`, `EuclideanNDSpace`, `euclideanNDSpace`, `NDimensionalRealEuclideanSpace`, `nDimensionalRealEuclideanSpace` |
-| `QuaternionEuclideanSpace` | `QuaternionEuclideanSpace` | `quaternionEuclideanSpace`, `EuclideanQuaternionSpace`, `euclideanQuaternionSpace`, `QuaternionCoordinatesRepresentedAsTheFourDimensionalRealEuclideanSpaceR4`, `quaternionCoordinatesRepresentedAsTheFourDimensionalRealEuclideanSpaceR4` |
-| `VsEuclideanSpace` | `VsEuclideanSpace` | `vsEuclideanSpace`, `EuclideanSpace`, `euclideanSpace`, `FiniteDimensionalRealInnerProductVectorSpace`, `finiteDimensionalRealInnerProductVectorSpace` |
-| `VsStateSpace` | `VsStateSpace` | `vsStateSpace`, `StateSpace`, `stateSpace`, `StateSpaceItsMathematicalStructureIsDefinedByTheSelectedModel`, `stateSpaceItsMathematicalStructureIsDefinedByTheSelectedModel` |
-| `VsThermodynamicSpace` | `VsThermodynamicSpace` | `vsThermodynamicSpace`, `ThermodynamicSpace`, `thermodynamicSpace`, `ThermodynamicStateSpaceDimensionalityAndConstraintsAreDefinedByTheSelectedStateVariablesAndModel`, `thermodynamicStateSpaceDimensionalityAndConstraintsAreDefinedByTheSelectedStateVariablesAndModel` |
+| `Euclidean2DSpace` | `EuclideanSpace2D` | `euclidean2DSpace`, `EuclideanSpace2D`, `euclideanSpace2D` |
+| `Euclidean3DSpace` | `EuclideanSpace3D` | `euclidean3DSpace`, `EuclideanSpace3D`, `euclideanSpace3D` |
+| `EuclideanNDSpace` | `EuclideanSpaceND` | `euclideanNDSpace`, `EuclideanSpaceND`, `euclideanSpaceND`, `NDimensionalRealEuclideanSpace`, `nDimensionalRealEuclideanSpace` |
+| `EuclideanQuaternionSpace` | `QuaternionEuclideanSpace` | `euclideanQuaternionSpace`, `QuaternionEuclideanSpace`, `quaternionEuclideanSpace`, `QuaternionCoordinatesRepresentedAsTheFourDimensionalRealEuclideanSpaceR4`, `quaternionCoordinatesRepresentedAsTheFourDimensionalRealEuclideanSpaceR4` |
+| `EuclideanSpace` | `VsEuclideanSpace` | `euclideanSpace`, `VsEuclideanSpace`, `vsEuclideanSpace`, `FiniteDimensionalRealInnerProductVectorSpace`, `finiteDimensionalRealInnerProductVectorSpace` |
+| `StateSpace` | `VsStateSpace` | `stateSpace`, `VsStateSpace`, `vsStateSpace`, `StateSpaceItsMathematicalStructureIsDefinedByTheSelectedModel`, `stateSpaceItsMathematicalStructureIsDefinedByTheSelectedModel` |
+| `ThermodynamicSpace` | `VsThermodynamicSpace` | `thermodynamicSpace`, `VsThermodynamicSpace`, `vsThermodynamicSpace`, `ThermodynamicStateSpaceDimensionalityAndConstraintsAreDefinedByTheSelectedStateVariablesAndModel`, `thermodynamicStateSpaceDimensionalityAndConstraintsAreDefinedByTheSelectedStateVariablesAndModel` |
 
 ### Domain: `ApproxFuncCodomainType`
 
@@ -454,44 +424,44 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `Afi5thDegPolyPath` | `Afi5thDegPolyPath` | `afi5thDegPolyPath`, `5thDegPolyPath`, `PolynomialOf5thDegreePath`, `polynomialOf5thDegreePath` |
-| `Afi7thDegPolyPath` | `Afi7thDegPolyPath` | `afi7thDegPolyPath`, `7thDegPolyPath`, `PolynomialOfDegreeSevenPath`, `polynomialOfDegreeSevenPath` |
-| `AIPath` | `AfiAIPath` | `aIPath`, `AfiAIPath`, `afiAIPath`, `AIOptimizedPath`, `aIOptimizedPath` |
-| `AdaptivePath` | `AfiAdaptivePath` | `adaptivePath`, `AfiAdaptivePath`, `afiAdaptivePath`, `AdaptiveLearningBasedPath`, `adaptiveLearningBasedPath` |
-| `ApproxCubicSplinesPath` | `AfiApproxCubicSplinesPath` | `approxCubicSplinesPath`, `AfiApproxCubicSplinesPath`, `afiApproxCubicSplinesPath`, `ApproximatedCubicSplinesPath`, `approximatedCubicSplinesPath` |
-| `ApproxOrthogonalPolyPath` | `AfiApproxOrthogonalPolyPath` | `approxOrthogonalPolyPath`, `AfiApproxOrthogonalPolyPath`, `afiApproxOrthogonalPolyPath`, `ApproximatedOrthogonalPolynomialsPath`, `approximatedOrthogonalPolynomialsPath` |
-| `ApproxPath` | `AfiApproxPath` | `approxPath`, `AfiApproxPath`, `afiApproxPath`, `MultipointApproximatedPath`, `multipointApproximatedPath` |
-| `ApproxPolyPath` | `AfiApproxPolyPath` | `approxPolyPath`, `AfiApproxPolyPath`, `afiApproxPolyPath`, `ApproximatedPolynomialPath`, `approximatedPolynomialPath` |
-| `ApproxTrigPolynomialPath` | `AfiApproxTrigPolynomialPath` | `approxTrigPolynomialPath`, `AfiApproxTrigPolynomialPath`, `afiApproxTrigPolynomialPath`, `ApproximatedTrigonometricPolynomialPath`, `approximatedTrigonometricPolynomialPath` |
-| `AsymmetricPath` | `AfiAsymmetricPath` | `asymmetricPath`, `AfiAsymmetricPath`, `afiAsymmetricPath`, `PathWithAsymmetricConstantAcceleration`, `pathWithAsymmetricConstantAcceleration` |
-| `BSplinePath` | `AfiBSplinePath` | `bSplinePath`, `AfiBSplinePath`, `afiBSplinePath` |
-| `BezierPath` | `AfiBezierPath` | `bezierPath`, `AfiBezierPath`, `afiBezierPath`, `BZierCurvePath`, `bZierCurvePath` |
-| `CatmullRomSpline` | `AfiCatmullRomSpline` | `catmullRomSpline`, `AfiCatmullRomSpline`, `afiCatmullRomSpline`, `CatmullRomSplineCurvePath`, `catmullRomSplineCurvePath` |
-| `CubicPath` | `AfiCubicPath` | `cubicPath`, `AfiCubicPath`, `afiCubicPath` |
-| `CycloidalPath` | `AfiCycloidalPath` | `cycloidalPath`, `AfiCycloidalPath`, `afiCycloidalPath` |
-| `EllipticPath` | `AfiEllipticPath` | `ellipticPath`, `AfiEllipticPath`, `afiEllipticPath` |
-| `ExpPath` | `AfiExpPath` | `expPath`, `AfiExpPath`, `afiExpPath`, `ExponentialPath`, `exponentialPath` |
-| `FourierSeriesExpansionPath` | `AfiFourierSeriesExpansionPath` | `fourierSeriesExpansionPath`, `AfiFourierSeriesExpansionPath`, `afiFourierSeriesExpansionPath`, `PathBasedOnTheFourierSeriesExpansion`, `pathBasedOnTheFourierSeriesExpansion` |
-| `FreudensteinPath` | `AfiFreudensteinPath` | `freudensteinPath`, `AfiFreudensteinPath`, `afiFreudensteinPath` |
-| `GutmanPath` | `AfiGutmanPath` | `gutmanPath`, `AfiGutmanPath`, `afiGutmanPath` |
-| `HarmonicPath` | `AfiHarmonicPath` | `harmonicPath`, `AfiHarmonicPath`, `afiHarmonicPath` |
-| `HermiteSpline` | `AfiHermiteSpline` | `hermiteSpline`, `AfiHermiteSpline`, `afiHermiteSpline`, `HermiteSplineCurvePath`, `hermiteSplineCurvePath` |
-| `HighDegPolyPath` | `AfiHighDegPolyPath` | `highDegPolyPath`, `AfiHighDegPolyPath`, `afiHighDegPolyPath`, `PolynomialOfHigherDegreePath`, `polynomialOfHigherDegreePath` |
-| `InterpCubicSplinesPath` | `AfiInterpCubicSplinesPath` | `interpCubicSplinesPath`, `AfiInterpCubicSplinesPath`, `afiInterpCubicSplinesPath`, `InterpolatedCubicSplinesPath`, `interpolatedCubicSplinesPath` |
-| `InterpOrthogonalPolyPath` | `AfiInterpOrthogonalPolyPath` | `interpOrthogonalPolyPath`, `AfiInterpOrthogonalPolyPath`, `afiInterpOrthogonalPolyPath`, `InterpolatedOrthogonalPolynomialsPath`, `interpolatedOrthogonalPolynomialsPath` |
-| `InterpPath` | `AfiInterpPath` | `interpPath`, `AfiInterpPath`, `afiInterpPath`, `MultipointInterpolatedPath`, `multipointInterpolatedPath` |
-| `InterpPolyPath` | `AfiInterpPolyPath` | `interpPolyPath`, `AfiInterpPolyPath`, `afiInterpPolyPath`, `InterpolatedPolynomialPath`, `interpolatedPolynomialPath` |
-| `InterpTrigPolyPath` | `AfiInterpTrigPolyPath` | `interpTrigPolyPath`, `AfiInterpTrigPolyPath`, `afiInterpTrigPolyPath`, `InterpolatedTrigonometricPolynomialPath`, `interpolatedTrigonometricPolynomialPath` |
-| `LagrangePolynomial` | `AfiLagrangePolynomial` | `lagrangePolynomial`, `AfiLagrangePolynomial`, `afiLagrangePolynomial`, `LagrangePolynomialCurvePath`, `lagrangePolynomialCurvePath` |
-| `LearningPath` | `AfiLearningPath` | `learningPath`, `AfiLearningPath`, `afiLearningPath`, `ReinforcementLearningPath`, `reinforcementLearningPath` |
-| `LinearPath` | `AfiLinearPath` | `linearPath`, `AfiLinearPath`, `afiLinearPath` |
-| `MultipointPath` | `AfiMultipointPath` | `multipointPath`, `AfiMultipointPath`, `afiMultipointPath` |
-| `NurbsPath` | `AfiNurbsPath` | `nurbsPath`, `AfiNurbsPath`, `afiNurbsPath`, `NURBSPath`, `nURBSPath` |
-| `P2PPath` | `AfiP2PPath` | `p2PPath`, `AfiP2PPath`, `afiP2PPath`, `PointToPointPath`, `pointToPointPath` |
-| `ParabolicPath` | `AfiParabolicPath` | `parabolicPath`, `AfiParabolicPath`, `afiParabolicPath` |
-| `Piecewise` | `AfiPiecewise` | `piecewise`, `AfiPiecewise`, `afiPiecewise`, `LinearCurvePath`, `linearCurvePath` |
-| `PolyPath` | `AfiPolyPath` | `polyPath`, `AfiPolyPath`, `afiPolyPath`, `PolynomialPath`, `polynomialPath` |
-| `TrigPath` | `AfiTrigPath` | `trigPath`, `AfiTrigPath`, `afiTrigPath`, `TrigonometricPath`, `trigonometricPath` |
+| `Afi5thDegPolyPath` | `Afi5thDegPolyPath` | `afi5thDegPolyPath`, `PolynomialOf5thDegreePath`, `polynomialOf5thDegreePath` |
+| `Afi7thDegPolyPath` | `Afi7thDegPolyPath` | `afi7thDegPolyPath`, `PolynomialOfDegreeSevenPath`, `polynomialOfDegreeSevenPath` |
+| `AfiAIPath` | `AfiAIPath` | `afiAIPath`, `AIOptimizedPath`, `aIOptimizedPath` |
+| `AfiAdaptivePath` | `AfiAdaptivePath` | `afiAdaptivePath`, `AdaptiveLearningBasedPath`, `adaptiveLearningBasedPath` |
+| `AfiApproxCubicSplinesPath` | `AfiApproxCubicSplinesPath` | `afiApproxCubicSplinesPath`, `ApproximatedCubicSplinesPath`, `approximatedCubicSplinesPath` |
+| `AfiApproxOrthogonalPolyPath` | `AfiApproxOrthogonalPolyPath` | `afiApproxOrthogonalPolyPath`, `ApproximatedOrthogonalPolynomialsPath`, `approximatedOrthogonalPolynomialsPath` |
+| `AfiApproxPath` | `AfiApproxPath` | `afiApproxPath`, `MultipointApproximatedPath`, `multipointApproximatedPath` |
+| `AfiApproxPolyPath` | `AfiApproxPolyPath` | `afiApproxPolyPath`, `ApproximatedPolynomialPath`, `approximatedPolynomialPath` |
+| `AfiApproxTrigPolynomialPath` | `AfiApproxTrigPolynomialPath` | `afiApproxTrigPolynomialPath`, `ApproximatedTrigonometricPolynomialPath`, `approximatedTrigonometricPolynomialPath` |
+| `AfiAsymmetricPath` | `AfiAsymmetricPath` | `afiAsymmetricPath`, `PathWithAsymmetricConstantAcceleration`, `pathWithAsymmetricConstantAcceleration` |
+| `AfiBSplinePath` | `AfiBSplinePath` | `afiBSplinePath`, `BSplinePath`, `bSplinePath` |
+| `AfiBezierPath` | `AfiBezierPath` | `afiBezierPath`, `BZierCurvePath`, `bZierCurvePath` |
+| `AfiCatmullRomSpline` | `AfiCatmullRomSpline` | `afiCatmullRomSpline`, `CatmullRomSplineCurvePath`, `catmullRomSplineCurvePath` |
+| `AfiCubicPath` | `AfiCubicPath` | `afiCubicPath`, `CubicPath`, `cubicPath` |
+| `AfiCycloidalPath` | `AfiCycloidalPath` | `afiCycloidalPath`, `CycloidalPath`, `cycloidalPath` |
+| `AfiEllipticPath` | `AfiEllipticPath` | `afiEllipticPath`, `EllipticPath`, `ellipticPath` |
+| `AfiExpPath` | `AfiExpPath` | `afiExpPath`, `ExponentialPath`, `exponentialPath` |
+| `AfiFourierSeriesExpansionPath` | `AfiFourierSeriesExpansionPath` | `afiFourierSeriesExpansionPath`, `PathBasedOnTheFourierSeriesExpansion`, `pathBasedOnTheFourierSeriesExpansion` |
+| `AfiFreudensteinPath` | `AfiFreudensteinPath` | `afiFreudensteinPath`, `FreudensteinPath`, `freudensteinPath` |
+| `AfiGutmanPath` | `AfiGutmanPath` | `afiGutmanPath`, `GutmanPath`, `gutmanPath` |
+| `AfiHarmonicPath` | `AfiHarmonicPath` | `afiHarmonicPath`, `HarmonicPath`, `harmonicPath` |
+| `AfiHermiteSpline` | `AfiHermiteSpline` | `afiHermiteSpline`, `HermiteSplineCurvePath`, `hermiteSplineCurvePath` |
+| `AfiHighDegPolyPath` | `AfiHighDegPolyPath` | `afiHighDegPolyPath`, `PolynomialOfHigherDegreePath`, `polynomialOfHigherDegreePath` |
+| `AfiInterpCubicSplinesPath` | `AfiInterpCubicSplinesPath` | `afiInterpCubicSplinesPath`, `InterpolatedCubicSplinesPath`, `interpolatedCubicSplinesPath` |
+| `AfiInterpOrthogonalPolyPath` | `AfiInterpOrthogonalPolyPath` | `afiInterpOrthogonalPolyPath`, `InterpolatedOrthogonalPolynomialsPath`, `interpolatedOrthogonalPolynomialsPath` |
+| `AfiInterpPath` | `AfiInterpPath` | `afiInterpPath`, `MultipointInterpolatedPath`, `multipointInterpolatedPath` |
+| `AfiInterpPolyPath` | `AfiInterpPolyPath` | `afiInterpPolyPath`, `InterpolatedPolynomialPath`, `interpolatedPolynomialPath` |
+| `AfiInterpTrigPolyPath` | `AfiInterpTrigPolyPath` | `afiInterpTrigPolyPath`, `InterpolatedTrigonometricPolynomialPath`, `interpolatedTrigonometricPolynomialPath` |
+| `AfiLagrangePolynomial` | `AfiLagrangePolynomial` | `afiLagrangePolynomial`, `LagrangePolynomialCurvePath`, `lagrangePolynomialCurvePath` |
+| `AfiLearningPath` | `AfiLearningPath` | `afiLearningPath`, `ReinforcementLearningPath`, `reinforcementLearningPath` |
+| `AfiLinearPath` | `AfiLinearPath` | `afiLinearPath`, `LinearPath`, `linearPath` |
+| `AfiMultipointPath` | `AfiMultipointPath` | `afiMultipointPath`, `MultipointPath`, `multipointPath` |
+| `AfiNurbsPath` | `AfiNurbsPath` | `afiNurbsPath`, `NURBSPath`, `nURBSPath` |
+| `AfiP2PPath` | `AfiP2PPath` | `afiP2PPath`, `PointToPointPath`, `pointToPointPath` |
+| `AfiParabolicPath` | `AfiParabolicPath` | `afiParabolicPath`, `ParabolicPath`, `parabolicPath` |
+| `AfiPiecewise` | `AfiPiecewise` | `afiPiecewise`, `LinearCurvePath`, `linearCurvePath` |
+| `AfiPolyPath` | `AfiPolyPath` | `afiPolyPath`, `PolynomialPath`, `polynomialPath` |
+| `AfiTrigPath` | `AfiTrigPath` | `afiTrigPath`, `TrigonometricPath`, `trigonometricPath` |
 
 ### Domain: `ApproxFuncPurpose`
 
@@ -618,10 +588,10 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `CUSTOMER_ENTRY` | `DST_CUSTOMER_ENTRY` | `cUSTOMER_ENTRY`, `DST_CUSTOMER_ENTRY`, `dST_CUSTOMER_ENTRY`, `CustomerDataEntry`, `customerDataEntry` |
-| `INTERNAL_ENTRY` | `DST_INTERNAL_ENTRY` | `iNTERNAL_ENTRY`, `DST_INTERNAL_ENTRY`, `dST_INTERNAL_ENTRY`, `InternalDataEntry`, `internalDataEntry` |
-| `MAILING_SIGNUP` | `DST_MAILING_SIGNUP` | `mAILING_SIGNUP`, `DST_MAILING_SIGNUP`, `dST_MAILING_SIGNUP`, `MailingListSignUp`, `mailingListSignUp` |
-| `PURCHASED_DATA` | `DST_PURCHASED_DATA` | `pURCHASED_DATA`, `DST_PURCHASED_DATA`, `dST_PURCHASED_DATA`, `PurchasedData`, `purchasedData` |
+| `CUSTOMER_ENTRY` | `DST_CUSTOMER_ENTRY` | `cUSTOMER_ENTRY`, `DST_CUSTOMER_ENTRY`, `dST_CUSTOMER_ENTRY`, `_CUSTOMER_ENTRY`, `CustomerDataEntry`, `customerDataEntry` |
+| `INTERNAL_ENTRY` | `DST_INTERNAL_ENTRY` | `iNTERNAL_ENTRY`, `DST_INTERNAL_ENTRY`, `dST_INTERNAL_ENTRY`, `_INTERNAL_ENTRY`, `InternalDataEntry`, `internalDataEntry` |
+| `MAILING_SIGNUP` | `DST_MAILING_SIGNUP` | `mAILING_SIGNUP`, `DST_MAILING_SIGNUP`, `dST_MAILING_SIGNUP`, `_MAILING_SIGNUP`, `MailingListSignUp`, `mailingListSignUp` |
+| `PURCHASED_DATA` | `DST_PURCHASED_DATA` | `pURCHASED_DATA`, `DST_PURCHASED_DATA`, `dST_PURCHASED_DATA`, `_PURCHASED_DATA`, `PurchasedData`, `purchasedData` |
 
 ### Domain: `DataType`
 
@@ -655,10 +625,10 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `CPU` | `DevCpu` | `cPU` |
-| `CUDA` | `DevCuda` | `cUDA` |
-| `MPS` | `DevMps` | `mPS` |
-| `ROCM` | `DevRocm` | `rOCM` |
+| `Cpu` | `DevCpu` | `cpu` |
+| `Cuda` | `DevCuda` | `cuda` |
+| `Mps` | `DevMps` | `mps` |
+| `Rocm` | `DevRocm` | `rocm` |
 | `Tpu` | `DevTpu` | `tpu` |
 
 ### Domain: `EmailMessage`
@@ -677,17 +647,17 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `ACCOUNT_INVITE` | `EMT_ACCOUNT_INVITE` | `aCCOUNT_INVITE`, `EMT_ACCOUNT_INVITE`, `eMT_ACCOUNT_INVITE`, `AccountInvitation`, `accountInvitation` |
-| `ADDED_EMAIL_AUTHC_FACTOR` | `EMT_ADDED_EMAIL_AUTHC_FACTOR` | `aDDED_EMAIL_AUTHC_FACTOR`, `EMT_ADDED_EMAIL_AUTHC_FACTOR`, `eMT_ADDED_EMAIL_AUTHC_FACTOR`, `AddedEmailAuthenticationType`, `addedEmailAuthenticationType` |
-| `EMAIL_AUTHC_FACTOR_SENT` | `EMT_EMAIL_AUTHC_FACTOR_SENT` | `eMAIL_AUTHC_FACTOR_SENT`, `EMT_EMAIL_AUTHC_FACTOR_SENT`, `eMT_EMAIL_AUTHC_FACTOR_SENT`, `EmailAuthenticationCodeSent`, `emailAuthenticationCodeSent` |
-| `EMAIL_VERIFY` | `EMT_EMAIL_VERIFY` | `eMAIL_VERIFY`, `EMT_EMAIL_VERIFY`, `eMT_EMAIL_VERIFY`, `EmailAddressVerification`, `emailAddressVerification` |
-| `NOTIFICATION` | `EMT_NOTIFICATION` | `nOTIFICATION`, `EMT_NOTIFICATION`, `eMT_NOTIFICATION`, `Notification`, `notification` |
-| `PWD_RESET` | `EMT_PWD_RESET` | `pWD_RESET`, `EMT_PWD_RESET`, `eMT_PWD_RESET`, `PasswordReset`, `passwordReset` |
-| `REG_CONFIRM` | `EMT_REG_CONFIRM` | `rEG_CONFIRM`, `EMT_REG_CONFIRM`, `eMT_REG_CONFIRM`, `RegistrationConfirmation`, `registrationConfirmation` |
-| `SCREEN_RENDER` | `EMT_SCREEN_RENDER` | `sCREEN_RENDER`, `EMT_SCREEN_RENDER`, `eMT_SCREEN_RENDER`, `ScreenRender`, `screenRender` |
-| `SINGLE_USE_CODE` | `EMT_SINGLE_USE_CODE` | `sINGLE_USE_CODE`, `EMT_SINGLE_USE_CODE`, `eMT_SINGLE_USE_CODE`, `SingleUseCode`, `singleUseCode` |
-| `SYSTEM` | `EMT_SYSTEM` | `sYSTEM`, `EMT_SYSTEM`, `eMT_SYSTEM`, `System`, `system` |
-| `UPD_INFO_CONFIRM` | `EMT_UPD_INFO_CONFIRM` | `uPD_INFO_CONFIRM`, `EMT_UPD_INFO_CONFIRM`, `eMT_UPD_INFO_CONFIRM`, `UpdatePersonalInfoConfirmation`, `updatePersonalInfoConfirmation` |
+| `ACCOUNT_INVITE` | `EMT_ACCOUNT_INVITE` | `aCCOUNT_INVITE`, `EMT_ACCOUNT_INVITE`, `eMT_ACCOUNT_INVITE`, `_ACCOUNT_INVITE`, `AccountInvitation`, `accountInvitation` |
+| `ADDED_EMAIL_AUTHC_FACTOR` | `EMT_ADDED_EMAIL_AUTHC_FACTOR` | `aDDED_EMAIL_AUTHC_FACTOR`, `EMT_ADDED_EMAIL_AUTHC_FACTOR`, `eMT_ADDED_EMAIL_AUTHC_FACTOR`, `_ADDED_EMAIL_AUTHC_FACTOR`, `AddedEmailAuthenticationType`, `addedEmailAuthenticationType` |
+| `EMAIL_AUTHC_FACTOR_SENT` | `EMT_EMAIL_AUTHC_FACTOR_SENT` | `eMAIL_AUTHC_FACTOR_SENT`, `EMT_EMAIL_AUTHC_FACTOR_SENT`, `eMT_EMAIL_AUTHC_FACTOR_SENT`, `_EMAIL_AUTHC_FACTOR_SENT`, `EmailAuthenticationCodeSent`, `emailAuthenticationCodeSent` |
+| `EMAIL_VERIFY` | `EMT_EMAIL_VERIFY` | `eMAIL_VERIFY`, `EMT_EMAIL_VERIFY`, `eMT_EMAIL_VERIFY`, `_EMAIL_VERIFY`, `EmailAddressVerification`, `emailAddressVerification` |
+| `NOTIFICATION` | `EMT_NOTIFICATION` | `nOTIFICATION`, `EMT_NOTIFICATION`, `eMT_NOTIFICATION`, `_NOTIFICATION`, `Notification`, `notification` |
+| `PWD_RESET` | `EMT_PWD_RESET` | `pWD_RESET`, `EMT_PWD_RESET`, `eMT_PWD_RESET`, `_PWD_RESET`, `PasswordReset`, `passwordReset` |
+| `REG_CONFIRM` | `EMT_REG_CONFIRM` | `rEG_CONFIRM`, `EMT_REG_CONFIRM`, `eMT_REG_CONFIRM`, `_REG_CONFIRM`, `RegistrationConfirmation`, `registrationConfirmation` |
+| `SCREEN_RENDER` | `EMT_SCREEN_RENDER` | `sCREEN_RENDER`, `EMT_SCREEN_RENDER`, `eMT_SCREEN_RENDER`, `_SCREEN_RENDER`, `ScreenRender`, `screenRender` |
+| `SINGLE_USE_CODE` | `EMT_SINGLE_USE_CODE` | `sINGLE_USE_CODE`, `EMT_SINGLE_USE_CODE`, `eMT_SINGLE_USE_CODE`, `_SINGLE_USE_CODE`, `SingleUseCode`, `singleUseCode` |
+| `SYSTEM` | `EMT_SYSTEM` | `sYSTEM`, `EMT_SYSTEM`, `eMT_SYSTEM`, `_SYSTEM`, `System`, `system` |
+| `UPD_INFO_CONFIRM` | `EMT_UPD_INFO_CONFIRM` | `uPD_INFO_CONFIRM`, `EMT_UPD_INFO_CONFIRM`, `eMT_UPD_INFO_CONFIRM`, `_UPD_INFO_CONFIRM`, `UpdatePersonalInfoConfirmation`, `updatePersonalInfoConfirmation` |
 
 ### Domain: `EndofunctorAlgebraType`
 
@@ -701,9 +671,9 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `Eng2DEuclideanSpace` | `Eng2DEuclideanSpace` | `eng2DEuclideanSpace`, `R2`, `r2`, `2DEuclideanSpace` |
-| `Eng3DEuclideanSpace` | `Eng3DEuclideanSpace` | `eng3DEuclideanSpace`, `R3`, `r3`, `3DEuclideanSpace` |
-| `SpaceTime` | `EngSpaceTime` | `spaceTime`, `EngSpaceTime`, `engSpaceTime` |
+| `R2` | `Eng2DEuclideanSpace` | `r2`, `Eng2DEuclideanSpace`, `eng2DEuclideanSpace` |
+| `R3` | `Eng3DEuclideanSpace` | `r3`, `Eng3DEuclideanSpace`, `eng3DEuclideanSpace` |
+| `EngSpaceTime` | `EngSpaceTime` | `engSpaceTime`, `SpaceTime`, `spaceTime` |
 
 ### Domain: `FunctorType`
 
@@ -727,33 +697,33 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `COUNTY_SEAT` | `GAT_COUNTY_SEAT` | `cOUNTY_SEAT`, `GAT_COUNTY_SEAT`, `gAT_COUNTY_SEAT`, `AdministrativeCity`, `administrativeCity` |
-| `GROUP_MEMBER` | `GAT_GROUP_MEMBER` | `gROUP_MEMBER`, `GAT_GROUP_MEMBER`, `gAT_GROUP_MEMBER`, `GeoGroupMember`, `geoGroupMember` |
-| `REGIONS` | `GAT_REGIONS` | `rEGIONS`, `GAT_REGIONS`, `gAT_REGIONS`, `RegionOfALargerGeo`, `regionOfALargerGeo` |
+| `COUNTY_SEAT` | `GAT_COUNTY_SEAT` | `cOUNTY_SEAT`, `GAT_COUNTY_SEAT`, `gAT_COUNTY_SEAT`, `_COUNTY_SEAT`, `AdministrativeCity`, `administrativeCity` |
+| `GROUP_MEMBER` | `GAT_GROUP_MEMBER` | `gROUP_MEMBER`, `GAT_GROUP_MEMBER`, `gAT_GROUP_MEMBER`, `_GROUP_MEMBER`, `GeoGroupMember`, `geoGroupMember` |
+| `REGIONS` | `GAT_REGIONS` | `rEGIONS`, `GAT_REGIONS`, `gAT_REGIONS`, `_REGIONS`, `RegionOfALargerGeo`, `regionOfALargerGeo` |
 
 ### Domain: `GeoType`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `CITY` | `GEOT_CITY` | `cITY`, `GEOT_CITY`, `gEOT_CITY`, `City`, `city` |
-| `COUNTRY` | `GEOT_COUNTRY` | `cOUNTRY`, `GEOT_COUNTRY`, `gEOT_COUNTRY`, `Country`, `country` |
-| `COUNTY` | `GEOT_COUNTY` | `cOUNTY`, `GEOT_COUNTY`, `gEOT_COUNTY`, `County`, `county` |
-| `COUNTY_CITY` | `GEOT_COUNTY_CITY` | `cOUNTY_CITY`, `GEOT_COUNTY_CITY`, `gEOT_COUNTY_CITY`, `CountyCity`, `countyCity` |
-| `GROUP` | `GEOT_GROUP` | `gROUP`, `GEOT_GROUP`, `gEOT_GROUP`, `Group`, `group` |
-| `MUNICIPALITY` | `GEOT_MUNICIPALITY` | `mUNICIPALITY`, `GEOT_MUNICIPALITY`, `gEOT_MUNICIPALITY`, `Municipality`, `municipality` |
-| `POSTAL_CODE` | `GEOT_POSTAL_CODE` | `pOSTAL_CODE`, `GEOT_POSTAL_CODE`, `gEOT_POSTAL_CODE`, `PostalCode`, `postalCode` |
-| `PROVINCE` | `GEOT_PROVINCE` | `pROVINCE`, `GEOT_PROVINCE`, `gEOT_PROVINCE`, `Province`, `province` |
-| `REGION` | `GEOT_REGION` | `rEGION`, `GEOT_REGION`, `gEOT_REGION`, `Region`, `region` |
-| `SALES_REGION` | `GEOT_SALES_REGION` | `sALES_REGION`, `GEOT_SALES_REGION`, `gEOT_SALES_REGION`, `SalesRegion`, `salesRegion` |
-| `SERVICE_REGION` | `GEOT_SERVICE_REGION` | `sERVICE_REGION`, `GEOT_SERVICE_REGION`, `gEOT_SERVICE_REGION`, `ServiceRegion`, `serviceRegion` |
-| `STATE` | `GEOT_STATE` | `sTATE`, `GEOT_STATE`, `gEOT_STATE`, `State`, `state` |
-| `TERRITORY` | `GEOT_TERRITORY` | `tERRITORY`, `GEOT_TERRITORY`, `gEOT_TERRITORY`, `Territory`, `territory` |
+| `CITY` | `GEOT_CITY` | `cITY`, `GEOT_CITY`, `gEOT_CITY`, `_CITY`, `City`, `city` |
+| `COUNTRY` | `GEOT_COUNTRY` | `cOUNTRY`, `GEOT_COUNTRY`, `gEOT_COUNTRY`, `_COUNTRY`, `Country`, `country` |
+| `COUNTY` | `GEOT_COUNTY` | `cOUNTY`, `GEOT_COUNTY`, `gEOT_COUNTY`, `_COUNTY`, `County`, `county` |
+| `COUNTY_CITY` | `GEOT_COUNTY_CITY` | `cOUNTY_CITY`, `GEOT_COUNTY_CITY`, `gEOT_COUNTY_CITY`, `_COUNTY_CITY`, `CountyCity`, `countyCity` |
+| `GROUP` | `GEOT_GROUP` | `gROUP`, `GEOT_GROUP`, `gEOT_GROUP`, `_GROUP`, `Group`, `group` |
+| `MUNICIPALITY` | `GEOT_MUNICIPALITY` | `mUNICIPALITY`, `GEOT_MUNICIPALITY`, `gEOT_MUNICIPALITY`, `_MUNICIPALITY`, `Municipality`, `municipality` |
+| `POSTAL_CODE` | `GEOT_POSTAL_CODE` | `pOSTAL_CODE`, `GEOT_POSTAL_CODE`, `gEOT_POSTAL_CODE`, `_POSTAL_CODE`, `PostalCode`, `postalCode` |
+| `PROVINCE` | `GEOT_PROVINCE` | `pROVINCE`, `GEOT_PROVINCE`, `gEOT_PROVINCE`, `_PROVINCE`, `Province`, `province` |
+| `REGION` | `GEOT_REGION` | `rEGION`, `GEOT_REGION`, `gEOT_REGION`, `_REGION`, `Region`, `region` |
+| `SALES_REGION` | `GEOT_SALES_REGION` | `sALES_REGION`, `GEOT_SALES_REGION`, `gEOT_SALES_REGION`, `_SALES_REGION`, `SalesRegion`, `salesRegion` |
+| `SERVICE_REGION` | `GEOT_SERVICE_REGION` | `sERVICE_REGION`, `GEOT_SERVICE_REGION`, `gEOT_SERVICE_REGION`, `_SERVICE_REGION`, `ServiceRegion`, `serviceRegion` |
+| `STATE` | `GEOT_STATE` | `sTATE`, `GEOT_STATE`, `gEOT_STATE`, `_STATE`, `State`, `state` |
+| `TERRITORY` | `GEOT_TERRITORY` | `tERRITORY`, `GEOT_TERRITORY`, `gEOT_TERRITORY`, `_TERRITORY`, `Territory`, `territory` |
 
 ### Domain: `GraphCategoryPurpose`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `UnderlyingGraph` | `GcpUnderlyingGraph` | `underlyingGraph`, `GcpUnderlyingGraph`, `gcpUnderlyingGraph`, `UnderlyingGraphUObjectsBecomeVerticesAndMorphismsBecomeDirectedEdges`, `underlyingGraphUObjectsBecomeVerticesAndMorphismsBecomeDirectedEdges` |
+| `Graph` | `GcpUnderlyingGraph` | `graph`, `GcpUnderlyingGraph`, `gcpUnderlyingGraph`, `UnderlyingGraphUObjectsBecomeVerticesAndMorphismsBecomeDirectedEdges`, `underlyingGraphUObjectsBecomeVerticesAndMorphismsBecomeDirectedEdges` |
 
 ### Domain: `GraphContentType`
 
@@ -862,7 +832,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `CoreTensor` | `MmdpCoreTensor` | `coreTensor`, `MmdpCoreTensor`, `mmdpCoreTensor` |
 | `CostVector` | `MmdpCostVector` | `costVector`, `MmdpCostVector`, `mmdpCostVector`, `CostObjectiveCoefficients`, `costObjectiveCoefficients` |
 | `Curvature` | `MmdpCurvature` | `curvature`, `MmdpCurvature`, `mmdpCurvature` |
-| `DecisionVariables` | `MmdpDecisionVars` | `decisionVariables`, `MmdpDecisionVars`, `mmdpDecisionVars`, `DecisionVars`, `decisionVars` |
+| `DecisionVars` | `MmdpDecisionVars` | `decisionVars`, `MmdpDecisionVars`, `mmdpDecisionVars`, `DecisionVariables`, `decisionVariables` |
 | `Derivative` | `MmdpDerivative` | `derivative`, `MmdpDerivative`, `mmdpDerivative` |
 | `DiscountFactor` | `MmdpDiscountFactor` | `discountFactor`, `MmdpDiscountFactor`, `mmdpDiscountFactor` |
 | `DualValue` | `MmdpDualValue` | `dualValue`, `MmdpDualValue`, `mmdpDualValue`, `DualValueShadowPrice`, `dualValueShadowPrice` |
@@ -887,7 +857,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `QueueDiscipline` | `MmdpQueueDiscipline` | `queueDiscipline`, `MmdpQueueDiscipline`, `mmdpQueueDiscipline` |
 | `ReducedCost` | `MmdpReducedCost` | `reducedCost`, `MmdpReducedCost`, `mmdpReducedCost` |
 | `Reward` | `MmdpReward` | `reward`, `MmdpReward`, `mmdpReward`, `RewardFunction`, `rewardFunction` |
-| `RightHandSide` | `MmdpRhsVector` | `rightHandSide`, `MmdpRhsVector`, `mmdpRhsVector`, `RhsVector`, `rhsVector` |
+| `RhsVector` | `MmdpRhsVector` | `rhsVector`, `MmdpRhsVector`, `mmdpRhsVector`, `RightHandSide`, `rightHandSide` |
 | `Sensitivity` | `MmdpSensitivity` | `sensitivity`, `MmdpSensitivity`, `mmdpSensitivity`, `SensitivityRange`, `sensitivityRange` |
 | `ServiceRate` | `MmdpServiceRate` | `serviceRate`, `MmdpServiceRate`, `mmdpServiceRate` |
 | `ServiceTimeDist` | `MmdpServiceTimeDist` | `serviceTimeDist`, `MmdpServiceTimeDist`, `mmdpServiceTimeDist`, `ServiceTimeDistribution`, `serviceTimeDistribution` |
@@ -899,7 +869,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `TransitionMatrix` | `MmdpTransitionMatrix` | `transitionMatrix`, `MmdpTransitionMatrix`, `mmdpTransitionMatrix`, `StateTransitionMatrix`, `stateTransitionMatrix` |
 | `ValidationData` | `MmdpValidationData` | `validationData`, `MmdpValidationData`, `mmdpValidationData` |
 | `ValueFunction` | `MmdpValueFunction` | `valueFunction`, `MmdpValueFunction`, `mmdpValueFunction`, `StateValueFunction`, `stateValueFunction` |
-| `VariableBounds` | `MmdpVarBounds` | `variableBounds`, `MmdpVarBounds`, `mmdpVarBounds`, `VarBounds`, `varBounds` |
+| `VarBounds` | `MmdpVarBounds` | `varBounds`, `MmdpVarBounds`, `mmdpVarBounds`, `VariableBounds`, `variableBounds` |
 | `VariableDomain` | `MmdpVariableDomain` | `variableDomain`, `MmdpVariableDomain`, `mmdpVariableDomain` |
 
 ### Domain: `MathModelDataType`
@@ -1088,7 +1058,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `Functional` | `MmtFunctional` | `functional`, `MmtFunctional`, `mmtFunctional`, `FunctionalModel`, `functionalModel` |
 | `LinearAlgebra` | `MmtLinearAlgebra` | `linearAlgebra`, `MmtLinearAlgebra`, `mmtLinearAlgebra`, `LINEAR_ALGEBRA`, `lINEAR_ALGEBRA` |
 | `LinearEqSystem` | `MmtLinearEqSystem` | `linearEqSystem`, `MmtLinearEqSystem`, `mmtLinearEqSystem`, `LinearEquationSystem`, `linearEquationSystem` |
-| `LinearProgram` | `MmtLp` | `linearProgram`, `MmtLp`, `mmtLp`, `Lp`, `lp` |
+| `Lp` | `MmtLp` | `lp`, `MmtLp`, `mmtLp`, `LinearProgram`, `linearProgram` |
 | `MarkovChain` | `MmtMarkovChain` | `markovChain`, `MmtMarkovChain`, `mmtMarkovChain` |
 | `Mdp` | `MmtMdp` | `mdp`, `MmtMdp`, `mmtMdp`, `MarkovDecisionProcess`, `markovDecisionProcess` |
 | `MeasuredDataSeries` | `MmtMeasuredDataSeries` | `measuredDataSeries`, `MmtMeasuredDataSeries`, `mmtMeasuredDataSeries`, `MeasuredDataSeriesModel`, `measuredDataSeriesModel` |
@@ -1106,7 +1076,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `Polynomial` | `MmtPolynomial` | `polynomial`, `MmtPolynomial`, `mmtPolynomial` |
 | `Pomdp` | `MmtPomdp` | `pomdp`, `MmtPomdp`, `mmtPomdp`, `PartiallyObservableMDP`, `partiallyObservableMDP` |
 | `Qcqp` | `MmtQcqp` | `qcqp`, `MmtQcqp`, `mmtQcqp`, `QuadraticallyConstrainedQP`, `quadraticallyConstrainedQP` |
-| `QuadraticProgram` | `MmtQp` | `quadraticProgram`, `MmtQp`, `mmtQp`, `Qp`, `qp` |
+| `Qp` | `MmtQp` | `qp`, `MmtQp`, `mmtQp`, `QuadraticProgram`, `quadraticProgram` |
 | `Queueing` | `MmtQueueing` | `queueing`, `MmtQueueing`, `mmtQueueing`, `QueueingModel`, `queueingModel` |
 | `RationalFunc` | `MmtRationalFunc` | `rationalFunc`, `MmtRationalFunc`, `mmtRationalFunc`, `RationalFunction`, `rationalFunction` |
 | `Regression` | `MmtRegression` | `regression`, `MmtRegression`, `mmtRegression`, `StatisticalRegression`, `statisticalRegression` |
@@ -1131,8 +1101,8 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `Eng2DEuclideanSpace` | `Eng2DEuclideanSpace` | `R2`, `r2` |
-| `Eng3DEuclideanSpace` | `Eng3DEuclideanSpace` | `R3`, `r3` |
+| `R2` | `Eng2DEuclideanSpace` | `r2` |
+| `R3` | `Eng3DEuclideanSpace` | `r3` |
 
 ### Domain: `MatrixComponentType`
 
@@ -1205,12 +1175,12 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `ntCustom` | `MCntCustom` | `MCntCustom`, `mCntCustom`, `Custom`, `custom` |
-| `ntObj` | `MCntObj` | `MCntObj`, `mCntObj`, `Obj`, `obj`, `WavefrontOBJCompressed`, `wavefrontOBJCompressed` |
-| `ntPly` | `MCntPly` | `MCntPly`, `mCntPly`, `Ply`, `ply`, `PLYBinaryLittleEndian`, `pLYBinaryLittleEndian` |
-| `ntStl` | `MCntStl` | `MCntStl`, `mCntStl`, `Stl`, `stl`, `STLBinary`, `sTLBinary` |
-| `ntVtk` | `MCntVtk` | `MCntVtk`, `mCntVtk`, `Vtk`, `vtk`, `VTKVTUBinary`, `vTKVTUBinary` |
-| `tnGltf` | `MCtnGltf` | `MCtnGltf`, `mCtnGltf`, `Gltf`, `gltf`, `GLTFBinary`, `gLTFBinary` |
+| `CntCustom` | `MCntCustom` | `cntCustom`, `MCntCustom`, `mCntCustom`, `Custom`, `custom` |
+| `CntObj` | `MCntObj` | `cntObj`, `MCntObj`, `mCntObj`, `Obj`, `obj`, `WavefrontOBJCompressed`, `wavefrontOBJCompressed` |
+| `CntPly` | `MCntPly` | `cntPly`, `MCntPly`, `mCntPly`, `Ply`, `ply`, `PLYBinaryLittleEndian`, `pLYBinaryLittleEndian` |
+| `CntStl` | `MCntStl` | `cntStl`, `MCntStl`, `mCntStl`, `Stl`, `stl`, `STLBinary`, `sTLBinary` |
+| `CntVtk` | `MCntVtk` | `cntVtk`, `MCntVtk`, `mCntVtk`, `Vtk`, `vtk`, `VTKVTUBinary`, `vTKVTUBinary` |
+| `CtnGltf` | `MCtnGltf` | `ctnGltf`, `MCtnGltf`, `mCtnGltf`, `Gltf`, `gltf`, `GLTFBinary`, `gLTFBinary` |
 
 ### Domain: `MeshGroupPurpose`
 
@@ -1267,21 +1237,21 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `atAluminum` | `MatAluminum` | `MatAluminum`, `matAluminum`, `Aluminum`, `aluminum` |
-| `atCarbonFiber` | `MatCarbonFiber` | `MatCarbonFiber`, `matCarbonFiber`, `CarbonFiber`, `carbonFiber` |
-| `atConcrete` | `MatConcrete` | `MatConcrete`, `matConcrete`, `Concrete`, `concrete` |
-| `atCopper` | `MatCopper` | `MatCopper`, `matCopper`, `Copper`, `copper` |
-| `atGlass` | `MatGlass` | `MatGlass`, `matGlass`, `Glass`, `glass` |
-| `atPlastic` | `MatPlastic` | `MatPlastic`, `matPlastic`, `Plastic`, `plastic` |
-| `atRubber` | `MatRubber` | `MatRubber`, `matRubber`, `Rubber`, `rubber` |
-| `atSteel` | `MatSteel` | `MatSteel`, `matSteel`, `Steel`, `steel` |
-| `atTitanium` | `MatTitanium` | `MatTitanium`, `matTitanium`, `Titanium`, `titanium` |
-| `atWood` | `MatWood` | `MatWood`, `matWood`, `Wood`, `wood` |
-| `mtLambert` | `MmtLambert` | `MmtLambert`, `mmtLambert`, `LambertMaterial`, `lambertMaterial` |
-| `mtPhong` | `MmtPhong` | `MmtPhong`, `mmtPhong`, `PhongMaterial`, `phongMaterial` |
-| `mtShader` | `MmtShader` | `MmtShader`, `mmtShader`, `CustomShaderMaterial`, `customShaderMaterial` |
-| `mtStandard` | `MmtStandard` | `MmtStandard`, `mmtStandard`, `StandardMaterial`, `standardMaterial` |
-| `mtToon` | `MmtToon` | `MmtToon`, `mmtToon`, `ToonMaterial`, `toonMaterial` |
+| `MatAluminum` | `MatAluminum` | `matAluminum`, `Aluminum`, `aluminum` |
+| `MatCarbonFiber` | `MatCarbonFiber` | `matCarbonFiber`, `CarbonFiber`, `carbonFiber` |
+| `MatConcrete` | `MatConcrete` | `matConcrete`, `Concrete`, `concrete` |
+| `MatCopper` | `MatCopper` | `matCopper`, `Copper`, `copper` |
+| `MatGlass` | `MatGlass` | `matGlass`, `Glass`, `glass` |
+| `MatPlastic` | `MatPlastic` | `matPlastic`, `Plastic`, `plastic` |
+| `MatRubber` | `MatRubber` | `matRubber`, `Rubber`, `rubber` |
+| `MatSteel` | `MatSteel` | `matSteel`, `Steel`, `steel` |
+| `MatTitanium` | `MatTitanium` | `matTitanium`, `Titanium`, `titanium` |
+| `MatWood` | `MatWood` | `matWood`, `Wood`, `wood` |
+| `MmtLambert` | `MmtLambert` | `mmtLambert`, `LambertMaterial`, `lambertMaterial` |
+| `MmtPhong` | `MmtPhong` | `mmtPhong`, `PhongMaterial`, `phongMaterial` |
+| `MmtShader` | `MmtShader` | `mmtShader`, `CustomShaderMaterial`, `customShaderMaterial` |
+| `MmtStandard` | `MmtStandard` | `mmtStandard`, `StandardMaterial`, `standardMaterial` |
+| `MmtToon` | `MmtToon` | `mmtToon`, `ToonMaterial`, `toonMaterial` |
 
 ### Domain: `MeshOrientation`
 
@@ -1339,23 +1309,23 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `phZero` | `MphZero` | `MphZero`, `mphZero`, `ZeroMorphism`, `zeroMorphism` |
-| `tDisplayMap` | `MtDisplayMap` | `MtDisplayMap`, `mtDisplayMap`, `DisplayMapRepresentingADependentType`, `displayMapRepresentingADependentType` |
-| `Endo` | `MtEndo` | `endo`, `MtEndo`, `mtEndo`, `tEndo`, `Endomorphism`, `endomorphism` |
-| `tEpi` | `MtEpi` | `MtEpi`, `mtEpi`, `Epimorphism`, `epimorphism` |
-| `General` | `MtGeneral` | `general`, `MtGeneral`, `mtGeneral`, `tGeneral`, `GeneralMorphism`, `generalMorphism` |
-| `tId` | `MtId` | `MtId`, `mtId`, `IdentityMorphismMayHaveACompositeImplementation`, `identityMorphismMayHaveACompositeImplementation` |
-| `tIso` | `MtIso` | `MtIso`, `mtIso`, `Isomorphism`, `isomorphism` |
-| `tLaw` | `MtLaw` | `MtLaw`, `mtLaw`, `StructurePreservingLaw`, `structurePreservingLaw` |
-| `tLawGroupHom` | `MtLawGroupHom` | `MtLawGroupHom`, `mtLawGroupHom`, `GroupHomomorphism`, `groupHomomorphism` |
-| `tLawLinear` | `MtLawLinear` | `MtLawLinear`, `mtLawLinear`, `LinearMap`, `linearMap` |
-| `tLawRingHom` | `MtLawRingHom` | `MtLawRingHom`, `mtLawRingHom`, `RingHomomorphism`, `ringHomomorphism` |
-| `tLeftInv` | `MtLeftInv` | `MtLeftInv`, `mtLeftInv`, `RetractionLeftInverse`, `retractionLeftInverse` |
-| `tMono` | `MtMono` | `MtMono`, `mtMono`, `Monomorphism`, `monomorphism` |
-| `tRetract` | `MtRetract` | `MtRetract`, `mtRetract`, `Retract`, `retract` |
-| `tRightInv` | `MtRightInv` | `MtRightInv`, `mtRightInv`, `SectionRightInverse`, `sectionRightInverse` |
-| `tSection` | `MtSection` | `MtSection`, `mtSection`, `Section`, `section` |
-| `tTerm` | `MtTerm` | `MtTerm`, `mtTerm`, `TypedTermFromAContextToAType`, `typedTermFromAContextToAType` |
+| `MphZero` | `MphZero` | `mphZero`, `ZeroMorphism`, `zeroMorphism` |
+| `MtDisplayMap` | `MtDisplayMap` | `mtDisplayMap`, `DisplayMapRepresentingADependentType`, `displayMapRepresentingADependentType` |
+| `MtEndo` | `MtEndo` | `mtEndo`, `Endomorphism`, `endomorphism` |
+| `MtEpi` | `MtEpi` | `mtEpi`, `Epimorphism`, `epimorphism` |
+| `MtGeneral` | `MtGeneral` | `mtGeneral`, `GeneralMorphism`, `generalMorphism` |
+| `MtId` | `MtId` | `mtId`, `IdentityMorphismMayHaveACompositeImplementation`, `identityMorphismMayHaveACompositeImplementation` |
+| `MtIso` | `MtIso` | `mtIso`, `Isomorphism`, `isomorphism` |
+| `MtLaw` | `MtLaw` | `mtLaw`, `StructurePreservingLaw`, `structurePreservingLaw` |
+| `MtLawGroupHom` | `MtLawGroupHom` | `mtLawGroupHom`, `GroupHomomorphism`, `groupHomomorphism` |
+| `MtLawLinear` | `MtLawLinear` | `mtLawLinear`, `LinearMap`, `linearMap` |
+| `MtLawRingHom` | `MtLawRingHom` | `mtLawRingHom`, `RingHomomorphism`, `ringHomomorphism` |
+| `MtLeftInv` | `MtLeftInv` | `mtLeftInv`, `RetractionLeftInverse`, `retractionLeftInverse` |
+| `MtMono` | `MtMono` | `mtMono`, `Monomorphism`, `monomorphism` |
+| `MtRetract` | `MtRetract` | `mtRetract`, `Retract`, `retract` |
+| `MtRightInv` | `MtRightInv` | `mtRightInv`, `SectionRightInverse`, `sectionRightInverse` |
+| `MtSection` | `MtSection` | `mtSection`, `Section`, `section` |
+| `MtTerm` | `MtTerm` | `mtTerm`, `TypedTermFromAContextToAType`, `typedTermFromAContextToAType` |
 
 ### Domain: `NatTransfCompositionType`
 
@@ -1410,8 +1380,8 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `Maximize` | `MAXIMIZE` | `maximize`, `maximise` |
-| `Minimize` | `MINIMIZE` | `minimize`, `minimise` |
+| `Maximize` | `MAXIMIZE` | `maximize` |
+| `Minimize` | `MINIMIZE` | `minimize` |
 
 ### Domain: `ParameterClass`
 
@@ -1550,19 +1520,19 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `Pppf3rdDegPolyProfile` | `Pppf3rdDegPolyProfile` | `pppf3rdDegPolyProfile`, `3rdDegPolyProfile`, `PolynomialOf3rdDegreeProfile`, `polynomialOf3rdDegreeProfile` |
-| `Pppf5thDegPolyProfile` | `Pppf5thDegPolyProfile` | `pppf5thDegPolyProfile`, `5thDegPolyProfile`, `PolynomialOf5thDegreeProfile`, `polynomialOf5thDegreeProfile` |
-| `Pppf7thDegPolyProfile` | `Pppf7thDegPolyProfile` | `pppf7thDegPolyProfile`, `7thDegPolyProfile`, `PolynomialOf7thDegreeProfile`, `polynomialOf7thDegreeProfile` |
-| `CycloidalProfile` | `PppfCycloidalProfile` | `cycloidalProfile`, `PppfCycloidalProfile`, `pppfCycloidalProfile` |
-| `DoubleSCurveProfile` | `PppfDoubleSCurveProfile` | `doubleSCurveProfile`, `PppfDoubleSCurveProfile`, `pppfDoubleSCurveProfile` |
-| `EllipticProfile` | `PppfEllipticProfile` | `ellipticProfile`, `PppfEllipticProfile`, `pppfEllipticProfile` |
-| `HighDegPolyProfile` | `PppfHighDegPolyProfile` | `highDegPolyProfile`, `PppfHighDegPolyProfile`, `pppfHighDegPolyProfile`, `PolynomialOfHigherDegreeProfile`, `polynomialOfHigherDegreeProfile` |
-| `ParameterProgression` | `PppfParameterProgression` | `parameterProgression`, `PppfParameterProgression`, `pppfParameterProgression`, `ParameterProgressionProfile`, `parameterProgressionProfile` |
-| `PolyProfile` | `PppfPolyProfile` | `polyProfile`, `PppfPolyProfile`, `pppfPolyProfile`, `PolynomialProfile`, `polynomialProfile` |
-| `SCurveProfile` | `PppfSCurveProfile` | `sCurveProfile`, `PppfSCurveProfile`, `pppfSCurveProfile` |
-| `TrajectoryProfile` | `PppfTrajectoryProfile` | `trajectoryProfile`, `PppfTrajectoryProfile`, `pppfTrajectoryProfile` |
-| `TrapezoidalProfile` | `PppfTrapezoidalProfile` | `trapezoidalProfile`, `PppfTrapezoidalProfile`, `pppfTrapezoidalProfile`, `TrapezoidalVelocityProfile`, `trapezoidalVelocityProfile` |
-| `TrigProfile` | `PppfTrigProfile` | `trigProfile`, `PppfTrigProfile`, `pppfTrigProfile`, `TrigonometricProfile`, `trigonometricProfile` |
+| `Pppf3rdDegPolyProfile` | `Pppf3rdDegPolyProfile` | `pppf3rdDegPolyProfile`, `PolynomialOf3rdDegreeProfile`, `polynomialOf3rdDegreeProfile` |
+| `Pppf5thDegPolyProfile` | `Pppf5thDegPolyProfile` | `pppf5thDegPolyProfile`, `PolynomialOf5thDegreeProfile`, `polynomialOf5thDegreeProfile` |
+| `Pppf7thDegPolyProfile` | `Pppf7thDegPolyProfile` | `pppf7thDegPolyProfile`, `PolynomialOf7thDegreeProfile`, `polynomialOf7thDegreeProfile` |
+| `PppfCycloidalProfile` | `PppfCycloidalProfile` | `pppfCycloidalProfile`, `CycloidalProfile`, `cycloidalProfile` |
+| `PppfDoubleSCurveProfile` | `PppfDoubleSCurveProfile` | `pppfDoubleSCurveProfile`, `DoubleSCurveProfile`, `doubleSCurveProfile` |
+| `PppfEllipticProfile` | `PppfEllipticProfile` | `pppfEllipticProfile`, `EllipticProfile`, `ellipticProfile` |
+| `PppfHighDegPolyProfile` | `PppfHighDegPolyProfile` | `pppfHighDegPolyProfile`, `PolynomialOfHigherDegreeProfile`, `polynomialOfHigherDegreeProfile` |
+| `PppfParameterProgression` | `PppfParameterProgression` | `pppfParameterProgression`, `ParameterProgressionProfile`, `parameterProgressionProfile` |
+| `PppfPolyProfile` | `PppfPolyProfile` | `pppfPolyProfile`, `PolynomialProfile`, `polynomialProfile` |
+| `PppfSCurveProfile` | `PppfSCurveProfile` | `pppfSCurveProfile`, `SCurveProfile`, `sCurveProfile` |
+| `PppfTrajectoryProfile` | `PppfTrajectoryProfile` | `pppfTrajectoryProfile`, `TrajectoryProfile`, `trajectoryProfile` |
+| `PppfTrapezoidalProfile` | `PppfTrapezoidalProfile` | `pppfTrapezoidalProfile`, `TrapezoidalVelocityProfile`, `trapezoidalVelocityProfile` |
+| `PppfTrigProfile` | `PppfTrigProfile` | `pppfTrigProfile`, `TrigonometricProfile`, `trigonometricProfile` |
 
 ### Domain: `PrintJob`
 
@@ -1619,7 +1589,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `PtjProcessing` | `PtjProcessing` | `ptjProcessing` |
 | `PtjProcessingStopped` | `PtjProcessingStopped` | `ptjProcessingStopped` |
 | `PtjSendFailed` | `PtjSendFailed` | `ptjSendFailed` |
-| `NA_` | `_NA_` | `_NA_` |
+| `A_` | `_NA_` | `_NA_` |
 
 ### Domain: `TensorApproxMethod`
 
@@ -1700,19 +1670,19 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
 | `CP` | `TdmCP` | `cP`, `TdmCP`, `tdmCP`, `CanonicalPolyadic`, `canonicalPolyadic` |
-| `HierarchicalTucker` | `TdmHT` | `hierarchicalTucker`, `TdmHT`, `tdmHT`, `HT`, `hT` |
+| `HT` | `TdmHT` | `hT`, `TdmHT`, `tdmHT`, `HierarchicalTucker`, `hierarchicalTucker` |
 | `Hosvd` | `TdmHosvd` | `hosvd`, `TdmHosvd`, `tdmHosvd`, `TuckerHigherOrderSVD`, `tuckerHigherOrderSVD` |
-| `TensorTrain` | `TdmTT` | `tensorTrain`, `TdmTT`, `tdmTT`, `TT`, `tT` |
+| `TT` | `TdmTT` | `tT`, `TdmTT`, `tdmTT`, `TensorTrain`, `tensorTrain` |
 | `Tucker` | `TdmTucker` | `tucker`, `TdmTucker`, `tdmTucker` |
 
 ### Domain: `TensorDevice`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `CPU` | `DevCpu` | `cPU`, `DevCpu`, `devCpu`, `cpu`, `Cpu`, `HostCPU`, `hostCPU` |
-| `CUDA` | `DevCuda` | `cUDA`, `DevCuda`, `devCuda`, `cuda`, `Cuda`, `NVIDIACUDADevice`, `nVIDIACUDADevice` |
-| `MPS` | `DevMps` | `mPS`, `DevMps`, `devMps`, `mps`, `Mps`, `AppleMetalPerformanceShaders`, `appleMetalPerformanceShaders` |
-| `ROCM` | `DevRocm` | `rOCM`, `DevRocm`, `devRocm`, `rocm`, `Rocm`, `AMDROCmDevice`, `aMDROCmDevice` |
+| `Cpu` | `DevCpu` | `cpu`, `DevCpu`, `devCpu`, `HostCPU`, `hostCPU` |
+| `Cuda` | `DevCuda` | `cuda`, `DevCuda`, `devCuda`, `NVIDIACUDADevice`, `nVIDIACUDADevice` |
+| `Mps` | `DevMps` | `mps`, `DevMps`, `devMps`, `AppleMetalPerformanceShaders`, `appleMetalPerformanceShaders` |
+| `Rocm` | `DevRocm` | `rocm`, `DevRocm`, `devRocm`, `AMDROCmDevice`, `aMDROCmDevice` |
 | `Tpu` | `DevTpu` | `tpu`, `DevTpu`, `devTpu`, `TensorProcessingUnit`, `tensorProcessingUnit` |
 
 ### Domain: `TensorElementType`
@@ -1727,9 +1697,9 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `hLast2` | `TmfChLast2` | `TmfChLast2`, `tmfChLast2`, `ChannelsLast2D`, `channelsLast2D` |
-| `hLast3` | `TmfChLast3` | `TmfChLast3`, `tmfChLast3`, `ChannelsLast3D`, `channelsLast3D` |
-| `ontig` | `TmfContig` | `TmfContig`, `tmfContig`, `Contiguous`, `contiguous` |
+| `ChLast2` | `TmfChLast2` | `chLast2`, `TmfChLast2`, `tmfChLast2`, `ChannelsLast2D`, `channelsLast2D` |
+| `ChLast3` | `TmfChLast3` | `chLast3`, `TmfChLast3`, `tmfChLast3`, `ChannelsLast3D`, `channelsLast3D` |
+| `Contig` | `TmfContig` | `contig`, `TmfContig`, `tmfContig`, `Contiguous`, `contiguous` |
 
 ### Domain: `TensorPurpose`
 
@@ -1947,7 +1917,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `BatchNorm` | `TtBatchNorm` | `batchNorm`, `TtBatchNorm`, `ttBatchNorm`, `BatchNormalization`, `batchNormalization` |
 | `BinaryLin` | `TtBinaryLin` | `binaryLin`, `TtBinaryLin`, `ttBinaryLin`, `BinaryLinearTransformation`, `binaryLinearTransformation` |
 | `BinaryNonLin` | `TtBinaryNonLin` | `binaryNonLin`, `TtBinaryNonLin`, `ttBinaryNonLin`, `BinaryNonLinearTransformation`, `binaryNonLinearTransformation` |
-| `BlockMatrixExtract` | `TtBlockMatrixExtr` | `blockMatrixExtract`, `TtBlockMatrixExtr`, `ttBlockMatrixExtr`, `BlockMatrixExtr`, `blockMatrixExtr`, `BlockMatrixExtractionFromAMatrix`, `blockMatrixExtractionFromAMatrix` |
+| `BlockMatrixExtr` | `TtBlockMatrixExtr` | `blockMatrixExtr`, `TtBlockMatrixExtr`, `ttBlockMatrixExtr`, `BlockMatrixExtractionFromAMatrix`, `blockMatrixExtractionFromAMatrix` |
 | `Canny` | `TtCanny` | `canny`, `TtCanny`, `ttCanny`, `CannyEdgeDetector`, `cannyEdgeDetector` |
 | `CholeskyDecomp` | `TtCholeskyDecomp` | `choleskyDecomp`, `TtCholeskyDecomp`, `ttCholeskyDecomp`, `CholeskyDecomposition`, `choleskyDecomposition` |
 | `Composition` | `TtComposition` | `composition`, `TtComposition`, `ttComposition`, `CompositionOfTransformations`, `compositionOfTransformations` |
@@ -1997,14 +1967,14 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `MatrixAdjoint` | `TtMatrixAdjoint` | `matrixAdjoint`, `TtMatrixAdjoint`, `ttMatrixAdjoint`, `MatrixConjugateTransposeAdjoint`, `matrixConjugateTransposeAdjoint` |
 | `MatrixAntiDiagonal` | `TtMatrixAntiDiagonal` | `matrixAntiDiagonal`, `TtMatrixAntiDiagonal`, `ttMatrixAntiDiagonal` |
 | `MatrixApply` | `TtMatrixApply` | `matrixApply`, `TtMatrixApply`, `ttMatrixApply`, `MatrixApplicationToAVectorMatrix`, `matrixApplicationToAVectorMatrix` |
-| `BandExtract` | `TtMatrixBandExtract` | `bandExtract`, `TtMatrixBandExtract`, `ttMatrixBandExtract`, `MatrixBandExtract`, `matrixBandExtract` |
+| `MatrixBandExtract` | `TtMatrixBandExtract` | `matrixBandExtract`, `TtMatrixBandExtract`, `ttMatrixBandExtract` |
 | `MatrixDecomp` | `TtMatrixDecomp` | `matrixDecomp`, `TtMatrixDecomp`, `ttMatrixDecomp`, `MatrixDecompositionFactorisation`, `matrixDecompositionFactorisation` |
 | `MatrixDiagonal` | `TtMatrixDiagonal` | `matrixDiagonal`, `TtMatrixDiagonal`, `ttMatrixDiagonal` |
 | `MatrixExp` | `TtMatrixExp` | `matrixExp`, `TtMatrixExp`, `ttMatrixExp`, `MatrixExponential`, `matrixExponential` |
 | `MatrixFlipLeftRight` | `TtMatrixFlipLeftRight` | `matrixFlipLeftRight`, `TtMatrixFlipLeftRight`, `ttMatrixFlipLeftRight` |
 | `MatrixFlipUpDown` | `TtMatrixFlipUpDown` | `matrixFlipUpDown`, `TtMatrixFlipUpDown`, `ttMatrixFlipUpDown` |
 | `MatrixInverse` | `TtMatrixInverse` | `matrixInverse`, `TtMatrixInverse`, `ttMatrixInverse`, `MatrixInversion`, `matrixInversion` |
-| `LowerTriangExtract` | `TtMatrixLowerTriang` | `lowerTriangExtract`, `TtMatrixLowerTriang`, `ttMatrixLowerTriang`, `MatrixLowerTriang`, `matrixLowerTriang`, `MatrixLowerTriangularExtract`, `matrixLowerTriangularExtract` |
+| `MatrixLowerTriang` | `TtMatrixLowerTriang` | `matrixLowerTriang`, `TtMatrixLowerTriang`, `ttMatrixLowerTriang`, `MatrixLowerTriangularExtract`, `matrixLowerTriangularExtract` |
 | `MatrixPower` | `TtMatrixPower` | `matrixPower`, `TtMatrixPower`, `ttMatrixPower`, `MatrixIntegerPower`, `matrixIntegerPower` |
 | `MatrixProduct` | `TtMatrixProduct` | `matrixProduct`, `TtMatrixProduct`, `ttMatrixProduct` |
 | `MatrixPseudoInverse` | `TtMatrixPseudoInverse` | `matrixPseudoInverse`, `TtMatrixPseudoInverse`, `ttMatrixPseudoInverse`, `PseudoInverseMatrix`, `pseudoInverseMatrix` |
@@ -2012,7 +1982,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `MatrixRotate90` | `TtMatrixRotate90` | `matrixRotate90`, `TtMatrixRotate90`, `ttMatrixRotate90` |
 | `MatrixTrace` | `TtMatrixTrace` | `matrixTrace`, `TtMatrixTrace`, `ttMatrixTrace` |
 | `MatrixTranspose` | `TtMatrixTranspose` | `matrixTranspose`, `TtMatrixTranspose`, `ttMatrixTranspose` |
-| `UpperTriangExtract` | `TtMatrixUpperTriang` | `upperTriangExtract`, `TtMatrixUpperTriang`, `ttMatrixUpperTriang`, `MatrixUpperTriang`, `matrixUpperTriang`, `MatrixUpperTriangularExtract`, `matrixUpperTriangularExtract` |
+| `MatrixUpperTriang` | `TtMatrixUpperTriang` | `matrixUpperTriang`, `TtMatrixUpperTriang`, `ttMatrixUpperTriang`, `MatrixUpperTriangularExtract`, `matrixUpperTriangularExtract` |
 | `MatrixVectorize` | `TtMatrixVectorize` | `matrixVectorize`, `TtMatrixVectorize`, `ttMatrixVectorize` |
 | `MaxPool2d` | `TtMaxPool2d` | `maxPool2d`, `TtMaxPool2d`, `ttMaxPool2d` |
 | `Membership` | `TtMembership` | `membership`, `TtMembership`, `ttMembership`, `SetOrTypeMembershipRelation`, `setOrTypeMembershipRelation` |
@@ -2128,22 +2098,22 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `AREA_MEASURE` | `UT_AREA_MEASURE` | `aREA_MEASURE`, `UT_AREA_MEASURE`, `uT_AREA_MEASURE`, `Area`, `area` |
-| `CURRENCY_MEASURE` | `UT_CURRENCY_MEASURE` | `cURRENCY_MEASURE`, `UT_CURRENCY_MEASURE`, `uT_CURRENCY_MEASURE`, `Currency`, `currency` |
-| `DATASPD_MEASURE` | `UT_DATASPD_MEASURE` | `dATASPD_MEASURE`, `UT_DATASPD_MEASURE`, `uT_DATASPD_MEASURE`, `DataSpeed`, `dataSpeed` |
-| `DATA_MEASURE` | `UT_DATA_MEASURE` | `dATA_MEASURE`, `UT_DATA_MEASURE`, `uT_DATA_MEASURE`, `DataSize`, `dataSize` |
-| `DENSITY_MEAS` | `UT_DENSITY_MEAS` | `dENSITY_MEAS`, `UT_DENSITY_MEAS`, `uT_DENSITY_MEAS`, `Density`, `density` |
-| `ENERGY_MEASURE` | `UT_ENERGY_MEASURE` | `eNERGY_MEASURE`, `UT_ENERGY_MEASURE`, `uT_ENERGY_MEASURE`, `Energy`, `energy` |
-| `LENGTH_MEASURE` | `UT_LENGTH_MEASURE` | `lENGTH_MEASURE`, `UT_LENGTH_MEASURE`, `uT_LENGTH_MEASURE`, `Length`, `length` |
-| `OTHER_MEASURE` | `UT_OTHER_MEASURE` | `oTHER_MEASURE`, `UT_OTHER_MEASURE`, `uT_OTHER_MEASURE`, `Other`, `other` |
-| `POWER_MEASURE` | `UT_POWER_MEASURE` | `pOWER_MEASURE`, `UT_POWER_MEASURE`, `uT_POWER_MEASURE`, `Power`, `power` |
-| `PRESSURE_MEASURE` | `UT_PRESSURE_MEASURE` | `pRESSURE_MEASURE`, `UT_PRESSURE_MEASURE`, `uT_PRESSURE_MEASURE`, `Pressure`, `pressure` |
-| `TEMP_MEASURE` | `UT_TEMP_MEASURE` | `tEMP_MEASURE`, `UT_TEMP_MEASURE`, `uT_TEMP_MEASURE`, `Temperature`, `temperature` |
-| `TIME_FREQ_MEASURE` | `UT_TIME_FREQ_MEASURE` | `tIME_FREQ_MEASURE`, `UT_TIME_FREQ_MEASURE`, `uT_TIME_FREQ_MEASURE`, `TimeFrequency`, `timeFrequency` |
-| `VELOCITY_MEASURE` | `UT_VELOCITY_MEASURE` | `vELOCITY_MEASURE`, `UT_VELOCITY_MEASURE`, `uT_VELOCITY_MEASURE`, `Velocity`, `velocity` |
-| `VOLUME_DRY_MEAS` | `UT_VOLUME_DRY_MEAS` | `vOLUME_DRY_MEAS`, `UT_VOLUME_DRY_MEAS`, `uT_VOLUME_DRY_MEAS`, `DryVolume`, `dryVolume` |
-| `VOLUME_LIQ_MEAS` | `UT_VOLUME_LIQ_MEAS` | `vOLUME_LIQ_MEAS`, `UT_VOLUME_LIQ_MEAS`, `uT_VOLUME_LIQ_MEAS`, `LiquidVolume`, `liquidVolume` |
-| `WEIGHT_MEASURE` | `UT_WEIGHT_MEASURE` | `wEIGHT_MEASURE`, `UT_WEIGHT_MEASURE`, `uT_WEIGHT_MEASURE`, `Weight`, `weight` |
+| `AREA_MEASURE` | `UT_AREA_MEASURE` | `aREA_MEASURE`, `UT_AREA_MEASURE`, `uT_AREA_MEASURE`, `_AREA_MEASURE`, `Area`, `area` |
+| `CURRENCY_MEASURE` | `UT_CURRENCY_MEASURE` | `cURRENCY_MEASURE`, `UT_CURRENCY_MEASURE`, `uT_CURRENCY_MEASURE`, `_CURRENCY_MEASURE`, `Currency`, `currency` |
+| `DATASPD_MEASURE` | `UT_DATASPD_MEASURE` | `dATASPD_MEASURE`, `UT_DATASPD_MEASURE`, `uT_DATASPD_MEASURE`, `_DATASPD_MEASURE`, `DataSpeed`, `dataSpeed` |
+| `DATA_MEASURE` | `UT_DATA_MEASURE` | `dATA_MEASURE`, `UT_DATA_MEASURE`, `uT_DATA_MEASURE`, `_DATA_MEASURE`, `DataSize`, `dataSize` |
+| `DENSITY_MEAS` | `UT_DENSITY_MEAS` | `dENSITY_MEAS`, `UT_DENSITY_MEAS`, `uT_DENSITY_MEAS`, `_DENSITY_MEAS`, `Density`, `density` |
+| `ENERGY_MEASURE` | `UT_ENERGY_MEASURE` | `eNERGY_MEASURE`, `UT_ENERGY_MEASURE`, `uT_ENERGY_MEASURE`, `_ENERGY_MEASURE`, `Energy`, `energy` |
+| `LENGTH_MEASURE` | `UT_LENGTH_MEASURE` | `lENGTH_MEASURE`, `UT_LENGTH_MEASURE`, `uT_LENGTH_MEASURE`, `_LENGTH_MEASURE`, `Length`, `length` |
+| `OTHER_MEASURE` | `UT_OTHER_MEASURE` | `oTHER_MEASURE`, `UT_OTHER_MEASURE`, `uT_OTHER_MEASURE`, `_OTHER_MEASURE`, `Other`, `other` |
+| `POWER_MEASURE` | `UT_POWER_MEASURE` | `pOWER_MEASURE`, `UT_POWER_MEASURE`, `uT_POWER_MEASURE`, `_POWER_MEASURE`, `Power`, `power` |
+| `PRESSURE_MEASURE` | `UT_PRESSURE_MEASURE` | `pRESSURE_MEASURE`, `UT_PRESSURE_MEASURE`, `uT_PRESSURE_MEASURE`, `_PRESSURE_MEASURE`, `Pressure`, `pressure` |
+| `TEMP_MEASURE` | `UT_TEMP_MEASURE` | `tEMP_MEASURE`, `UT_TEMP_MEASURE`, `uT_TEMP_MEASURE`, `_TEMP_MEASURE`, `Temperature`, `temperature` |
+| `TIME_FREQ_MEASURE` | `UT_TIME_FREQ_MEASURE` | `tIME_FREQ_MEASURE`, `UT_TIME_FREQ_MEASURE`, `uT_TIME_FREQ_MEASURE`, `_TIME_FREQ_MEASURE`, `TimeFrequency`, `timeFrequency` |
+| `VELOCITY_MEASURE` | `UT_VELOCITY_MEASURE` | `vELOCITY_MEASURE`, `UT_VELOCITY_MEASURE`, `uT_VELOCITY_MEASURE`, `_VELOCITY_MEASURE`, `Velocity`, `velocity` |
+| `VOLUME_DRY_MEAS` | `UT_VOLUME_DRY_MEAS` | `vOLUME_DRY_MEAS`, `UT_VOLUME_DRY_MEAS`, `uT_VOLUME_DRY_MEAS`, `_VOLUME_DRY_MEAS`, `DryVolume`, `dryVolume` |
+| `VOLUME_LIQ_MEAS` | `UT_VOLUME_LIQ_MEAS` | `vOLUME_LIQ_MEAS`, `UT_VOLUME_LIQ_MEAS`, `uT_VOLUME_LIQ_MEAS`, `_VOLUME_LIQ_MEAS`, `LiquidVolume`, `liquidVolume` |
+| `WEIGHT_MEASURE` | `UT_WEIGHT_MEASURE` | `wEIGHT_MEASURE`, `UT_WEIGHT_MEASURE`, `uT_WEIGHT_MEASURE`, `_WEIGHT_MEASURE`, `Weight`, `weight` |
 
 ### Domain: `VariableDomain`
 
@@ -2203,5 +2173,5 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `NA_` | `_NA_` | `nA_`, `_NA_`, `NotApplicable`, `notApplicable` |
+| `A_` | `_NA_` | `a_`, `_NA_`, `NotApplicable`, `notApplicable` |
 

@@ -10,7 +10,7 @@ ParameterDef('OptimizationObjectiveSense',
     parameterName: 'Optimization objective sense')
 
 MathModelDef('LinearProductionPlanning',
-    modelTypeEnum: MathModelType.LinearProgram,
+    modelTypeEnum: MathModelType.Lp,
     usageContextEnum: MathModelUsageContext.Optimisation,
     modelName: 'Linear production planning',
     description: 'Maximize production margin under machine-capacity constraints') {
@@ -31,7 +31,7 @@ MathModelDef('LinearProductionPlanning',
 
         data('ProductionVariablesData',
             dataTypeEnum: MathModelDataType.Vector,
-            purposeEnum: MathModelDataPurpose.DecisionVariables,
+            purposeEnum: MathModelDataPurpose.DecisionVars,
             vectorId: 'ProductionVariables', sequenceNum: 0) {
             Vector('ProductionVariables', name: 'Production quantities', dimension: 2,
                 componentArray: '["Standard","Premium"]')
@@ -57,7 +57,7 @@ MathModelDef('LinearProductionPlanning',
 
         data('MachineCapacityData',
             dataTypeEnum: MathModelDataType.Vector,
-            purposeEnum: MathModelDataPurpose.RightHandSide,
+            purposeEnum: MathModelDataPurpose.RhsVector,
             vectorId: 'MachineCapacity', sequenceNum: 3) {
             Vector('MachineCapacity', name: 'Available machine capacity', dimension: 2,
                 componentArray: '[100,80]')
@@ -65,7 +65,7 @@ MathModelDef('LinearProductionPlanning',
 
         data('ProductionBoundsData',
             dataTypeEnum: MathModelDataType.Matrix,
-            purposeEnum: MathModelDataPurpose.VariableBounds,
+            purposeEnum: MathModelDataPurpose.VarBounds,
             matrixId: 'ProductionBounds', sequenceNum: 4) {
             Matrix('ProductionBounds', matrixTypeEnum: MatrixType.Rectangular,
                 domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,

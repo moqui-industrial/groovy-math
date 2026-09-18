@@ -19,16 +19,18 @@ class DslVocabularyTest {
         // Entities and keywords
         assertTrue(vocab.hasEntity('moqui.math.MathModel'))
         assertTrue(vocab.hasEntity('MathModel'))
-        assertTrue(vocab.hasEntity('model'))
+        assertTrue(vocab.hasEntity('mathModel'))
         assertTrue(vocab.hasEntity('Matrix'))
         assertTrue(vocab.hasEntity('matrix'))
         assertTrue(vocab.hasEntity('Vector'))
         assertTrue(vocab.hasEntity('vector'))
         assertTrue(vocab.hasEntity('Tensor'))
         assertTrue(vocab.hasEntity('tensor'))
+        assertTrue(vocab.hasEntity('Parameter'))
         assertTrue(vocab.hasEntity('parameter'))
-        assertTrue(vocab.hasEntity('parameterDef'))
+        assertTrue(vocab.hasEntity('Transformation'))
         assertTrue(vocab.hasEntity('transformation'))
+        assertFalse(vocab.hasEntity('nonExistentEntityXYZ'))
 
         // Transformation entities derived dynamically
         assertTrue(vocab.isTransformationEntity('moqui.math.Transformation'))
@@ -48,14 +50,14 @@ class DslVocabularyTest {
     void testNakedSymbolResolution() {
         DslVocabulary vocab = DslVocabulary.of(MoquiSchemaInspector.embedded())
 
-        // Objective sense synonyms
-        DslSymbol minUK = vocab.resolveSymbol('minimise')
-        assertNotNull(minUK)
-        assertEquals('MINIMIZE', minUK.id)
+        // Objective sense
+        DslSymbol minUpper = vocab.resolveSymbol('Minimize')
+        assertNotNull(minUpper)
+        assertEquals('MINIMIZE', minUpper.id)
 
-        DslSymbol minUS = vocab.resolveSymbol('minimize')
-        assertNotNull(minUS)
-        assertEquals('MINIMIZE', minUS.id)
+        DslSymbol minLower = vocab.resolveSymbol('minimize')
+        assertNotNull(minLower)
+        assertEquals('MINIMIZE', minLower.id)
 
         // MathModelType
         DslSymbol qp = vocab.resolveSymbol('QuadraticProgram')
@@ -72,11 +74,11 @@ class DslVocabularyTest {
         assertEquals('DtFloat32', f32.id)
 
         // DeviceType
-        DslSymbol cpu = vocab.resolveSymbol('CPU')
+        DslSymbol cpu = vocab.resolveSymbol('Cpu')
         assertNotNull(cpu)
         assertEquals('DevCpu', cpu.id)
 
-        DslSymbol cuda = vocab.resolveSymbol('CUDA')
+        DslSymbol cuda = vocab.resolveSymbol('Cuda')
         assertNotNull(cuda)
         assertEquals('DevCuda', cuda.id)
     }

@@ -8,10 +8,10 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 enum TensorDevice implements DslEnumValue {
-    CPU('DevCpu', 'cpu', 'Host CPU', ''),
-    CUDA('DevCuda', 'cuda', 'NVIDIA CUDA Device', ''),
-    ROCM('DevRocm', 'rocm', 'AMD ROCm Device', ''),
-    MPS('DevMps', 'mps', 'Apple Metal Performance Shaders', ''),
+    Cpu('DevCpu', 'cpu', 'Host CPU', ''),
+    Cuda('DevCuda', 'cuda', 'NVIDIA CUDA Device', ''),
+    Rocm('DevRocm', 'rocm', 'AMD ROCm Device', ''),
+    Mps('DevMps', 'mps', 'Apple Metal Performance Shaders', ''),
     Tpu('DevTpu', 'tpu', 'Tensor Processing Unit', '');
 
     final String id

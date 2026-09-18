@@ -8,19 +8,19 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 enum ParametricPathProfile implements DslEnumValue {
-    ParameterProgression('PppfParameterProgression', '', 'Parameter Progression Profile', ''),
-    TrajectoryProfile('PppfTrajectoryProfile', '', 'Trajectory Profile', ''),
-    TrapezoidalProfile('PppfTrapezoidalProfile', '', 'Trapezoidal Velocity Profile ', 'PppfTrajectoryProfile'),
-    SCurveProfile('PppfSCurveProfile', '', 'S-curve (Jerk-limited) Profile', 'PppfTrajectoryProfile'),
-    DoubleSCurveProfile('PppfDoubleSCurveProfile', '', 'Double S-curve Profile', 'PppfTrajectoryProfile'),
-    PolyProfile('PppfPolyProfile', '', 'Polynomial Profile', 'PppfTrajectoryProfile'),
+    PppfParameterProgression('PppfParameterProgression', '', 'Parameter Progression Profile', ''),
+    PppfTrajectoryProfile('PppfTrajectoryProfile', '', 'Trajectory Profile', ''),
+    PppfTrapezoidalProfile('PppfTrapezoidalProfile', '', 'Trapezoidal Velocity Profile ', 'PppfTrajectoryProfile'),
+    PppfSCurveProfile('PppfSCurveProfile', '', 'S-curve (Jerk-limited) Profile', 'PppfTrajectoryProfile'),
+    PppfDoubleSCurveProfile('PppfDoubleSCurveProfile', '', 'Double S-curve Profile', 'PppfTrajectoryProfile'),
+    PppfPolyProfile('PppfPolyProfile', '', 'Polynomial Profile', 'PppfTrajectoryProfile'),
     Pppf3rdDegPolyProfile('Pppf3rdDegPolyProfile', '', 'Polynomial of 3rd Degree Profile', 'PppfPolyProfile'),
     Pppf5thDegPolyProfile('Pppf5thDegPolyProfile', '', 'Polynomial of 5th Degree Profile', 'PppfPolyProfile'),
     Pppf7thDegPolyProfile('Pppf7thDegPolyProfile', '', 'Polynomial of 7th Degree Profile', 'PppfPolyProfile'),
-    HighDegPolyProfile('PppfHighDegPolyProfile', '', 'Polynomial of Higher Degree Profile', 'PppfPolyProfile'),
-    TrigProfile('PppfTrigProfile', '', 'Trigonometric Profile', 'PppfTrajectoryProfile'),
-    CycloidalProfile('PppfCycloidalProfile', '', 'Cycloidal Profile', 'PppfTrigProfile'),
-    EllipticProfile('PppfEllipticProfile', '', 'Elliptic Profile', 'PppfTrigProfile');
+    PppfHighDegPolyProfile('PppfHighDegPolyProfile', '', 'Polynomial of Higher Degree Profile', 'PppfPolyProfile'),
+    PppfTrigProfile('PppfTrigProfile', '', 'Trigonometric Profile', 'PppfTrajectoryProfile'),
+    PppfCycloidalProfile('PppfCycloidalProfile', '', 'Cycloidal Profile', 'PppfTrigProfile'),
+    PppfEllipticProfile('PppfEllipticProfile', '', 'Elliptic Profile', 'PppfTrigProfile');
 
     final String id
     final String enumCode

@@ -65,7 +65,7 @@ class PetscTaoProviderTest {
 
     private static MathMeta energyDispatch() {
         MathDsl.math(modelDefinition()) {
-            MathModelDef('QuadraticEnergyDispatch', modelTypeEnum: MathModelType.QuadraticProgram)
+            MathModelDef('QuadraticEnergyDispatch', modelTypeEnum: MathModelType.Qp)
             MathModel('EnergyDispatch', mathModelDefId: 'QuadraticEnergyDispatch',
                 solvingMethodEnum: MathModelSolvingMethod.InteriorPoint)
             Parameter('ObjectiveSense', mathModelId: 'EnergyDispatch',
@@ -76,13 +76,13 @@ class PetscTaoProviderTest {
             Matrix('DispatchBounds', rows: 2, cols: 2, componentArray: '[[0,0],[5,3]]')
             Vector('DispatchInitialCondition', componentArray: '[1,1]')
             MathModelData('variables', mathModelId: 'EnergyDispatch',
-                purposeEnum: MathModelDataPurpose.DecisionVariables, vectorId: 'EnergySourceVariables')
+                purposeEnum: MathModelDataPurpose.DecisionVars, vectorId: 'EnergySourceVariables')
             MathModelData('hessian', mathModelId: 'EnergyDispatch',
                 purposeEnum: MathModelDataPurpose.Hessian, matrixId: 'DispatchHessian')
             MathModelData('linear', mathModelId: 'EnergyDispatch',
                 purposeEnum: MathModelDataPurpose.CostVector, vectorId: 'DispatchLinearCost')
             MathModelData('bounds', mathModelId: 'EnergyDispatch',
-                purposeEnum: MathModelDataPurpose.VariableBounds, matrixId: 'DispatchBounds')
+                purposeEnum: MathModelDataPurpose.VarBounds, matrixId: 'DispatchBounds')
             MathModelData('initial', mathModelId: 'EnergyDispatch',
                 purposeEnum: MathModelDataPurpose.InitialCondition, vectorId: 'DispatchInitialCondition')
         }

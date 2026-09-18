@@ -8,7 +8,7 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 enum GraphCategoryPurpose implements DslEnumValue {
-    UnderlyingGraph('GcpUnderlyingGraph', '', 'Underlying graph U(C): objects become vertices and morphisms become directed edges', '');
+    Graph('GcpUnderlyingGraph', '', 'Underlying graph U(C): objects become vertices and morphisms become directed edges', '');
 
     final String id
     final String enumCode

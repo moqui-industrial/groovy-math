@@ -21,7 +21,9 @@ import org.moqui.math.entity.FieldDefinition
 import org.moqui.math.entity.ModelDefinition
 import org.moqui.math.entity.RelationshipDefinition
 import org.moqui.math.entity.StatusDefinition
+import org.moqui.math.entity.StatusFlowItemDefinition
 import org.moqui.math.entity.StatusTransitionDefinition
+import org.moqui.math.entity.UomConversionDefinition
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
@@ -159,6 +161,13 @@ final class MoquiSchemaInspector {
         descendantElements(root, 'moqui.basic.StatusFlow').each { Element node ->
             model.addStatusFlow(node.getAttribute('statusFlowId'))
         }
+        descendantElements(root, 'moqui.basic.StatusFlowItem').each { Element node ->
+            model.addStatusFlowItem(new StatusFlowItemDefinition(
+                node.getAttribute('statusFlowId'),
+                node.getAttribute('statusId'),
+                attributeOrNull(node, 'isInitial'),
+                integerOrNull(node, 'sequenceNum')))
+        }
         descendantElements(root, 'moqui.basic.StatusFlowTransition').each { Element node ->
             model.addStatusTransition(new StatusTransitionDefinition(
                 attributeOrNull(node, 'statusFlowId'),
@@ -167,6 +176,17 @@ final class MoquiSchemaInspector {
                 attributeOrNull(node, 'transitionName'),
                 integerOrNull(node, 'transitionSequence'),
                 attributeOrNull(node, 'userPermissionId')))
+        }
+        descendantElements(root, 'moqui.basic.UomConversion').each { Element node ->
+            model.addUomConversion(new UomConversionDefinition(
+                attributeOrNull(node, 'uomConversionId'),
+                node.getAttribute('uomId'),
+                node.getAttribute('toUomId'),
+                timestampOrNull(node, 'fromDate'),
+                timestampOrNull(node, 'thruDate'),
+                doubleOrNull(node, 'conversionFactor'),
+                decimalOrNull(node, 'conversionOffset'),
+                attributeOrNull(node, 'purposeEnumId')))
         }
         model
     }
@@ -258,6 +278,29 @@ final class MoquiSchemaInspector {
     private static Integer integerOrNull(final Element node, final String name) {
         String value = attributeOrNull(node, name)
         value == null ? null : Integer.valueOf(value)
+    }
+
+    private static Double doubleOrNull(final Element node, final String name) {
+        String value = attributeOrNull(node, name)
+        value == null ? null : Double.valueOf(value)
+    }
+
+    private static BigDecimal decimalOrNull(final Element node, final String name) {
+        String value = attributeOrNull(node, name)
+        value == null ? null : new BigDecimal(value)
+    }
+
+    private static java.sql.Timestamp timestampOrNull(final Element node, final String name) {
+        String value = attributeOrNull(node, name)
+        if (value == null) return null
+        String normalized = value.trim()
+        if (normalized.length() == 10) normalized += ' 00:00:00'
+        if (normalized.contains('T')) normalized = normalized.replace('T', ' ')
+        try {
+            return java.sql.Timestamp.valueOf(normalized)
+        } catch (Exception ignored) {
+            return null
+        }
     }
 
     private static String attributeOrNull(final Element node, final String name) {

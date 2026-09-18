@@ -29,13 +29,13 @@ enum AlgebraicStructureType implements DslEnumValue {
     AsVectorSpace('AsVectorSpace', '', 'Vector space: module whose scalar ring is a specified field', 'AsModule'),
     AsRn3('AsRn3', '', 'Three-dimensional vector space R^3 over the field R', 'AsVectorSpace'),
     AsC2('AsC2', '', 'Two-dimensional vector space C^2 over the field C', 'AsVectorSpace'),
-    VsStateSpace('VsStateSpace', 'StateSpace', 'State space; its mathematical structure is defined by the selected model', ''),
-    VsEuclideanSpace('VsEuclideanSpace', 'EuclideanSpace', 'Finite-dimensional real inner-product vector space', 'AsVectorSpace'),
-    EuclideanSpace2D('EuclideanSpace2D', 'Euclidean2DSpace', '2D Euclidean Space', 'VsEuclideanSpace'),
-    EuclideanSpace3D('EuclideanSpace3D', 'Euclidean3DSpace', '3D Euclidean Space', 'VsEuclideanSpace'),
-    QuaternionEuclideanSpace('QuaternionEuclideanSpace', 'EuclideanQuaternionSpace', 'Quaternion coordinates represented as the four-dimensional real Euclidean space R^4', 'VsEuclideanSpace'),
-    EuclideanSpaceND('EuclideanSpaceND', 'EuclideanNDSpace', 'N-dimensional real Euclidean space', 'VsEuclideanSpace'),
-    VsThermodynamicSpace('VsThermodynamicSpace', 'ThermodynamicSpace', 'Thermodynamic state space; dimensionality and constraints are defined by the selected state variables and model', 'VsStateSpace');
+    StateSpace('VsStateSpace', 'StateSpace', 'State space; its mathematical structure is defined by the selected model', ''),
+    EuclideanSpace('VsEuclideanSpace', 'EuclideanSpace', 'Finite-dimensional real inner-product vector space', 'AsVectorSpace'),
+    Euclidean2DSpace('EuclideanSpace2D', 'Euclidean2DSpace', '2D Euclidean Space', 'VsEuclideanSpace'),
+    Euclidean3DSpace('EuclideanSpace3D', 'Euclidean3DSpace', '3D Euclidean Space', 'VsEuclideanSpace'),
+    EuclideanQuaternionSpace('QuaternionEuclideanSpace', 'EuclideanQuaternionSpace', 'Quaternion coordinates represented as the four-dimensional real Euclidean space R^4', 'VsEuclideanSpace'),
+    EuclideanNDSpace('EuclideanSpaceND', 'EuclideanNDSpace', 'N-dimensional real Euclidean space', 'VsEuclideanSpace'),
+    ThermodynamicSpace('VsThermodynamicSpace', 'ThermodynamicSpace', 'Thermodynamic state space; dimensionality and constraints are defined by the selected state variables and model', 'VsStateSpace');
 
     final String id
     final String enumCode

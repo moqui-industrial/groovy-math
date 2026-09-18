@@ -11,8 +11,8 @@ enum TensorDecompMethod implements DslEnumValue {
     Hosvd('TdmHosvd', '', 'Tucker / Higher-Order SVD (HOSVD)', ''),
     CP('TdmCP', '', 'Canonical Polyadic (CP / PARAFAC)', ''),
     Tucker('TdmTucker', '', 'Tucker (HOOI)', ''),
-    TensorTrain('TdmTT', '', 'Tensor-Train (MPS)', ''),
-    HierarchicalTucker('TdmHT', '', 'Hierarchical-Tucker', '');
+    TT('TdmTT', '', 'Tensor-Train (MPS)', ''),
+    HT('TdmHT', '', 'Hierarchical-Tucker', '');
 
     final String id
     final String enumCode
