@@ -57,6 +57,25 @@ FALLBACK_ROOTS = {
 }
 
 
+import subprocess
+
+
+def get_git_commit(root):
+    if not root or not os.path.isdir(root):
+        return None
+    try:
+        res = subprocess.run(
+            ['git', 'rev-parse', 'HEAD'],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return res.stdout.strip()
+    except Exception:
+        return None
+
+
 def resolve_root(env_var):
     explicit = os.environ.get(env_var)
     if explicit:
@@ -80,8 +99,11 @@ def write_manifest(entries):
         'synced=' + datetime.date.today().isoformat(),
         '',
     ]
-    for name, (origin, sha) in entries.items():
+    for name, data in entries.items():
+        origin, sha, commit = data
         lines.append('%s.origin=%s' % (name, origin))
+        if commit:
+            lines.append('%s.upstreamCommit=%s' % (name, commit))
         lines.append('%s.sha256=%s' % (name, sha))
     with open(MANIFEST, 'w') as handle:
         handle.write('\n'.join(lines) + '\n')
@@ -107,10 +129,11 @@ def main():
         root = resolve_root(env_var)
         upstream = os.path.join(root, relative) if root else None
 
+        commit = get_git_commit(root) if root else None
         if upstream is None or not os.path.isfile(upstream):
             skipped.append('%s (no %s)' % (name, env_var))
             if os.path.isfile(vendored):
-                entries[name] = (origin, digest(vendored))
+                entries[name] = (origin, digest(vendored), None)
             continue
 
         if options.check:
@@ -119,17 +142,17 @@ def main():
             elif digest(vendored) != digest(upstream):
                 newer = 'here' if os.path.getmtime(vendored) > os.path.getmtime(upstream) else 'upstream'
                 drifted.append('%s (differs; %s is newer)' % (name, newer))
-            entries[name] = (origin, digest(vendored) if os.path.isfile(vendored) else '')
+            entries[name] = (origin, digest(vendored) if os.path.isfile(vendored) else '', commit)
         elif options.push:
             if not os.path.isfile(vendored):
                 skipped.append('%s (nothing vendored to push)' % name)
                 continue
             shutil.copyfile(vendored, upstream)
-            entries[name] = (origin, digest(vendored))
+            entries[name] = (origin, digest(vendored), commit)
             print('pushed %-22s -> %s' % (name, upstream))
         else:
             shutil.copyfile(upstream, vendored)
-            entries[name] = (origin, digest(vendored))
+            entries[name] = (origin, digest(vendored), commit)
             print('synced %-22s <- %s' % (name, upstream))
 
     if skipped:

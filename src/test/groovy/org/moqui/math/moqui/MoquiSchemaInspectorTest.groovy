@@ -50,7 +50,7 @@ class MoquiSchemaInspectorTest {
         // `./gradlew syncMoquiSchema`.
         ModelDefinition model = MoquiSchemaInspector.inspect(VENDORED_MATH_ENTITIES)
 
-        assert model.entities.size() == 90
+        assert model.entities.size() == 92
         assert model.extensionCount == 1
         assert model.entity('MathModel').relationships.data.relatedEntityName == 'moqui.math.MathModelData'
         assert model.entity('MathModelDefPipeline').relationships.transformation.relatedEntityName == 'moqui.math.Transformation'
@@ -63,8 +63,8 @@ class MoquiSchemaInspectorTest {
         // No file path, no MOQUI_MATH_ENTITIES: this is what a plain consumer of the jar gets.
         ModelDefinition model = MoquiSchemaInspector.embedded()
 
-        assert model.entities.size() == 103
-        assert model.entities.keySet().count { String name -> name.startsWith('moqui.math') } == 90
+        assert model.entities.size() == 105
+        assert model.entities.keySet().count { String name -> name.startsWith('moqui.math') } == 92
         assert model.extensionCount == 1
         // Raw element count across the three sources; unique ids are fewer because MathData.xml
         // is allowed to redeclare a value from MathEntities.xml.

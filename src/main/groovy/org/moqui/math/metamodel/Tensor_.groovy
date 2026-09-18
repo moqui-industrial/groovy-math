@@ -39,8 +39,6 @@ class Tensor_ {
     public static final Attribute<Tensor, Long> quantAxis = new Attribute<>('quantAxis', Tensor.class, Long.class, false, false)
     public static final Attribute<Tensor, String> elementArray = new Attribute<>('elementArray', Tensor.class, String.class, false, false)
     public static final Attribute<Tensor, byte[]> elementBlob = new Attribute<>('elementBlob', Tensor.class, byte[].class, false, false)
-    public static final Attribute<Tensor, String> arrayEncodingEnumId = new Attribute<>('arrayEncodingEnumId', Tensor.class, String.class, false, false)
-    public static final Attribute<Tensor, String> arrayChecksum = new Attribute<>('arrayChecksum', Tensor.class, String.class, false, false)
     public static final Attribute<Tensor, String> dataTypeEnumId = new Attribute<>('dataTypeEnumId', Tensor.class, String.class, false, false)
     public static final Attribute<Tensor, String> deviceEnumId = new Attribute<>('deviceEnumId', Tensor.class, String.class, false, false)
 }

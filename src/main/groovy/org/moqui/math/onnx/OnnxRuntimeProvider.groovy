@@ -36,19 +36,47 @@ final class OnnxRuntimeProvider implements MathProvider<OnnxPlan, Map<String, Ob
                 "Run './gradlew buildOnnxNative' and ensure libonnxruntime is on library path.")
         }
 
+        String modelPath = null
         ModelValue model = mathModelId ? mathMeta.entity('MathModel').findByName(mathModelId) : null
-        if (!model) {
-            for (String name : mathMeta.entity('MathModel').getNames()) {
-                ModelValue candidate = mathMeta.entity('MathModel').findByName(name)
-                String loc = candidate?.get('location') as String
-                if (loc?.endsWith('.onnx') || candidate?.get('solvingMethod') == 'MmsmOnnx' || candidate?.get('solvingMethodEnumId') == 'MmsmOnnx' || candidate?.get('solvingMethod') == 'SmOnnx') {
-                    model = candidate
-                    break
+        if (model != null) {
+            String defId = model.get('mathModelDefId') as String
+            if (defId && mathMeta.entity('MathModelDefContent') != null) {
+                for (String contentName : mathMeta.entity('MathModelDefContent').getNames()) {
+                    ModelValue content = mathMeta.entity('MathModelDefContent').findByName(contentName)
+                    if (content?.get('mathModelDefId') == defId) {
+                        String typeEnum = content.get('contentTypeEnumId') as String
+                        String loc = content.get('contentLocation') as String
+                        if (typeEnum == 'MmCntOnnx' || (loc != null && loc.endsWith('.onnx'))) {
+                            modelPath = loc
+                            break
+                        }
+                    }
                 }
             }
         }
 
-        String modelPath = model?.get('location') as String
+        if (modelPath == null && mathMeta.entity('MathModelDefContent') != null) {
+            for (String name : mathMeta.entity('MathModel').getNames()) {
+                ModelValue candidate = mathMeta.entity('MathModel').findByName(name)
+                String defId = candidate?.get('mathModelDefId') as String
+                if (defId) {
+                    for (String contentName : mathMeta.entity('MathModelDefContent').getNames()) {
+                        ModelValue content = mathMeta.entity('MathModelDefContent').findByName(contentName)
+                        if (content?.get('mathModelDefId') == defId) {
+                            String typeEnum = content.get('contentTypeEnumId') as String
+                            String loc = content.get('contentLocation') as String
+                            if (typeEnum == 'MmCntOnnx' || (loc != null && loc.endsWith('.onnx')) ||
+                                candidate.get('solvingMethod') == 'MmsmOnnx' || candidate.get('solvingMethodEnumId') == 'MmsmOnnx' || candidate.get('solvingMethod') == 'SmOnnx') {
+                                modelPath = loc
+                                break
+                            }
+                        }
+                    }
+                }
+                if (modelPath != null) break
+            }
+        }
+
         if (!modelPath) {
             throw new IllegalArgumentException("No ONNX model location specified for model: ${mathModelId}")
         }

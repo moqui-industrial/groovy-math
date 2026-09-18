@@ -46,9 +46,6 @@ class MathModel implements Serializable {
     /** statusFlowId */
     String statusFlowId
 
-    /** location */
-    String location
-
     MathModelDef modelDef
 
     Graph graph
@@ -72,7 +69,6 @@ class MathModel implements Serializable {
             if (args.containsKey('description')) this.description = args.get('description')?.toString()
             if (args.containsKey('statusId')) this.statusId = args.get('statusId')?.toString()
             if (args.containsKey('statusFlowId')) this.statusFlowId = args.get('statusFlowId')?.toString()
-            if (args.containsKey('location')) this.location = args.get('location')?.toString()
         }
     }
 
@@ -121,11 +117,6 @@ class MathModel implements Serializable {
         return this;
     }
 
-    MathModel location(String value) {
-        this.location = value
-        return this;
-    }
-
     MathModel modelDef(MathModelDef item) {
         this.modelDef = item;
         return this;
@@ -162,7 +153,6 @@ class MathModel implements Serializable {
         if (this.description != null) map.put('description', this.description);
         if (this.statusId != null) map.put('statusId', this.statusId);
         if (this.statusFlowId != null) map.put('statusFlowId', this.statusFlowId);
-        if (this.location != null) map.put('location', this.location);
         return map;
     }
 }

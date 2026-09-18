@@ -16,6 +16,8 @@ class TensorContent_ {
     public static final Attribute<TensorContent, String> tensorId = new Attribute<>('tensorId', TensorContent.class, String.class, false, true)
     public static final Attribute<TensorContent, String> contentLocation = new Attribute<>('contentLocation', TensorContent.class, String.class, false, false)
     public static final Attribute<TensorContent, String> contentTypeEnumId = new Attribute<>('contentTypeEnumId', TensorContent.class, String.class, false, false)
+    public static final Attribute<TensorContent, String> arrayChecksum = new Attribute<>('arrayChecksum', TensorContent.class, String.class, false, false)
+    public static final Attribute<TensorContent, String> arrayEncodingEnumId = new Attribute<>('arrayEncodingEnumId', TensorContent.class, String.class, false, false)
     public static final Attribute<TensorContent, java.sql.Timestamp> contentDate = new Attribute<>('contentDate', TensorContent.class, java.sql.Timestamp.class, false, false)
     public static final Attribute<TensorContent, String> description = new Attribute<>('description', TensorContent.class, String.class, false, false)
     public static final Attribute<TensorContent, String> userId = new Attribute<>('userId', TensorContent.class, String.class, false, false)

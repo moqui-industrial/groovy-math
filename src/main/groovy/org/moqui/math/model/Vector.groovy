@@ -64,6 +64,8 @@ class Vector implements Serializable {
 
     List<VectorComponent> components = new ArrayList<>()
 
+    List<VectorContent> contents = new ArrayList<>()
+
     Vector() {}
 
     Vector(Map<String, Object> args) {
@@ -161,6 +163,11 @@ class Vector implements Serializable {
 
     Vector components(List<VectorComponent> list) {
         this.components = list;
+        return this;
+    }
+
+    Vector contents(List<VectorContent> list) {
+        this.contents = list;
         return this;
     }
 

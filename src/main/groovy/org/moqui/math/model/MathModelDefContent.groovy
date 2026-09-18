@@ -13,14 +13,14 @@ import java.util.List
 import java.util.ArrayList
 
 @CompileStatic
-@EqualsAndHashCode(includes = ['mathModelContentId'])
+@EqualsAndHashCode(includes = ['mathModelDefContentId'])
 @ToString(includePackage = false, includeNames = true)
 @AutoClone
 class MathModelDefContent implements Serializable {
     private static final long serialVersionUID = 1L
 
-    /** mathModelContentId */
-    String mathModelContentId
+    /** mathModelDefContentId */
+    String mathModelDefContentId
 
     /** mathModelDefId */
     String mathModelDefId
@@ -49,7 +49,7 @@ class MathModelDefContent implements Serializable {
 
     MathModelDefContent(Map<String, Object> args) {
         if (args != null) {
-            if (args.containsKey('mathModelContentId')) this.mathModelContentId = args.get('mathModelContentId')?.toString()
+            if (args.containsKey('mathModelDefContentId')) this.mathModelDefContentId = args.get('mathModelDefContentId')?.toString()
             if (args.containsKey('mathModelDefId')) this.mathModelDefId = args.get('mathModelDefId')?.toString()
             if (args.containsKey('contentLocation')) this.contentLocation = args.get('contentLocation')?.toString()
             if (args.containsKey('contentTypeEnumId')) this.contentTypeEnumId = args.get('contentTypeEnumId')?.toString()
@@ -60,8 +60,8 @@ class MathModelDefContent implements Serializable {
         }
     }
 
-    MathModelDefContent mathModelContentId(String value) {
-        this.mathModelContentId = value
+    MathModelDefContent mathModelDefContentId(String value) {
+        this.mathModelDefContentId = value
         return this;
     }
 
@@ -107,7 +107,7 @@ class MathModelDefContent implements Serializable {
 
     Map<String, Object> toMap() {
         Map<String, Object> map = new LinkedHashMap<>();
-        if (this.mathModelContentId != null) map.put('mathModelContentId', this.mathModelContentId);
+        if (this.mathModelDefContentId != null) map.put('mathModelDefContentId', this.mathModelDefContentId);
         if (this.mathModelDefId != null) map.put('mathModelDefId', this.mathModelDefId);
         if (this.contentLocation != null) map.put('contentLocation', this.contentLocation);
         if (this.contentTypeEnumId != null) map.put('contentTypeEnumId', this.contentTypeEnumId);

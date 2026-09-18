@@ -1,6 +1,6 @@
 /*
  * Generated domain model for Moqui Math Metamodel
- * Entity: moqui.math.TensorContent
+ * Entity: moqui.math.MatrixContent
  */
 package org.moqui.math.model
 
@@ -13,17 +13,17 @@ import java.util.List
 import java.util.ArrayList
 
 @CompileStatic
-@EqualsAndHashCode(includes = ['tensorContentId'])
+@EqualsAndHashCode(includes = ['matrixContentId'])
 @ToString(includePackage = false, includeNames = true)
 @AutoClone
-class TensorContent implements Serializable {
+class MatrixContent implements Serializable {
     private static final long serialVersionUID = 1L
 
-    /** tensorContentId */
-    String tensorContentId
+    /** matrixContentId */
+    String matrixContentId
 
-    /** tensorId */
-    String tensorId
+    /** matrixId */
+    String matrixId
 
     /** contentLocation */
     String contentLocation
@@ -46,14 +46,14 @@ class TensorContent implements Serializable {
     /** userId */
     String userId
 
-    Tensor tensor
+    Matrix matrix
 
-    TensorContent() {}
+    MatrixContent() {}
 
-    TensorContent(Map<String, Object> args) {
+    MatrixContent(Map<String, Object> args) {
         if (args != null) {
-            if (args.containsKey('tensorContentId')) this.tensorContentId = args.get('tensorContentId')?.toString()
-            if (args.containsKey('tensorId')) this.tensorId = args.get('tensorId')?.toString()
+            if (args.containsKey('matrixContentId')) this.matrixContentId = args.get('matrixContentId')?.toString()
+            if (args.containsKey('matrixId')) this.matrixId = args.get('matrixId')?.toString()
             if (args.containsKey('contentLocation')) this.contentLocation = args.get('contentLocation')?.toString()
             if (args.containsKey('contentTypeEnumId')) this.contentTypeEnumId = args.get('contentTypeEnumId')?.toString()
             if (args.containsKey('arrayChecksum')) this.arrayChecksum = args.get('arrayChecksum')?.toString()
@@ -64,60 +64,60 @@ class TensorContent implements Serializable {
         }
     }
 
-    TensorContent tensorContentId(String value) {
-        this.tensorContentId = value
+    MatrixContent matrixContentId(String value) {
+        this.matrixContentId = value
         return this;
     }
 
-    TensorContent tensorId(String value) {
-        this.tensorId = value
+    MatrixContent matrixId(String value) {
+        this.matrixId = value
         return this;
     }
 
-    TensorContent contentLocation(String value) {
+    MatrixContent contentLocation(String value) {
         this.contentLocation = value
         return this;
     }
 
-    TensorContent contentTypeEnumId(String value) {
+    MatrixContent contentTypeEnumId(String value) {
         this.contentTypeEnumId = value
         return this;
     }
 
-    TensorContent arrayChecksum(String value) {
+    MatrixContent arrayChecksum(String value) {
         this.arrayChecksum = value
         return this;
     }
 
-    TensorContent arrayEncodingEnumId(String value) {
+    MatrixContent arrayEncodingEnumId(String value) {
         this.arrayEncodingEnumId = value
         return this;
     }
 
-    TensorContent contentDate(java.sql.Timestamp value) {
+    MatrixContent contentDate(java.sql.Timestamp value) {
         this.contentDate = value
         return this;
     }
 
-    TensorContent description(String value) {
+    MatrixContent description(String value) {
         this.description = value
         return this;
     }
 
-    TensorContent userId(String value) {
+    MatrixContent userId(String value) {
         this.userId = value
         return this;
     }
 
-    TensorContent tensor(Tensor item) {
-        this.tensor = item;
+    MatrixContent matrix(Matrix item) {
+        this.matrix = item;
         return this;
     }
 
     Map<String, Object> toMap() {
         Map<String, Object> map = new LinkedHashMap<>();
-        if (this.tensorContentId != null) map.put('tensorContentId', this.tensorContentId);
-        if (this.tensorId != null) map.put('tensorId', this.tensorId);
+        if (this.matrixContentId != null) map.put('matrixContentId', this.matrixContentId);
+        if (this.matrixId != null) map.put('matrixId', this.matrixId);
         if (this.contentLocation != null) map.put('contentLocation', this.contentLocation);
         if (this.contentTypeEnumId != null) map.put('contentTypeEnumId', this.contentTypeEnumId);
         if (this.arrayChecksum != null) map.put('arrayChecksum', this.arrayChecksum);

@@ -54,9 +54,11 @@ MathMeta meta = MathDsl.fluent {
 // 4. Inspect Metamodel Declarations and Provider Selection via SPI
 def mathModel = meta.entity('MathModel').findByName('OnnxClassifier')
 assert mathModel != null
+def defContent = meta.entity('MathModelDefContent').findByName('OnnxClassifier_autoDef_Content')
 println "\nDeclared Model Metadata:"
 println " - Model ID: ${mathModel.get('mathModelId')}"
-println " - Location: ${mathModel.get('location')}"
+println " - Location: ${defContent?.get('contentLocation')}"
+println " - Content Type: ${defContent?.get('contentTypeEnumId')}"
 println " - Solving Method: ${mathModel.get('solvingMethod') ?: mathModel.get('solvingMethodEnumId')}"
 
 DeclaredModel declared = DeclaredModel.of(meta, mathModel)

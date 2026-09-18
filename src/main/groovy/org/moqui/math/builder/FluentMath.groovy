@@ -457,6 +457,21 @@ class MathModelDefBuilder {
         builder.build()
     }
 
+    MathModelDefBuilder content(final String location, final DslEnumValue contentType = null, final DslEnumValue purpose = null) {
+        String contentId = "${defId}_Content"
+        Map<String, Object> contentValues = new LinkedHashMap<>()
+        contentValues.put('mathModelDefContentId', contentId)
+        contentValues.put('mathModelDefId', defId)
+        contentValues.put('contentLocation', location)
+        if (contentType != null) contentValues.put('contentTypeEnumId', contentType.id)
+        else if (location.endsWith('.onnx')) contentValues.put('contentTypeEnumId', 'MmCntOnnx')
+        else if (location.endsWith('.pt') || location.endsWith('.pth')) contentValues.put('contentTypeEnumId', 'MmCntTorchScript')
+        if (purpose != null) contentValues.put('contentPurposeEnumId', purpose.id)
+        else contentValues.put('contentPurposeEnumId', 'MmdcpFullModel')
+        mathMeta.declare('moqui.math.MathModelDefContent', contentId, contentValues)
+        this
+    }
+
     EntityRef<MathModelDef> build() {
         Map<String, Object> values = new LinkedHashMap<>()
         values.put('mathModelDefId', defId)
@@ -477,6 +492,8 @@ class MathModelBuilder {
     String alias
     String description
     String location
+    DslEnumValue contentType
+    DslEnumValue contentPurpose
     MathModelSolvingMethod solvingMethod
     private int dataSequence = 1
 
@@ -489,6 +506,15 @@ class MathModelBuilder {
     MathModelBuilder alias(String alias) { this.alias = alias; this }
     MathModelBuilder description(String desc) { this.description = desc; this }
     MathModelBuilder location(String loc) { this.location = loc; this }
+    MathModelBuilder contentLocation(String loc) { this.location = loc; this }
+    MathModelBuilder contentType(DslEnumValue type) { this.contentType = type; this }
+    MathModelBuilder contentPurpose(DslEnumValue purpose) { this.contentPurpose = purpose; this }
+    MathModelBuilder content(String loc, DslEnumValue contentType = null, DslEnumValue purpose = null) {
+        this.location = loc
+        this.contentType = contentType
+        this.contentPurpose = purpose
+        this
+    }
     MathModelBuilder solvingMethod(MathModelSolvingMethod method) { this.solvingMethod = method; this }
 
     EntityRef<Matrix> matrix(final Map<String, Object> args, final String matrixId = null,
@@ -630,8 +656,20 @@ class MathModelBuilder {
         values.put('mathModelDefId', defId)
         if (alias) values.put('modelAlias', alias)
         if (description) values.put('description', description)
-        if (location) values.put('location', location)
         mathMeta.declare('moqui.math.MathModel', modelId, values)
+        if (location) {
+            String contentId = "${defId}_Content"
+            Map<String, Object> contentValues = new LinkedHashMap<>()
+            contentValues.put('mathModelDefContentId', contentId)
+            contentValues.put('mathModelDefId', defId)
+            contentValues.put('contentLocation', location)
+            if (contentType != null) contentValues.put('contentTypeEnumId', contentType.id)
+            else if (location.endsWith('.onnx')) contentValues.put('contentTypeEnumId', 'MmCntOnnx')
+            else if (location.endsWith('.pt') || location.endsWith('.pth')) contentValues.put('contentTypeEnumId', 'MmCntTorchScript')
+            if (contentPurpose != null) contentValues.put('contentPurposeEnumId', contentPurpose.id)
+            else contentValues.put('contentPurposeEnumId', 'MmdcpFullModel')
+            mathMeta.declare('moqui.math.MathModelDefContent', contentId, contentValues)
+        }
         new EntityRef<>(modelId, MathModel.class, values)
     }
 }
@@ -816,6 +854,17 @@ class MatrixBuilder {
         if (symbol) values.put('symbol', symbol)
         if (description) values.put('description', description)
         mathMeta.declare('moqui.math.Matrix', matrixId, values)
+        if (contentLocation) {
+            Map<String, Object> contentValues = new LinkedHashMap<>()
+            String contentId = "${matrixId}_Content"
+            contentValues.put('matrixContentId', contentId)
+            contentValues.put('matrixId', matrixId)
+            contentValues.put('contentLocation', contentLocation)
+            if (contentType) contentValues.put('contentTypeEnumId', contentType.id)
+            else if (contentTypeEnumId) contentValues.put('contentTypeEnumId', contentTypeEnumId)
+            else if (contentLocation.endsWith('.npy')) contentValues.put('contentTypeEnumId', 'MCntNpy')
+            mathMeta.declare('moqui.math.MatrixContent', contentId, contentValues)
+        }
         new EntityRef<>(matrixId, Matrix.class, values)
     }
 }
@@ -915,6 +964,17 @@ class VectorBuilder {
         if (symbol) values.put('symbol', symbol)
         if (description) values.put('description', description)
         mathMeta.declare('moqui.math.Vector', vectorId, values)
+        if (contentLocation) {
+            Map<String, Object> contentValues = new LinkedHashMap<>()
+            String contentId = "${vectorId}_Content"
+            contentValues.put('vectorContentId', contentId)
+            contentValues.put('vectorId', vectorId)
+            contentValues.put('contentLocation', contentLocation)
+            if (contentType) contentValues.put('contentTypeEnumId', contentType.id)
+            else if (contentTypeEnumId) contentValues.put('contentTypeEnumId', contentTypeEnumId)
+            else if (contentLocation.endsWith('.npy')) contentValues.put('contentTypeEnumId', 'VCntNpy')
+            mathMeta.declare('moqui.math.VectorContent', contentId, contentValues)
+        }
         new EntityRef<>(vectorId, Vector.class, values)
     }
 }

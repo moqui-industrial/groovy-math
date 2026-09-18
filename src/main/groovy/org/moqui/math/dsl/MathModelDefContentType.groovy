@@ -1,13 +1,13 @@
 /*
  * Generated domain enum for Moqui Math Metamodel
- * EnumerationType: MathModelContentType
+ * EnumerationType: MathModelDefContentType
  */
 package org.moqui.math.dsl
 
 import groovy.transform.CompileStatic
 
 @CompileStatic
-enum MathModelContentType implements DslEnumValue {
+enum MathModelDefContentType implements DslEnumValue {
     Python('MmCntPython', 'Python', 'Python Script', ''),
     Yaml('MmCntYaml', 'Yaml', 'YAML', ''),
     Json('MmCntJson', 'Json', 'JSON', ''),
@@ -24,7 +24,7 @@ enum MathModelContentType implements DslEnumValue {
     final String description
     final String parentEnumId
 
-    MathModelContentType(final String id, final String enumCode = null, final String description = null, final String parentEnumId = null) {
+    MathModelDefContentType(final String id, final String enumCode = null, final String description = null, final String parentEnumId = null) {
         this.id = id
         this.enumCode = enumCode
         this.description = description
@@ -43,17 +43,17 @@ enum MathModelContentType implements DslEnumValue {
     @Override
     String getParentEnumId() { parentEnumId }
 
-    static MathModelContentType fromId(final String id) {
+    static MathModelDefContentType fromId(final String id) {
         if (id == null) return null
-        for (MathModelContentType val : values()) {
+        for (MathModelDefContentType val : values()) {
             if (val.id == id) return val
         }
         null
     }
 
-    static MathModelContentType fromCode(final String code) {
+    static MathModelDefContentType fromCode(final String code) {
         if (code == null) return null
-        for (MathModelContentType val : values()) {
+        for (MathModelDefContentType val : values()) {
             if (val.enumCode == code) return val
         }
         null

@@ -12,7 +12,7 @@ class MathModelDefContent_ {
     public static final String ENTITY_NAME = 'MathModelDefContent'
     public static final String FULL_NAME = 'moqui.math.MathModelDefContent'
 
-    public static final Attribute<MathModelDefContent, String> mathModelContentId = new Attribute<>('mathModelContentId', MathModelDefContent.class, String.class, true, true)
+    public static final Attribute<MathModelDefContent, String> mathModelDefContentId = new Attribute<>('mathModelDefContentId', MathModelDefContent.class, String.class, true, true)
     public static final Attribute<MathModelDefContent, String> mathModelDefId = new Attribute<>('mathModelDefId', MathModelDefContent.class, String.class, false, true)
     public static final Attribute<MathModelDefContent, String> contentLocation = new Attribute<>('contentLocation', MathModelDefContent.class, String.class, false, false)
     public static final Attribute<MathModelDefContent, String> contentTypeEnumId = new Attribute<>('contentTypeEnumId', MathModelDefContent.class, String.class, false, false)

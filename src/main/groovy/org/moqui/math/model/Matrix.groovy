@@ -88,6 +88,8 @@ class Matrix implements Serializable {
 
     List<MatrixComponent> components = new ArrayList<>()
 
+    List<MatrixContent> contents = new ArrayList<>()
+
     Matrix() {}
 
     Matrix(Map<String, Object> args) {
@@ -233,6 +235,11 @@ class Matrix implements Serializable {
 
     Matrix components(List<MatrixComponent> list) {
         this.components = list;
+        return this;
+    }
+
+    Matrix contents(List<MatrixContent> list) {
+        this.contents = list;
         return this;
     }
 

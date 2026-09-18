@@ -52,6 +52,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `MathModelRun` | `moqui.math.MathModelRun` | `-` |
 | `Matrix` | `moqui.math.Matrix` | `matrices` |
 | `MatrixComponent` | `moqui.math.MatrixComponent` | `-` |
+| `MatrixContent` | `moqui.math.MatrixContent` | `-` |
 | `MatrixDecomposition` | `moqui.math.MatrixDecomposition` | `-` |
 | `Mesh` | `moqui.math.Mesh` | `-` |
 | `MeshContent` | `moqui.math.MeshContent` | `-` |
@@ -122,6 +123,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `UomGroupMember` | `moqui.basic.UomGroupMember` | `-` |
 | `Vector` | `moqui.math.Vector` | `vectors` |
 | `VectorComponent` | `moqui.math.VectorComponent` | `-` |
+| `VectorContent` | `moqui.math.VectorContent` | `-` |
 | `Vertex` | `moqui.math.GraphVertex` | `-` |
 | `VertexCategoryObject` | `moqui.math.GraphVertexCategoryObject` | `-` |
 | `adjunction` | `moqui.math.ct.Adjunction` | `-` |
@@ -174,6 +176,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `matrices` | `moqui.math.Matrix` | `matrices` |
 | `matrix` | `moqui.math.Matrix` | `matrices` |
 | `matrixComponent` | `moqui.math.MatrixComponent` | `-` |
+| `matrixContent` | `moqui.math.MatrixContent` | `-` |
 | `matrixDecomposition` | `moqui.math.MatrixDecomposition` | `-` |
 | `mesh` | `moqui.math.Mesh` | `-` |
 | `meshContent` | `moqui.math.MeshContent` | `-` |
@@ -237,6 +240,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `moqui.math.MathModelRun` | `moqui.math.MathModelRun` | `-` |
 | `moqui.math.Matrix` | `moqui.math.Matrix` | `matrices` |
 | `moqui.math.MatrixComponent` | `moqui.math.MatrixComponent` | `-` |
+| `moqui.math.MatrixContent` | `moqui.math.MatrixContent` | `-` |
 | `moqui.math.MatrixDecomposition` | `moqui.math.MatrixDecomposition` | `-` |
 | `moqui.math.Mesh` | `moqui.math.Mesh` | `-` |
 | `moqui.math.MeshContent` | `moqui.math.MeshContent` | `-` |
@@ -275,6 +279,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `moqui.math.TriangularExtraction` | `moqui.math.TriangularExtraction` | `-` |
 | `moqui.math.Vector` | `moqui.math.Vector` | `vectors` |
 | `moqui.math.VectorComponent` | `moqui.math.VectorComponent` | `-` |
+| `moqui.math.VectorContent` | `moqui.math.VectorContent` | `-` |
 | `moqui.math.ct.Adjunction` | `moqui.math.ct.Adjunction` | `-` |
 | `moqui.math.ct.Category` | `moqui.math.ct.Category` | `-` |
 | `moqui.math.ct.CategoryConstruction` | `moqui.math.ct.CategoryConstruction` | `-` |
@@ -354,6 +359,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `uoms` | `moqui.basic.Uom` | `uoms` |
 | `vector` | `moqui.math.Vector` | `vectors` |
 | `vectorComponent` | `moqui.math.VectorComponent` | `-` |
+| `vectorContent` | `moqui.math.VectorContent` | `-` |
 | `vectors` | `moqui.math.Vector` | `vectors` |
 | `vertex` | `moqui.math.GraphVertex` | `-` |
 | `vertexCategoryObject` | `moqui.math.GraphVertexCategoryObject` | `-` |
@@ -839,33 +845,6 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `Nurbs` | `MmbNurbs` | `nurbs`, `MmbNurbs`, `mmbNurbs`, `NURBSIGABasis`, `nURBSIGABasis` |
 | `Serendipity` | `MmbSerendipity` | `serendipity`, `MmbSerendipity`, `mmbSerendipity`, `SerendipityFamily`, `serendipityFamily` |
 
-### Domain: `MathModelContentPurpose`
-
-| Preferred Symbol | Canonical Enum ID | Accepted Aliases |
-| :--- | :--- | :--- |
-| `HelperFunc` | `MmCnpHelperFunc` | `helperFunc`, `MmCnpHelperFunc`, `mmCnpHelperFunc`, `HelperFuction`, `helperFuction` |
-| `MainLogic` | `MmCnpMainLogic` | `mainLogic`, `MmCnpMainLogic`, `mmCnpMainLogic`, `MainExecutableLogic`, `mainExecutableLogic` |
-| `ModelDef` | `MmCnpModelDef` | `modelDef`, `MmCnpModelDef`, `mmCnpModelDef`, `ModelDefinition`, `modelDefinition` |
-| `PostProcessingScript` | `MmCnpPostProcessingScript` | `postProcessingScript`, `MmCnpPostProcessingScript`, `mmCnpPostProcessingScript` |
-| `PreProcessingScript` | `MmCnpPreProcessingScript` | `preProcessingScript`, `MmCnpPreProcessingScript`, `mmCnpPreProcessingScript` |
-| `SolverConfig` | `MmCnpSolverConfig` | `solverConfig`, `MmCnpSolverConfig`, `mmCnpSolverConfig`, `SolverConfiguration`, `solverConfiguration` |
-| `SymDer` | `MmCnpSymDer` | `symDer`, `MmCnpSymDer`, `mmCnpSymDer`, `SymbolicDerivation`, `symbolicDerivation` |
-
-### Domain: `MathModelContentType`
-
-| Preferred Symbol | Canonical Enum ID | Accepted Aliases |
-| :--- | :--- | :--- |
-| `BinaryModel` | `MmCntBinaryModel` | `binaryModel`, `MmCntBinaryModel`, `mmCntBinaryModel`, `BinaryModelBlob`, `binaryModelBlob` |
-| `Csv` | `MmCntCsv` | `csv`, `MmCntCsv`, `mmCntCsv`, `CSV`, `cSV` |
-| `Docs` | `MmCntDocs` | `docs`, `MmCntDocs`, `mmCntDocs`, `Documentation`, `documentation` |
-| `Jax` | `MmCntJax` | `jax`, `MmCntJax`, `mmCntJax`, `JAX`, `jAX`, `JAXXLAProgram`, `jAXXLAProgram` |
-| `Json` | `MmCntJson` | `json`, `MmCntJson`, `mmCntJson`, `JSON`, `jSON` |
-| `Onnx` | `MmCntOnnx` | `onnx`, `MmCntOnnx`, `mmCntOnnx`, `ONNXExports`, `oNNXExports` |
-| `Python` | `MmCntPython` | `python`, `MmCntPython`, `mmCntPython`, `PythonScript`, `pythonScript` |
-| `SymPy` | `MmCntSymPy` | `symPy`, `MmCntSymPy`, `mmCntSymPy`, `SymPyScript`, `symPyScript` |
-| `TorchScript` | `MmCntTorchScript` | `torchScript`, `MmCntTorchScript`, `mmCntTorchScript`, `TorchScriptBundle`, `torchScriptBundle` |
-| `Yaml` | `MmCntYaml` | `yaml`, `MmCntYaml`, `mmCntYaml`, `YAML`, `yAML` |
-
 ### Domain: `MathModelDataPurpose`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
@@ -943,6 +922,33 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `MathModelProduction` | `MathModelProduction` | `mathModelProduction`, `Production`, `production` |
 | `MathModelRetired` | `MathModelRetired` | `mathModelRetired`, `Retired`, `retired` |
 | `MathModelTested` | `MathModelTested` | `mathModelTested`, `Tested`, `tested` |
+
+### Domain: `MathModelDefContentPurpose`
+
+| Preferred Symbol | Canonical Enum ID | Accepted Aliases |
+| :--- | :--- | :--- |
+| `HelperFunc` | `MmCnpHelperFunc` | `helperFunc`, `MmCnpHelperFunc`, `mmCnpHelperFunc`, `HelperFuction`, `helperFuction` |
+| `MainLogic` | `MmCnpMainLogic` | `mainLogic`, `MmCnpMainLogic`, `mmCnpMainLogic`, `MainExecutableLogic`, `mainExecutableLogic` |
+| `ModelDef` | `MmCnpModelDef` | `modelDef`, `MmCnpModelDef`, `mmCnpModelDef`, `ModelDefinition`, `modelDefinition` |
+| `PostProcessingScript` | `MmCnpPostProcessingScript` | `postProcessingScript`, `MmCnpPostProcessingScript`, `mmCnpPostProcessingScript` |
+| `PreProcessingScript` | `MmCnpPreProcessingScript` | `preProcessingScript`, `MmCnpPreProcessingScript`, `mmCnpPreProcessingScript` |
+| `SolverConfig` | `MmCnpSolverConfig` | `solverConfig`, `MmCnpSolverConfig`, `mmCnpSolverConfig`, `SolverConfiguration`, `solverConfiguration` |
+| `SymDer` | `MmCnpSymDer` | `symDer`, `MmCnpSymDer`, `mmCnpSymDer`, `SymbolicDerivation`, `symbolicDerivation` |
+
+### Domain: `MathModelDefContentType`
+
+| Preferred Symbol | Canonical Enum ID | Accepted Aliases |
+| :--- | :--- | :--- |
+| `BinaryModel` | `MmCntBinaryModel` | `binaryModel`, `MmCntBinaryModel`, `mmCntBinaryModel`, `BinaryModelBlob`, `binaryModelBlob` |
+| `Csv` | `MmCntCsv` | `csv`, `MmCntCsv`, `mmCntCsv`, `CSV`, `cSV` |
+| `Docs` | `MmCntDocs` | `docs`, `MmCntDocs`, `mmCntDocs`, `Documentation`, `documentation` |
+| `Jax` | `MmCntJax` | `jax`, `MmCntJax`, `mmCntJax`, `JAX`, `jAX`, `JAXXLAProgram`, `jAXXLAProgram` |
+| `Json` | `MmCntJson` | `json`, `MmCntJson`, `mmCntJson`, `JSON`, `jSON` |
+| `Onnx` | `MmCntOnnx` | `onnx`, `MmCntOnnx`, `mmCntOnnx`, `ONNXExports`, `oNNXExports` |
+| `Python` | `MmCntPython` | `python`, `MmCntPython`, `mmCntPython`, `PythonScript`, `pythonScript` |
+| `SymPy` | `MmCntSymPy` | `symPy`, `MmCntSymPy`, `mmCntSymPy`, `SymPyScript`, `symPyScript` |
+| `TorchScript` | `MmCntTorchScript` | `torchScript`, `MmCntTorchScript`, `mmCntTorchScript`, `TorchScriptBundle`, `torchScriptBundle` |
+| `Yaml` | `MmCntYaml` | `yaml`, `MmCntYaml`, `mmCntYaml`, `YAML`, `yAML` |
 
 ### Domain: `MathModelDomain`
 

@@ -41,9 +41,7 @@ class ExternalContentTest {
 
         MathMeta meta = MathDsl.fluent {
             matrix('MatA') {
-                rows 2L
-                cols 3L
-                componentArray "[1.5, 2.5, 3.5, 4.5, 5.5, 6.5]"
+                content(location: matFile.toAbsolutePath().toString())
             }
         }
 
@@ -51,8 +49,13 @@ class ExternalContentTest {
         assertNotNull(valA)
         Matrix m = new Matrix(valA)
 
+        ModelValue valContent = meta.entity('MatrixContent').findByName('MatA_Content')
+        assertNotNull(valContent)
+        org.moqui.math.model.MatrixContent content = new org.moqui.math.model.MatrixContent(valContent)
+        assertEquals(matFile.toAbsolutePath().toString(), content.contentLocation)
+
         try (Arena arena = Arena.ofConfined()) {
-            MemorySegment seg = NativeMemoryMapper.mapMatrix(arena, m)
+            MemorySegment seg = NativeMemoryMapper.mapMatrix(arena, m, content)
             assertNotNull(seg)
             assertEquals(2L, m.rows)
             assertEquals(3L, m.cols)
@@ -71,8 +74,7 @@ class ExternalContentTest {
 
         MathMeta meta = MathDsl.fluent {
             vector('VecB') {
-                size 4L
-                componentArray "[10.0, 20.0, 30.0, 40.0]"
+                content(location: vecFile.toAbsolutePath().toString())
             }
         }
 
@@ -80,8 +82,13 @@ class ExternalContentTest {
         assertNotNull(valB)
         Vector v = new Vector(valB)
 
+        ModelValue valContent = meta.entity('VectorContent').findByName('VecB_Content')
+        assertNotNull(valContent)
+        org.moqui.math.model.VectorContent content = new org.moqui.math.model.VectorContent(valContent)
+        assertEquals(vecFile.toAbsolutePath().toString(), content.contentLocation)
+
         try (Arena arena = Arena.ofConfined()) {
-            MemorySegment seg = NativeMemoryMapper.mapVector(arena, v)
+            MemorySegment seg = NativeMemoryMapper.mapVector(arena, v, content)
             assertNotNull(seg)
             assertEquals(4L, v.dimension)
 

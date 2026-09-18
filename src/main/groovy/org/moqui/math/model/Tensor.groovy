@@ -100,12 +100,6 @@ class Tensor implements Serializable {
     /** elementBlob */
     byte[] elementBlob
 
-    /** arrayEncodingEnumId */
-    String arrayEncodingEnumId
-
-    /** arrayChecksum */
-    String arrayChecksum
-
     /** dataTypeEnumId */
     String dataTypeEnumId
 
@@ -117,6 +111,8 @@ class Tensor implements Serializable {
     CoordinateSystem coordSystem
 
     List<TensorElement> elements = new ArrayList<>()
+
+    List<TensorContent> contents = new ArrayList<>()
 
     Tensor() {}
 
@@ -149,8 +145,6 @@ class Tensor implements Serializable {
             if (args.containsKey('quantAxis')) this.quantAxis = args.get('quantAxis') != null ? ((Number) args.get('quantAxis')).longValue() : null
             if (args.containsKey('elementArray')) this.elementArray = args.get('elementArray')?.toString()
             if (args.containsKey('elementBlob')) this.elementBlob = (byte[]) args.get('elementBlob')
-            if (args.containsKey('arrayEncodingEnumId')) this.arrayEncodingEnumId = args.get('arrayEncodingEnumId')?.toString()
-            if (args.containsKey('arrayChecksum')) this.arrayChecksum = args.get('arrayChecksum')?.toString()
             if (args.containsKey('dataTypeEnumId')) this.dataTypeEnumId = args.get('dataTypeEnumId')?.toString()
             if (args.containsKey('deviceEnumId')) this.deviceEnumId = args.get('deviceEnumId')?.toString()
         }
@@ -291,16 +285,6 @@ class Tensor implements Serializable {
         return this;
     }
 
-    Tensor arrayEncodingEnumId(String value) {
-        this.arrayEncodingEnumId = value
-        return this;
-    }
-
-    Tensor arrayChecksum(String value) {
-        this.arrayChecksum = value
-        return this;
-    }
-
     Tensor dataTypeEnumId(String value) {
         this.dataTypeEnumId = value
         return this;
@@ -323,6 +307,11 @@ class Tensor implements Serializable {
 
     Tensor elements(List<TensorElement> list) {
         this.elements = list;
+        return this;
+    }
+
+    Tensor contents(List<TensorContent> list) {
+        this.contents = list;
         return this;
     }
 
@@ -355,8 +344,6 @@ class Tensor implements Serializable {
         if (this.quantAxis != null) map.put('quantAxis', this.quantAxis);
         if (this.elementArray != null) map.put('elementArray', this.elementArray);
         if (this.elementBlob != null) map.put('elementBlob', this.elementBlob);
-        if (this.arrayEncodingEnumId != null) map.put('arrayEncodingEnumId', this.arrayEncodingEnumId);
-        if (this.arrayChecksum != null) map.put('arrayChecksum', this.arrayChecksum);
         if (this.dataTypeEnumId != null) map.put('dataTypeEnumId', this.dataTypeEnumId);
         if (this.deviceEnumId != null) map.put('deviceEnumId', this.deviceEnumId);
         return map;

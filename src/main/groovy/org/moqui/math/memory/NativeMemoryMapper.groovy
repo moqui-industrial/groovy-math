@@ -9,11 +9,13 @@ import groovy.transform.CompileStatic
 import org.moqui.math.libtorch.LibTorchPanama
 import org.moqui.math.model.Matrix
 import org.moqui.math.model.MatrixComponent
+import org.moqui.math.model.MatrixContent
 import org.moqui.math.model.Tensor
 import org.moqui.math.model.TensorContent
 import org.moqui.math.model.TensorElement
 import org.moqui.math.model.Vector
 import org.moqui.math.model.VectorComponent
+import org.moqui.math.model.VectorContent
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -24,21 +26,40 @@ import java.nio.file.StandardOpenOption
 
 /**
  * High-performance Native Memory Mapper utilizing Project Panama (Java 21).
- * Maps Groovy domain entities (Tensor, Matrix, Vector, TensorContent) to off-heap MemorySegments
- * supporting discrete elements (physics/mechanics), inline arrays/blobs, and memory-mapped external files (ONNX/Safetensors).
+ * Maps Groovy domain entities (Tensor, Matrix, Vector, TensorContent, MatrixContent, VectorContent) to off-heap MemorySegments
+ * supporting discrete elements (physics/mechanics), inline arrays/blobs, and memory-mapped external files (ONNX/Safetensors/NPY).
  */
 @CompileStatic
 class NativeMemoryMapper {
 
     /**
-     * Maps a Matrix and its discrete components (Tier 1) or inline array/blob (Tier 2) to an off-heap row-major float MemorySegment.
+     * Maps a Matrix and its discrete components (Tier 1), inline array/blob (Tier 2), or external file via MatrixContent (Tier 3) to an off-heap row-major float MemorySegment.
      */
-    static MemorySegment mapMatrix(Arena arena, Matrix matrix, List<MatrixComponent> components = null) {
+    static MemorySegment mapMatrix(Arena arena, Matrix matrix, List<MatrixComponent> components = null, MatrixContent content = null) {
+        // Tier 3: External Large File / NPY via MatrixContent
+        String loc = content?.contentLocation
+        if (loc) {
+            File externalFile = new File(loc)
+            if (externalFile.exists()) {
+                if (externalFile.name.endsWith('.npy')) {
+                    NpyReader.NpyHeader hdr = NpyReader.parseHeader(externalFile.toPath())
+                    if ((matrix.rows == null || matrix.rows == 0L) && hdr.shape.size() >= 2) {
+                        matrix.rows = hdr.shape.get(0)
+                        matrix.cols = hdr.shape.get(1)
+                    }
+                    return NpyReader.map(arena, externalFile.toPath())
+                }
+                return mapExternalFile(arena, externalFile.toPath())
+            }
+        }
+
+        // Tier 2: Blob
         if (matrix.componentBlob != null && matrix.componentBlob.length > 0) {
             MemorySegment segment = arena.allocate((long) matrix.componentBlob.length)
             MemorySegment.copy(MemorySegment.ofArray(matrix.componentBlob), 0L, segment, 0L, (long) matrix.componentBlob.length)
             return segment
         }
+        // Tier 2: Inline Array
         if (matrix.componentArray != null && !matrix.componentArray.trim().isEmpty()) {
             String cleanStr = matrix.componentArray.replaceAll('[\\[\\]]', '').trim()
             String[] tokens = cleanStr.isEmpty() ? new String[0] : cleanStr.split('[,\\s]+')
@@ -51,6 +72,7 @@ class NativeMemoryMapper {
             return segment
         }
 
+        // Tier 1: Discrete Components
         int rows = (matrix.rows ?: 0L).intValue()
         int cols = (matrix.cols ?: 0L).intValue()
         int totalElements = rows * cols
@@ -73,15 +95,37 @@ class NativeMemoryMapper {
         segment
     }
 
+    static MemorySegment mapMatrix(Arena arena, Matrix matrix, MatrixContent content) {
+        mapMatrix(arena, matrix, null, content)
+    }
+
     /**
-     * Maps a Vector and its discrete components (Tier 1) or inline array/blob (Tier 2) to an off-heap float MemorySegment.
+     * Maps a Vector and its discrete components (Tier 1), inline array/blob (Tier 2), or external file via VectorContent (Tier 3) to an off-heap float MemorySegment.
      */
-    static MemorySegment mapVector(Arena arena, Vector vector, List<VectorComponent> components = null) {
+    static MemorySegment mapVector(Arena arena, Vector vector, List<VectorComponent> components = null, VectorContent content = null) {
+        // Tier 3: External Large File / NPY via VectorContent
+        String loc = content?.contentLocation
+        if (loc) {
+            File externalFile = new File(loc)
+            if (externalFile.exists()) {
+                if (externalFile.name.endsWith('.npy')) {
+                    NpyReader.NpyHeader hdr = NpyReader.parseHeader(externalFile.toPath())
+                    if ((vector.dimension == null || vector.dimension == 0L) && !hdr.shape.isEmpty()) {
+                        vector.dimension = hdr.shape.get(0)
+                    }
+                    return NpyReader.map(arena, externalFile.toPath())
+                }
+                return mapExternalFile(arena, externalFile.toPath())
+            }
+        }
+
+        // Tier 2: Blob
         if (vector.componentBlob != null && vector.componentBlob.length > 0) {
             MemorySegment segment = arena.allocate((long) vector.componentBlob.length)
             MemorySegment.copy(MemorySegment.ofArray(vector.componentBlob), 0L, segment, 0L, (long) vector.componentBlob.length)
             return segment
         }
+        // Tier 2: Inline Array
         if (vector.componentArray != null && !vector.componentArray.trim().isEmpty()) {
             String cleanStr = vector.componentArray.replaceAll('[\\[\\]]', '').trim()
             String[] tokens = cleanStr.isEmpty() ? new String[0] : cleanStr.split('[,\\s]+')
@@ -94,6 +138,7 @@ class NativeMemoryMapper {
             return segment
         }
 
+        // Tier 1: Discrete Components
         int size = (vector.dimension ?: 0L).intValue()
         if (size <= 0) throw new IllegalArgumentException("Vector dimension must be positive: ${size}")
 
@@ -110,6 +155,10 @@ class NativeMemoryMapper {
             }
         }
         segment
+    }
+
+    static MemorySegment mapVector(Arena arena, Vector vector, VectorContent content) {
+        mapVector(arena, vector, null, content)
     }
 
     /**

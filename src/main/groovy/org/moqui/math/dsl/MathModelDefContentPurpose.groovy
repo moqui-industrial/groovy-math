@@ -1,13 +1,13 @@
 /*
  * Generated domain enum for Moqui Math Metamodel
- * EnumerationType: MathModelContentPurpose
+ * EnumerationType: MathModelDefContentPurpose
  */
 package org.moqui.math.dsl
 
 import groovy.transform.CompileStatic
 
 @CompileStatic
-enum MathModelContentPurpose implements DslEnumValue {
+enum MathModelDefContentPurpose implements DslEnumValue {
     MainLogic('MmCnpMainLogic', 'MainLogic', 'Main Executable Logic', ''),
     HelperFunc('MmCnpHelperFunc', 'HelperFunc', 'Helper Fuction', ''),
     ModelDef('MmCnpModelDef', 'ModelDef', 'Model Definition', ''),
@@ -21,7 +21,7 @@ enum MathModelContentPurpose implements DslEnumValue {
     final String description
     final String parentEnumId
 
-    MathModelContentPurpose(final String id, final String enumCode = null, final String description = null, final String parentEnumId = null) {
+    MathModelDefContentPurpose(final String id, final String enumCode = null, final String description = null, final String parentEnumId = null) {
         this.id = id
         this.enumCode = enumCode
         this.description = description
@@ -40,17 +40,17 @@ enum MathModelContentPurpose implements DslEnumValue {
     @Override
     String getParentEnumId() { parentEnumId }
 
-    static MathModelContentPurpose fromId(final String id) {
+    static MathModelDefContentPurpose fromId(final String id) {
         if (id == null) return null
-        for (MathModelContentPurpose val : values()) {
+        for (MathModelDefContentPurpose val : values()) {
             if (val.id == id) return val
         }
         null
     }
 
-    static MathModelContentPurpose fromCode(final String code) {
+    static MathModelDefContentPurpose fromCode(final String code) {
         if (code == null) return null
-        for (MathModelContentPurpose val : values()) {
+        for (MathModelDefContentPurpose val : values()) {
             if (val.enumCode == code) return val
         }
         null

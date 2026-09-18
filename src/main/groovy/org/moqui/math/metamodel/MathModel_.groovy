@@ -21,5 +21,4 @@ class MathModel_ {
     public static final Attribute<MathModel, String> description = new Attribute<>('description', MathModel.class, String.class, false, false)
     public static final Attribute<MathModel, String> statusId = new Attribute<>('statusId', MathModel.class, String.class, false, false)
     public static final Attribute<MathModel, String> statusFlowId = new Attribute<>('statusFlowId', MathModel.class, String.class, false, false)
-    public static final Attribute<MathModel, String> location = new Attribute<>('location', MathModel.class, String.class, false, false)
 }
