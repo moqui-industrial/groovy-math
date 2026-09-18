@@ -116,12 +116,16 @@ class EnumCatalogueTest {
 
         List<String> problems = []
         examples.each { File example ->
-            MathMeta mathMeta = MathDsl.evaluate(example).validate()
-            mathMeta.enumViolations().each { String violation ->
-                problems.add("${example.name}: ${violation}".toString())
-            }
-            mathMeta.unknownEnumReferences().each { String reference ->
-                problems.add("${example.name}: ${reference}".toString())
+            try {
+                MathMeta mathMeta = MathDsl.evaluate(example).validate()
+                mathMeta.enumViolations().each { String violation ->
+                    problems.add("${example.name}: ${violation}".toString())
+                }
+                mathMeta.unknownEnumReferences().each { String reference ->
+                    problems.add("${example.name}: ${reference}".toString())
+                }
+            } catch (Throwable t) {
+                problems.add("${example.name}: Evaluation failed: ${t.message}".toString())
             }
         }
         assert problems.isEmpty() : "Examples referencing undeclared enumerations:\n${problems.join('\n')}"

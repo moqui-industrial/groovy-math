@@ -116,13 +116,15 @@ final class OrToolsProvider implements MathProvider<OrToolsPlan, OrToolsResult> 
                 if (lower > upper) {
                     throw new IllegalStateException("Variable '${variableNames[column]}' has lower bound ${lower} greater than upper bound ${upper}")
                 }
+                double l = (lower <= -1.0e20d || Double.isInfinite(lower)) ? Double.NEGATIVE_INFINITY : lower
+                double u = (upper >= 1.0e20d || Double.isInfinite(upper)) ? Double.POSITIVE_INFINITY : upper
                 String dom = domains != null && domains.size() > column ? domains[column] : 'VdContinuous'
                 if (dom == 'VdBinary' || dom == 'Binary') {
                     variables.add(solver.makeBoolVar(variableNames[column]))
                 } else if (dom == 'VdInteger' || dom == 'Integer') {
-                    variables.add(solver.makeIntVar(lower, upper, variableNames[column]))
+                    variables.add(solver.makeIntVar(l, u, variableNames[column]))
                 } else {
-                    variables.add(solver.makeNumVar(lower, upper, variableNames[column]))
+                    variables.add(solver.makeNumVar(l, u, variableNames[column]))
                 }
             }
 

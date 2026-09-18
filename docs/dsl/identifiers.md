@@ -7,11 +7,15 @@ This document describes the identifier derivation rules and syntax conventions f
 - Explicit keys can also be supplied as the first positional argument: `MathModel('ProductionPlan', ...)` or `matrix('A', ...)`.
 
 ## 2. Nested and Child Identifiers
-- Children declared nested within a parent entity (such as `MathModelData`, nested parameters, or pipeline steps) receive derived identifiers in hierarchical dot-notation or prefixed format:
-  `<parentId>.<childName>` or `<parentId>_Data_<childKey>`.
-- Derived identifiers are validated against Moqui entity primary key field type limits (40 characters for `id`, 255 characters for `id-long`).
+- Children declared nested within a parent entity (such as `MathModelData`, nested parameters, or optimization structures) receive derived identifiers following structured, compact templates:
+  - `${modelKey}_D_<TypeKey>` for `MathModelData` rows (e.g., `ProductionPlan_D_Vars`, `ProductionPlan_D_Bounds`, `ProductionPlan_D_Cost`, `ProductionPlan_D_ConsMat`, `ProductionPlan_D_Rhs`, `ProductionPlan_D_Sense`).
+  - `${modelKey}_<DataEntityName>` for generated data entities (e.g., `ProductionPlan_Variables`, `ProductionPlan_VariableBounds`, `ProductionPlan_ConstraintMatrix`).
+  - `<modelKey>.<parameterAlias>` for nested parameters (e.g., `ProductionPlan.ObjectiveSense`).
+  - `<transformationKey>_Op_<index>` for `TransformationOperand` entities.
+- All derived identifiers are strictly constrained to fit within Moqui entity primary key field type limits (**40 characters** for `id`, 255 characters for `id-long`).
 
 ## 3. Reference and Symbol Resolution
 - Bare identifiers assigned to typed enumeration fields are contextually resolved against the field's target `enumTypeId`.
 - Local variables bound in the DSL script are accessible to subsequent declarations.
 - Forward references within a model or file are resolved at the completion of script evaluation.
+

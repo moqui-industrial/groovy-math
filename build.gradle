@@ -379,6 +379,21 @@ tasks.register('runOrToolsProductionPlan', JavaExec) {
     args file('examples/run-ortools-production-plan.groovy').absolutePath
 }
 
+tasks.register('runOrToolsLp', JavaExec) {
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'groovy.ui.GroovyMain'
+    args file('examples/run-ortools-lp.groovy').absolutePath
+}
+
+tasks.register('runPyTorchLinearRelu', JavaExec) {
+    dependsOn tasks.named('classes')
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'groovy.ui.GroovyMain'
+    args file('examples/run-pytorch-linear-relu.groovy').absolutePath
+}
+
+
 tasks.register('runJaxPipeline', JavaExec) {
     dependsOn tasks.named('buildLibTorchNative'), tasks.named('buildJaxNative'), tasks.named('testClasses')
     classpath = sourceSets.main.runtimeClasspath + sourceSets.test.runtimeClasspath

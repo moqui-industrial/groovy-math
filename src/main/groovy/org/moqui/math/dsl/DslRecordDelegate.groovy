@@ -82,8 +82,12 @@ final class DslRecordDelegate {
         ])
 
         // 2. Variable Bounds Matrix
-        List<Double> lowerBounds = declaredVariables.collect { it.lowerBound }
-        List<Double> upperBounds = declaredVariables.collect { it.upperBound }
+        List<Double> lowerBounds = declaredVariables.collect {
+            Double.isInfinite(it.lowerBound) ? (it.lowerBound < 0 ? -Double.MAX_VALUE : Double.MAX_VALUE) : it.lowerBound
+        }
+        List<Double> upperBounds = declaredVariables.collect {
+            Double.isInfinite(it.upperBound) ? (it.upperBound < 0 ? -Double.MAX_VALUE : Double.MAX_VALUE) : it.upperBound
+        }
         List<List<Double>> boundsRows = [lowerBounds, upperBounds]
         String boundsId = "${record.modelKey}_VariableBounds"
         root.mathMeta.declare('moqui.math.Matrix', boundsId, [
