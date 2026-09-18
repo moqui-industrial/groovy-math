@@ -63,4 +63,14 @@ enum MeshKCellType implements DslEnumValue {
         }
         null
     }
+
+    static MeshKCellType fromName(final String name) {
+        if (name == null) return null
+        for (MeshKCellType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('BezierSurfacePatch'.equalsIgnoreCase(name)) return BezierPatch
+        if ('NurbsSurfacePatch'.equalsIgnoreCase(name)) return NurbsPatch
+        null
+    }
 }

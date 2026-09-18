@@ -51,4 +51,15 @@ enum SpaceDimension implements DslEnumValue {
         }
         null
     }
+
+    static SpaceDimension fromName(final String name) {
+        if (name == null) return null
+        for (SpaceDimension val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('XDimension'.equalsIgnoreCase(name)) return X
+        if ('YDimension'.equalsIgnoreCase(name)) return Y
+        if ('ZDimension'.equalsIgnoreCase(name)) return Z
+        null
+    }
 }

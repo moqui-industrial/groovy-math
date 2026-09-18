@@ -83,4 +83,27 @@ enum ParameterPurpose implements DslEnumValue {
         }
         null
     }
+
+    static ParameterPurpose fromName(final String name) {
+        if (name == null) return null
+        for (ParameterPurpose val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('MathModelParameter'.equalsIgnoreCase(name)) return MathModel
+        if ('MeshParameter'.equalsIgnoreCase(name)) return Mesh
+        if ('MachineLearningHyperparameter'.equalsIgnoreCase(name)) return MlHyperparameter
+        if ('BoundaryPatchFieldSpecification'.equalsIgnoreCase(name)) return BoundaryCondition
+        if ('MeshMaterialPropertyAssignment'.equalsIgnoreCase(name)) return MeshMaterial
+        if ('MeshVisualRenderingPropertyAssignment'.equalsIgnoreCase(name)) return MeshRendering
+        if ('PhysicalQuantity'.equalsIgnoreCase(name)) return Physical
+        if ('FluidTransportThermodynamicProperty'.equalsIgnoreCase(name)) return FluidProperty
+        if ('SimulationRuntimeConvergenceControl'.equalsIgnoreCase(name)) return SolverControl
+        if ('FvmDiscretizationScheme'.equalsIgnoreCase(name)) return NumericalScheme
+        if ('MechanicalProperty'.equalsIgnoreCase(name)) return Mechanical
+        if ('ThermalProperty'.equalsIgnoreCase(name)) return Thermal
+        if ('ElectricalProperty'.equalsIgnoreCase(name)) return Electrical
+        if ('OpticalVisualProperty'.equalsIgnoreCase(name)) return Optical
+        if ('RenderingShadingRelatedProperty'.equalsIgnoreCase(name)) return Rendering
+        null
+    }
 }

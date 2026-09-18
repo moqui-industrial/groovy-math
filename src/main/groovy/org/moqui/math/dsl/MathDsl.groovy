@@ -39,6 +39,20 @@ final class MathDsl {
         evaluate(MoquiSchemaInspector.embedded(), dslFile)
     }
 
+    static MathMeta evaluate(final String dslText) {
+        evaluate(MoquiSchemaInspector.embedded(), dslText)
+    }
+
+    static MathMeta evaluate(final ModelDefinition definition, final String dslText) {
+        File tempFile = File.createTempFile("math-dsl-script", ".groovy")
+        try {
+            tempFile.text = dslText
+            return evaluate(definition, tempFile)
+        } finally {
+            tempFile.delete()
+        }
+    }
+
     static MathMeta fluent(
             @DelegatesTo(value = org.moqui.math.builder.FluentMath, strategy = Closure.DELEGATE_FIRST) final Closure<?> declarations) {
         fluent(MoquiSchemaInspector.embedded(), declarations)
@@ -122,8 +136,10 @@ final class MathDsl {
         MathMeta mathMeta = new MathMeta(definition)
         CURRENT_META.set(mathMeta)
         try {
-            script.delegate = new MathDslBuilder(mathMeta)
+            MathDslBuilder builder = new MathDslBuilder(mathMeta)
+            script.delegate = builder
             Object result = script.run()
+            builder.resolvePendingReferences(dslFile.name)
             if (result instanceof MathMeta) return (MathMeta) result
             return mathMeta
         } finally {

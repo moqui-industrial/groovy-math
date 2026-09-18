@@ -61,4 +61,25 @@ enum GeoType implements DslEnumValue {
         }
         null
     }
+
+    static GeoType fromName(final String name) {
+        if (name == null) return null
+        for (GeoType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('Group'.equalsIgnoreCase(name)) return GROUP
+        if ('Region'.equalsIgnoreCase(name)) return REGION
+        if ('SalesRegion'.equalsIgnoreCase(name)) return SALES_REGION
+        if ('ServiceRegion'.equalsIgnoreCase(name)) return SERVICE_REGION
+        if ('City'.equalsIgnoreCase(name)) return CITY
+        if ('State'.equalsIgnoreCase(name)) return STATE
+        if ('PostalCode'.equalsIgnoreCase(name)) return POSTAL_CODE
+        if ('Country'.equalsIgnoreCase(name)) return COUNTRY
+        if ('County'.equalsIgnoreCase(name)) return COUNTY
+        if ('CountyCity'.equalsIgnoreCase(name)) return COUNTY_CITY
+        if ('Municipality'.equalsIgnoreCase(name)) return MUNICIPALITY
+        if ('Province'.equalsIgnoreCase(name)) return PROVINCE
+        if ('Territory'.equalsIgnoreCase(name)) return TERRITORY
+        null
+    }
 }

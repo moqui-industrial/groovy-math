@@ -51,4 +51,12 @@ enum TrajectoryStatsType implements DslEnumValue {
         }
         null
     }
+
+    static TrajectoryStatsType fromName(final String name) {
+        if (name == null) return null
+        for (TrajectoryStatsType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        null
+    }
 }

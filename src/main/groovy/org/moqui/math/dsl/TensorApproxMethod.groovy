@@ -57,4 +57,21 @@ enum TensorApproxMethod implements DslEnumValue {
         }
         null
     }
+
+    static TensorApproxMethod fromName(final String name) {
+        if (name == null) return null
+        for (TensorApproxMethod val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('ExactFullPrecision'.equalsIgnoreCase(name)) return Exact
+        if ('TruncatedSvd'.equalsIgnoreCase(name)) return TruncSVD
+        if ('TuckerHosvdCompression'.equalsIgnoreCase(name)) return Tucker
+        if ('CanonicalPolyadicRankR'.equalsIgnoreCase(name)) return CP
+        if ('TensorTrainTruncation'.equalsIgnoreCase(name)) return TT
+        if ('StructuredUnstructuredPruning'.equalsIgnoreCase(name)) return Prune
+        if ('RandomProjectionCountSketch'.equalsIgnoreCase(name)) return RandProj
+        if ('CurLeverageScoreSampling'.equalsIgnoreCase(name)) return CUR
+        if ('WaveletMultiresolutionCompression'.equalsIgnoreCase(name)) return Wavelet
+        null
+    }
 }

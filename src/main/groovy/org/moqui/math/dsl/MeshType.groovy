@@ -53,4 +53,17 @@ enum MeshType implements DslEnumValue {
         }
         null
     }
+
+    static MeshType fromName(final String name) {
+        if (name == null) return null
+        for (MeshType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('TriangleMesh'.equalsIgnoreCase(name)) return Triangle
+        if ('QuadMesh'.equalsIgnoreCase(name)) return Quad
+        if ('PolygonMesh'.equalsIgnoreCase(name)) return Polygon
+        if ('TetrahedralMesh'.equalsIgnoreCase(name)) return Tetrahedral
+        if ('HexahedralMesh'.equalsIgnoreCase(name)) return Hexahedral
+        null
+    }
 }

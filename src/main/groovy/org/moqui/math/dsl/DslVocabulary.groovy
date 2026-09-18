@@ -292,6 +292,16 @@ final class DslVocabulary {
                 addSymbol(rest, id, 'Status')
                 addSymbol(uncapitalize(rest), id, 'Status')
             }
+            if (sd.description) {
+                String cleanDesc = sd.description.replaceAll(/\(.*?\)/, '').trim()
+                String descCamel = toCamelCase(cleanDesc)
+                if (descCamel && isCleanIdentifier(descCamel)) {
+                    addSymbol(descCamel, id, type)
+                    addSymbol(uncapitalize(descCamel), id, type)
+                    addSymbol(descCamel, id, 'Status')
+                    addSymbol(uncapitalize(descCamel), id, 'Status')
+                }
+            }
         }
     }
 
@@ -393,8 +403,29 @@ final class DslVocabulary {
         symbols.get(name)
     }
 
+    List<String> getOrderedCandidatesForEnumType(final String enumTypeId) {
+        List<EnumerationDefinition> defs = modelDefinition.enumerationsOfType(enumTypeId)
+        if (defs.isEmpty()) {
+            Map<String, DslSymbol> typeSymbols = symbolsByEnumType.get(enumTypeId)
+            return typeSymbols != null ? new ArrayList<String>(typeSymbols.keySet()).take(10) : []
+        }
+        List<EnumerationDefinition> roots = defs.findAll { !it.parentEnumId }
+        List<EnumerationDefinition> children = defs.findAll { it.parentEnumId }
+        List<String> result = new ArrayList<>()
+        for (EnumerationDefinition ed : roots) {
+            String sym = preferredSymbolForId(ed.enumId)
+            if (sym && !result.contains(sym)) result.add(sym)
+        }
+        for (EnumerationDefinition ed : children) {
+            String sym = preferredSymbolForId(ed.enumId)
+            if (sym && !result.contains(sym)) result.add(sym)
+        }
+        result.take(10)
+    }
+
     DslSymbol resolveSymbolForField(final String symbolName, final String enumTypeId,
-                                   final EntityDefinition entity = null, final String fieldName = null) {
+                                   final EntityDefinition entity = null, final String fieldName = null,
+                                   final String sourceFile = null, final int line = -1) {
         if (!symbolName) return null
         String targetType = enumTypeId
         if (targetType == null && entity != null && fieldName != null) {
@@ -431,19 +462,22 @@ final class DslVocabulary {
             }
 
             // Not found in expected target domain -> compute edit distance suggestion
+            List<String> topCandidates = getOrderedCandidatesForEnumType(targetType)
             Set<String> allowed = typeSymbols.keySet()
             String suggestion = findClosestSymbol(symbolName, allowed)
             String didYouMean = suggestion ? " Did you mean '${suggestion}'?" : ""
+            String locationInfo = (sourceFile != null && line > 0) ? " [${sourceFile}:${line}]" : ""
             throw new IllegalArgumentException(
                 "Invalid symbol '${symbolName}' for field '${fieldName ?: 'unknown'}' " +
-                "on entity '${entity?.name ?: 'unknown'}' (expected domain '${targetType}'). " +
-                "Allowed values: ${allowed.take(15).join(', ')}${allowed.size() > 15 ? '...' : ''}.${didYouMean}"
+                "on entity '${entity?.name ?: 'unknown'}' (expected domain '${targetType}')${locationInfo}. " +
+                "Allowed candidates: ${topCandidates.join(', ')}${allowed.size() > 10 ? '...' : ''}.${didYouMean}"
             )
         }
 
+        String locationInfo = (sourceFile != null && line > 0) ? " [${sourceFile}:${line}]" : ""
         if (entity != null && fieldName != null) {
             throw new IllegalArgumentException(
-                "Field '${fieldName}' on entity '${entity.name}' has no known enumeration domain; " +
+                "Field '${fieldName}' on entity '${entity.name}' has no known enumeration domain${locationInfo}; " +
                 "cannot resolve bare symbol '${symbolName}'"
             )
         }
@@ -452,7 +486,7 @@ final class DslVocabulary {
         DslSymbol global = resolveSymbol(symbolName)
         if (global != null) return global
 
-        throw new IllegalArgumentException("Unresolved bare symbol '${symbolName}'")
+        throw new IllegalArgumentException("Unresolved bare symbol '${symbolName}'${locationInfo}")
     }
 
     static int editDistance(final String s1, final String s2) {

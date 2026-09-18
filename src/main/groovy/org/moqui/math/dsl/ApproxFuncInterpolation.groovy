@@ -86,4 +86,50 @@ enum ApproxFuncInterpolation implements DslEnumValue {
         }
         null
     }
+
+    static ApproxFuncInterpolation fromName(final String name) {
+        if (name == null) return null
+        for (ApproxFuncInterpolation val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('PointToPointPath'.equalsIgnoreCase(name)) return AfiP2PPath
+        if ('PolynomialPath'.equalsIgnoreCase(name)) return AfiPolyPath
+        if ('LinearPath'.equalsIgnoreCase(name)) return AfiLinearPath
+        if ('ParabolicPath'.equalsIgnoreCase(name)) return AfiParabolicPath
+        if ('PathWithAsymmetricConstantAcceleration'.equalsIgnoreCase(name)) return AfiAsymmetricPath
+        if ('CubicPath'.equalsIgnoreCase(name)) return AfiCubicPath
+        if ('PolynomialOf5thDegreePath'.equalsIgnoreCase(name)) return Afi5thDegPolyPath
+        if ('PolynomialOfDegreeSevenPath'.equalsIgnoreCase(name)) return Afi7thDegPolyPath
+        if ('PolynomialOfHigherDegreePath'.equalsIgnoreCase(name)) return AfiHighDegPolyPath
+        if ('TrigonometricPath'.equalsIgnoreCase(name)) return AfiTrigPath
+        if ('HarmonicPath'.equalsIgnoreCase(name)) return AfiHarmonicPath
+        if ('CycloidalPath'.equalsIgnoreCase(name)) return AfiCycloidalPath
+        if ('EllipticPath'.equalsIgnoreCase(name)) return AfiEllipticPath
+        if ('ExponentialPath'.equalsIgnoreCase(name)) return AfiExpPath
+        if ('PathBasedOnTheFourierSeriesExpansion'.equalsIgnoreCase(name)) return AfiFourierSeriesExpansionPath
+        if ('GutmanPath'.equalsIgnoreCase(name)) return AfiGutmanPath
+        if ('FreudensteinPath'.equalsIgnoreCase(name)) return AfiFreudensteinPath
+        if ('MultipointPath'.equalsIgnoreCase(name)) return AfiMultipointPath
+        if ('MultipointApproximatedPath'.equalsIgnoreCase(name)) return AfiApproxPath
+        if ('ApproximatedPolynomialPath'.equalsIgnoreCase(name)) return AfiApproxPolyPath
+        if ('ApproximatedOrthogonalPolynomialsPath'.equalsIgnoreCase(name)) return AfiApproxOrthogonalPolyPath
+        if ('ApproximatedTrigonometricPolynomialPath'.equalsIgnoreCase(name)) return AfiApproxTrigPolynomialPath
+        if ('ApproximatedCubicSplinesPath'.equalsIgnoreCase(name)) return AfiApproxCubicSplinesPath
+        if ('MultipointInterpolatedPath'.equalsIgnoreCase(name)) return AfiInterpPath
+        if ('InterpolatedPolynomialPath'.equalsIgnoreCase(name)) return AfiInterpPolyPath
+        if ('InterpolatedOrthogonalPolynomialsPath'.equalsIgnoreCase(name)) return AfiInterpOrthogonalPolyPath
+        if ('InterpolatedTrigonometricPolynomialPath'.equalsIgnoreCase(name)) return AfiInterpTrigPolyPath
+        if ('InterpolatedCubicSplinesPath'.equalsIgnoreCase(name)) return AfiInterpCubicSplinesPath
+        if ('LinearCurvePath'.equalsIgnoreCase(name)) return AfiPiecewise
+        if ('BZierCurvePath'.equalsIgnoreCase(name)) return AfiBezierPath
+        if ('BSplinePath'.equalsIgnoreCase(name)) return AfiBSplinePath
+        if ('NurbsPath'.equalsIgnoreCase(name)) return AfiNurbsPath
+        if ('HermiteSplineCurvePath'.equalsIgnoreCase(name)) return AfiHermiteSpline
+        if ('LagrangePolynomialCurvePath'.equalsIgnoreCase(name)) return AfiLagrangePolynomial
+        if ('CatmullRomSplineCurvePath'.equalsIgnoreCase(name)) return AfiCatmullRomSpline
+        if ('AdaptiveLearningBasedPath'.equalsIgnoreCase(name)) return AfiAdaptivePath
+        if ('ReinforcementLearningPath'.equalsIgnoreCase(name)) return AfiLearningPath
+        if ('AiOptimizedPath'.equalsIgnoreCase(name)) return AfiAIPath
+        null
+    }
 }

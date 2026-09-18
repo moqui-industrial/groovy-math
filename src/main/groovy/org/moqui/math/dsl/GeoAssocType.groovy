@@ -51,4 +51,15 @@ enum GeoAssocType implements DslEnumValue {
         }
         null
     }
+
+    static GeoAssocType fromName(final String name) {
+        if (name == null) return null
+        for (GeoAssocType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('GeoGroupMember'.equalsIgnoreCase(name)) return GROUP_MEMBER
+        if ('RegionOfALargerGeo'.equalsIgnoreCase(name)) return REGIONS
+        if ('AdministrativeCity'.equalsIgnoreCase(name)) return COUNTY_SEAT
+        null
+    }
 }

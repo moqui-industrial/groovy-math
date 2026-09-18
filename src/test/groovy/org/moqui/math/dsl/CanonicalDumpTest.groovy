@@ -53,4 +53,24 @@ class CanonicalDumpTest {
         assertEquals('MtDense', meta.entity('Matrix').findByName('Q').get('matrixTypeEnumId'))
         assertEquals('MINIMIZE', meta.entity('Parameter').findByName('objSense').get('symbolicValue'))
     }
+
+    @Test
+    void testStructuralEquivalence() {
+        MathMeta meta1 = MathDsl.math {
+            MathModelDef('ModelDefA', modelType: Lp) {
+                MathModel('ModelA') {
+                    matrix('A', rows: 2, cols: 2)
+                }
+            }
+        }
+        MathMeta meta2 = MathDsl.math {
+            MathModelDef('ModelDefA', modelType: Lp) {
+                MathModel('ModelA') {
+                    matrix('A', rows: 2, cols: 2)
+                }
+            }
+        }
+        assertTrue(CanonicalDump.structuralEquals(meta1, meta2))
+        assertDoesNotThrow({ CanonicalDump.assertStructuralEquals(meta1, meta2) } as org.junit.jupiter.api.function.Executable)
+    }
 }

@@ -310,7 +310,6 @@ final class DslRecordDelegate {
         if (key == null) {
             key = options.remove('_key')?.toString() ?: options.get('name')?.toString() ?: "Matrix_${System.identityHashCode(options)}"
         }
-        if (!options.containsKey('name')) options.put('name', key)
         declareDataEntity('Matrix', key, options)
     }
 
@@ -339,7 +338,6 @@ final class DslRecordDelegate {
         if (key == null) {
             key = options.remove('_key')?.toString() ?: options.get('name')?.toString() ?: "Vector_${System.identityHashCode(options)}"
         }
-        if (!options.containsKey('name')) options.put('name', key)
         declareDataEntity('Vector', key, options)
     }
 
@@ -358,7 +356,6 @@ final class DslRecordDelegate {
         if (key == null) {
             key = options.remove('_key')?.toString() ?: options.get('name')?.toString() ?: "Tensor_${System.identityHashCode(options)}"
         }
-        if (!options.containsKey('name')) options.put('name', key)
         declareDataEntity('Tensor', key, options)
     }
 
@@ -727,6 +724,15 @@ final class DslRecordDelegate {
             return childDecl.provider
         }
 
+        String resolvedFieldName = MathDslBuilder.resolveFieldName(record.definition, name)
+        if (record.definition.fields.containsKey(resolvedFieldName)) {
+            Object val = arguments.length > 0 ? arguments[0] : null
+            Object normVal = root.normalizeValue(val, record.definition, resolvedFieldName)
+            record.values.put(resolvedFieldName, normVal)
+            record.provider.configure { ModelValue mv -> mv.put(resolvedFieldName, normVal) }
+            return this
+        }
+
         RelationshipDefinition relationship = record.definition.relationships.get(name)
         if (relationship == null) {
             if (name == 'vertex') relationship = record.definition.relationships.get('vertices')
@@ -747,22 +753,11 @@ final class DslRecordDelegate {
     @CompileStatic(TypeCheckingMode.SKIP)
     Object propertyMissing(final String name) {
         if (localVariables.containsKey(name)) return localVariables.get(name)
-        new DslDeferredSymbol(name)
+        new DslDeferredSymbol(name, MathDslBuilder.getCallerFile(), MathDslBuilder.getCallerLine())
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
     void propertyMissing(final String name, final Object value) {
         localVariables.put(name, value)
-        if (value instanceof ModelProvider) {
-            ModelProvider mp = (ModelProvider) value
-            if (mp.name.startsWith('Matrix_') || mp.name.startsWith('Vector_') || mp.name.startsWith('Tensor_')) {
-                mp.configure { ModelValue mv ->
-                    Object existingName = mv.get('name')
-                    if (existingName == null || existingName.toString().startsWith('Matrix_') || existingName.toString().startsWith('Vector_') || existingName.toString().startsWith('Tensor_')) {
-                        mv.put('name', name)
-                    }
-                }
-            }
-        }
     }
 }

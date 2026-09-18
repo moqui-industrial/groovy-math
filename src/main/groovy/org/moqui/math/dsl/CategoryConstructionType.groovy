@@ -56,4 +56,20 @@ enum CategoryConstructionType implements DslEnumValue {
         }
         null
     }
+
+    static CategoryConstructionType fromName(final String name) {
+        if (name == null) return null
+        for (CategoryConstructionType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('ProductCategory'.equalsIgnoreCase(name)) return Product
+        if ('OppositeCategory'.equalsIgnoreCase(name)) return Opposite
+        if ('ArrowCategory'.equalsIgnoreCase(name)) return Arrow
+        if ('SliceCategory'.equalsIgnoreCase(name)) return Slice
+        if ('CosliceCategory'.equalsIgnoreCase(name)) return Coslice
+        if ('FreeCategoryOnAGraph'.equalsIgnoreCase(name)) return Free
+        if ('QuotientCategoryByACongruence'.equalsIgnoreCase(name)) return Quotient
+        if ('FunctorCategoryCD'.equalsIgnoreCase(name)) return FunctorCategory
+        null
+    }
 }

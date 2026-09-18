@@ -54,4 +54,18 @@ enum MathModelInterpolation implements DslEnumValue {
         }
         null
     }
+
+    static MathModelInterpolation fromName(final String name) {
+        if (name == null) return null
+        for (MathModelInterpolation val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('LinearInterpolation'.equalsIgnoreCase(name)) return Linear
+        if ('SplineBasedInterpolation'.equalsIgnoreCase(name)) return Spline
+        if ('LagrangeShapeFunction'.equalsIgnoreCase(name)) return Lagrange
+        if ('HermiteShapeFunction'.equalsIgnoreCase(name)) return Hermite
+        if ('SerendipityShapeFunction'.equalsIgnoreCase(name)) return Serendipity
+        if ('NurbsIsogeometricShapeFunction'.equalsIgnoreCase(name)) return Nurbs
+        null
+    }
 }

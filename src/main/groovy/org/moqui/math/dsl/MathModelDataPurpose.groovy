@@ -100,4 +100,36 @@ enum MathModelDataPurpose implements DslEnumValue {
         }
         null
     }
+
+    static MathModelDataPurpose fromName(final String name) {
+        if (name == null) return null
+        for (MathModelDataPurpose val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('DirichletBoundaryCondition'.equalsIgnoreCase(name)) return BcDirichlet
+        if ('NeumannBoundaryCondition'.equalsIgnoreCase(name)) return BcNeumann
+        if ('RobinMixedBoundary'.equalsIgnoreCase(name)) return BcRobin
+        if ('StandardDeviation'.equalsIgnoreCase(name)) return StdDev
+        if ('ConfidenceInterval'.equalsIgnoreCase(name)) return Confidence
+        if ('AbsoluteError'.equalsIgnoreCase(name)) return Absolute
+        if ('EqualityConstraint'.equalsIgnoreCase(name)) return Equality
+        if ('InequalityConstraint'.equalsIgnoreCase(name)) return Inequality
+        if ('SymbolicRule'.equalsIgnoreCase(name)) return Symbolic
+        if ('ModelParameters'.equalsIgnoreCase(name)) return ModelParams
+        if ('LastsuccessfulState'.equalsIgnoreCase(name)) return LastSuccessfulState
+        if ('DecisionVariables'.equalsIgnoreCase(name)) return DecisionVars
+        if ('ObjectiveFunction'.equalsIgnoreCase(name)) return Objective
+        if ('CostObjectiveCoefficients'.equalsIgnoreCase(name)) return CostVector
+        if ('RightHandSide'.equalsIgnoreCase(name)) return RhsVector
+        if ('VariableBounds'.equalsIgnoreCase(name)) return VarBounds
+        if ('DualValueShadowPrice'.equalsIgnoreCase(name)) return DualValue
+        if ('SensitivityRange'.equalsIgnoreCase(name)) return Sensitivity
+        if ('ServiceTimeDistribution'.equalsIgnoreCase(name)) return ServiceTimeDist
+        if ('InterarrivalTimeDistribution'.equalsIgnoreCase(name)) return InterarrivalDist
+        if ('StateTransitionMatrix'.equalsIgnoreCase(name)) return TransitionMatrix
+        if ('RewardFunction'.equalsIgnoreCase(name)) return Reward
+        if ('StateValueFunction'.equalsIgnoreCase(name)) return ValueFunction
+        if ('ActionValueFunction'.equalsIgnoreCase(name)) return QFunction
+        null
+    }
 }

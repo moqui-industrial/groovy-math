@@ -69,4 +69,31 @@ enum CategoryType implements DslEnumValue {
         }
         null
     }
+
+    static CategoryType fromName(final String name) {
+        if (name == null) return null
+        for (CategoryType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('SmallFiniteCategory'.equalsIgnoreCase(name)) return Small
+        if ('MonoidalCategory'.equalsIgnoreCase(name)) return Monoidal
+        if ('LargeCategory'.equalsIgnoreCase(name)) return Large
+        if ('CartesianClosedCategory'.equalsIgnoreCase(name)) return CCC
+        if ('SyntacticCategoryOfATypeTheory'.equalsIgnoreCase(name)) return Syntactic
+        if ('LocallyCartesianClosedCategoryForDependentTypes'.equalsIgnoreCase(name)) return LCCC
+        if ('AbelianCategory'.equalsIgnoreCase(name)) return Abelian
+        if ('EnrichedCategory'.equalsIgnoreCase(name)) return Enriched
+        if ('PosetViewedAsCategory'.equalsIgnoreCase(name)) return Poset
+        if ('DiscreteCategory'.equalsIgnoreCase(name)) return Discrete
+        if ('PreAdditiveCategory'.equalsIgnoreCase(name)) return PreAdditive
+        if ('CategoryOfSmallSetsObjectsSetsMorphismsFunctions'.equalsIgnoreCase(name)) return Set
+        if ('FiniteSets'.equalsIgnoreCase(name)) return FinSet
+        if ('CategoryOfGroupsAndGroupHomomorphisms'.equalsIgnoreCase(name)) return Grp
+        if ('AbelianGroupsAndHomomorphisms'.equalsIgnoreCase(name)) return Ab
+        if ('RealVectorSpacesWithLinearMaps'.equalsIgnoreCase(name)) return VectR
+        if ('ComplexVectorSpacesWithLinearMaps'.equalsIgnoreCase(name)) return VectC
+        if ('TopologicalSpacesWithContinuousMaps'.equalsIgnoreCase(name)) return Top
+        if ('BigCategoryOfSmallCategoriesFunctors'.equalsIgnoreCase(name)) return Cat
+        null
+    }
 }

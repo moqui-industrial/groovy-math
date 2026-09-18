@@ -49,4 +49,13 @@ enum GraphCategoryPurpose implements DslEnumValue {
         }
         null
     }
+
+    static GraphCategoryPurpose fromName(final String name) {
+        if (name == null) return null
+        for (GraphCategoryPurpose val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('UnderlyingGraphUObjectsBecomeVerticesAndMorphismsBecomeDirectedEdges'.equalsIgnoreCase(name)) return Graph
+        null
+    }
 }

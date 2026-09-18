@@ -52,4 +52,13 @@ enum TrajectoryPointRunErrorCause implements DslEnumValue {
         }
         null
     }
+
+    static TrajectoryPointRunErrorCause fromName(final String name) {
+        if (name == null) return null
+        for (TrajectoryPointRunErrorCause val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('EnvironmentalInterference'.equalsIgnoreCase(name)) return Environmental
+        null
+    }
 }

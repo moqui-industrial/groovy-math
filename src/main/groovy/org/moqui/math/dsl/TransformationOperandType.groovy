@@ -74,4 +74,38 @@ enum TransformationOperandType implements DslEnumValue {
         }
         null
     }
+
+    static TransformationOperandType fromName(final String name) {
+        if (name == null) return null
+        for (TransformationOperandType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('LeftFirstOperand'.equalsIgnoreCase(name)) return Left
+        if ('RightSecondOperand'.equalsIgnoreCase(name)) return Right
+        if ('ConvolutionCorrelationKernelFilterBias'.equalsIgnoreCase(name)) return Kernel
+        if ('BiasTranslationVector'.equalsIgnoreCase(name)) return Bias
+        if ('SingleOperand'.equalsIgnoreCase(name)) return Single
+        if ('NthOperand'.equalsIgnoreCase(name)) return Nth
+        if ('EnumerationEnumerationGroupOperand'.equalsIgnoreCase(name)) return Enum
+        if ('GenericMatrixOperand'.equalsIgnoreCase(name)) return Matrix
+        if ('GenericVectorOperand'.equalsIgnoreCase(name)) return Vector
+        if ('GenericTensorOperand'.equalsIgnoreCase(name)) return Tensor
+        if ('ScalarHyperParameterOperand'.equalsIgnoreCase(name)) return Scalar
+        if ('NestedTransformationOperand'.equalsIgnoreCase(name)) return Transformation
+        if ('ScalarSymbolicOrTypedParameterOperand'.equalsIgnoreCase(name)) return Parameter
+        if ('LeftFirstOperandMatrix'.equalsIgnoreCase(name)) return LeftMatrix
+        if ('RightSecondOperandMatrix'.equalsIgnoreCase(name)) return RightMatrix
+        if ('KernelFilterMatrix'.equalsIgnoreCase(name)) return KernelMatrix
+        if ('BiasTermMatrix'.equalsIgnoreCase(name)) return BiasMatrix
+        if ('LeftFirstOperandVector'.equalsIgnoreCase(name)) return LeftVector
+        if ('RightSecondOperandVector'.equalsIgnoreCase(name)) return RightVector
+        if ('KernelFilterVector'.equalsIgnoreCase(name)) return KernelVector
+        if ('BiasTermVector'.equalsIgnoreCase(name)) return BiasVector
+        if ('LeftFirstOperandTensor'.equalsIgnoreCase(name)) return LeftTensor
+        if ('RightSecondOperandTensor'.equalsIgnoreCase(name)) return RightTensor
+        if ('KernelFilterTensor'.equalsIgnoreCase(name)) return KernelTensor
+        if ('BiasTermTensor'.equalsIgnoreCase(name)) return BiasTensor
+        if ('EnumerationValueOperand'.equalsIgnoreCase(name)) return EnumValue
+        null
+    }
 }

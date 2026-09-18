@@ -56,4 +56,20 @@ enum MorphismCompositionType implements DslEnumValue {
         }
         null
     }
+
+    static MorphismCompositionType fromName(final String name) {
+        if (name == null) return null
+        for (MorphismCompositionType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('BinaryComposition'.equalsIgnoreCase(name)) return Binary
+        if ('IdentityLawProof'.equalsIgnoreCase(name)) return Identity
+        if ('AssociativityProof'.equalsIgnoreCase(name)) return Assoc
+        if ('UnitLawProof'.equalsIgnoreCase(name)) return UnitLaw
+        if ('ZeroArrowAnnihilation'.equalsIgnoreCase(name)) return ZeroLaw
+        if ('NAryComposition'.equalsIgnoreCase(name)) return Nary
+        if ('NaturalTransformationVerticalComposition'.equalsIgnoreCase(name)) return NatVert
+        if ('IteratedComposition'.equalsIgnoreCase(name)) return Iterate
+        null
+    }
 }

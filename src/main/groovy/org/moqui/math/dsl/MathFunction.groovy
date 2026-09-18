@@ -53,4 +53,17 @@ enum MathFunction implements DslEnumValue {
         }
         null
     }
+
+    static MathFunction fromName(final String name) {
+        if (name == null) return null
+        for (MathFunction val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('SineFunction'.equalsIgnoreCase(name)) return Sin
+        if ('CosineFunction'.equalsIgnoreCase(name)) return Cos
+        if ('ExponentialFunction'.equalsIgnoreCase(name)) return Exp
+        if ('NaturalLogarithm'.equalsIgnoreCase(name)) return Log
+        if ('Polynomial'.equalsIgnoreCase(name)) return Poly
+        null
+    }
 }

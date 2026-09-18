@@ -58,4 +58,16 @@ enum TransformationPurpose implements DslEnumValue {
         }
         null
     }
+
+    static TransformationPurpose fromName(final String name) {
+        if (name == null) return null
+        for (TransformationPurpose val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('CoordinateSystemTransformation'.equalsIgnoreCase(name)) return CoordTransform
+        if ('GeometricalTransformation'.equalsIgnoreCase(name)) return GeometricModeling
+        if ('SymbolicOrAlgebraicSimplification'.equalsIgnoreCase(name)) return SymbolicSimplification
+        if ('SpectralAnalysisOrStability'.equalsIgnoreCase(name)) return EigenAnalysis
+        null
+    }
 }

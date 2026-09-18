@@ -53,4 +53,16 @@ enum TensorDecompMethod implements DslEnumValue {
         }
         null
     }
+
+    static TensorDecompMethod fromName(final String name) {
+        if (name == null) return null
+        for (TensorDecompMethod val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('TuckerHigherOrderSvd'.equalsIgnoreCase(name)) return Hosvd
+        if ('CanonicalPolyadic'.equalsIgnoreCase(name)) return CP
+        if ('TensorTrain'.equalsIgnoreCase(name)) return TT
+        if ('HierarchicalTucker'.equalsIgnoreCase(name)) return HT
+        null
+    }
 }

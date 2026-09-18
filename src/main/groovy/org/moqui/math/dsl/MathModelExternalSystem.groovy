@@ -70,4 +70,32 @@ enum MathModelExternalSystem implements DslEnumValue {
         }
         null
     }
+
+    static MathModelExternalSystem fromName(final String name) {
+        if (name == null) return null
+        for (MathModelExternalSystem val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('HuggingFaceHub'.equalsIgnoreCase(name)) return HfHub
+        if ('OnnxModelZoo'.equalsIgnoreCase(name)) return OnnxZoo
+        if ('PytorchHub'.equalsIgnoreCase(name)) return PyTorchHub
+        if ('TensorflowHubKaggleModels'.equalsIgnoreCase(name)) return TfHub
+        if ('NvidiaNgcModelCatalog'.equalsIgnoreCase(name)) return NvidiaNgc
+        if ('OpenaiApi'.equalsIgnoreCase(name)) return OpenAi
+        if ('AnthropicApi'.equalsIgnoreCase(name)) return Anthropic
+        if ('AzureOpenaiService'.equalsIgnoreCase(name)) return AzureOpenAi
+        if ('GoogleAiVertexAiGeminiApi'.equalsIgnoreCase(name)) return GoogleAi
+        if ('CohereApi'.equalsIgnoreCase(name)) return Cohere
+        if ('MistralApi'.equalsIgnoreCase(name)) return Mistral
+        if ('OllamaLocalRuntime'.equalsIgnoreCase(name)) return Ollama
+        if ('VllmServer'.equalsIgnoreCase(name)) return Vllm
+        if ('LlamaCppServer'.equalsIgnoreCase(name)) return LlamaCpp
+        if ('MlflowModelRegistry'.equalsIgnoreCase(name)) return Mlflow
+        if ('WeightsAndBiases'.equalsIgnoreCase(name)) return Wandb
+        if ('NeptuneAi'.equalsIgnoreCase(name)) return Neptune
+        if ('DvcDagshub'.equalsIgnoreCase(name)) return Dvc
+        if ('InternalRegistry'.equalsIgnoreCase(name)) return Internal
+        if ('CustomOther'.equalsIgnoreCase(name)) return Custom
+        null
+    }
 }

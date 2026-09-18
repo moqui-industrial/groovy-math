@@ -55,4 +55,17 @@ enum MathModelDefContentPurpose implements DslEnumValue {
         }
         null
     }
+
+    static MathModelDefContentPurpose fromName(final String name) {
+        if (name == null) return null
+        for (MathModelDefContentPurpose val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('MainExecutableLogic'.equalsIgnoreCase(name)) return MainLogic
+        if ('HelperFuction'.equalsIgnoreCase(name)) return HelperFunc
+        if ('ModelDefinition'.equalsIgnoreCase(name)) return ModelDef
+        if ('SolverConfiguration'.equalsIgnoreCase(name)) return SolverConfig
+        if ('SymbolicDerivation'.equalsIgnoreCase(name)) return SymDer
+        null
+    }
 }

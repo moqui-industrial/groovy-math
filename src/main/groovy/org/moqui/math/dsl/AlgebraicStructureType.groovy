@@ -76,4 +76,38 @@ enum AlgebraicStructureType implements DslEnumValue {
         }
         null
     }
+
+    static AlgebraicStructureType fromName(final String name) {
+        if (name == null) return null
+        for (AlgebraicStructureType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('MagmaCarrierSetEquippedWithAClosedBinaryOperation'.equalsIgnoreCase(name)) return AsMagma
+        if ('SemigroupAssociativeMagma'.equalsIgnoreCase(name)) return AsSemigroup
+        if ('MonoidSemigroupWithATwoSidedIdentityElement'.equalsIgnoreCase(name)) return AsMonoid
+        if ('QuasigroupMagmaInWhichEveryLeftAndRightDivisionEquationHasAUniqueSolution'.equalsIgnoreCase(name)) return AsQuasigroup
+        if ('LoopQuasigroupWithATwoSidedIdentityElement'.equalsIgnoreCase(name)) return AsLoop
+        if ('GroupMonoidInWhichEveryElementHasATwoSidedInverse'.equalsIgnoreCase(name)) return AsGroup
+        if ('AbelianGroupGroupWithACommutativeOperation'.equalsIgnoreCase(name)) return AsAbelianGroup
+        if ('AdditiveAbelianGroupOfRealNumbers'.equalsIgnoreCase(name)) return AsAdditiveReal
+        if ('AdditiveAbelianGroupOfIntegers'.equalsIgnoreCase(name)) return AsAdditiveInteger
+        if ('CyclicAbelianGroupOfIntegersModulo3UnderAddition'.equalsIgnoreCase(name)) return AsZ3Group
+        if ('UnitalRingAdditiveAbelianGroupMultiplicativeMonoidAndDistributiveLaws'.equalsIgnoreCase(name)) return AsRing
+        if ('FieldCommutativeUnitalRingWith01WhoseNonzeroElementsFormAnAbelianGroupUnderMultiplication'.equalsIgnoreCase(name)) return AsField
+        if ('RingOfIntegers'.equalsIgnoreCase(name)) return AsIntegers
+        if ('FiniteFieldOfIntegersModulo5'.equalsIgnoreCase(name)) return AsZ5Field
+        if ('FieldOfRationalNumbers'.equalsIgnoreCase(name)) return AsRationals
+        if ('FieldOfRealNumbers'.equalsIgnoreCase(name)) return AsReals
+        if ('FieldZ7z'.equalsIgnoreCase(name)) return AsZ7Field
+        if ('ModuleAdditiveAbelianGroupEquippedWithScalarMultiplicationOverASpecifiedRing'.equalsIgnoreCase(name)) return AsModule
+        if ('VectorSpaceModuleWhoseScalarRingIsASpecifiedField'.equalsIgnoreCase(name)) return AsVectorSpace
+        if ('ThreeDimensionalVectorSpaceR3OverTheFieldR'.equalsIgnoreCase(name)) return AsRn3
+        if ('TwoDimensionalVectorSpaceC2OverTheFieldC'.equalsIgnoreCase(name)) return AsC2
+        if ('StateSpaceItsMathematicalStructureIsDefinedByTheSelectedModel'.equalsIgnoreCase(name)) return StateSpace
+        if ('FiniteDimensionalRealInnerProductVectorSpace'.equalsIgnoreCase(name)) return EuclideanSpace
+        if ('QuaternionCoordinatesRepresentedAsTheFourDimensionalRealEuclideanSpaceR4'.equalsIgnoreCase(name)) return EuclideanQuaternionSpace
+        if ('NDimensionalRealEuclideanSpace'.equalsIgnoreCase(name)) return EuclideanNDSpace
+        if ('ThermodynamicStateSpaceDimensionalityAndConstraintsAreDefinedByTheSelectedStateVariablesAndModel'.equalsIgnoreCase(name)) return ThermodynamicSpace
+        null
+    }
 }

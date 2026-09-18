@@ -57,4 +57,21 @@ enum CoordinateSystemPurpose implements DslEnumValue {
         }
         null
     }
+
+    static CoordinateSystemPurpose fromName(final String name) {
+        if (name == null) return null
+        for (CoordinateSystemPurpose val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('BaseCoordinateSystem'.equalsIgnoreCase(name)) return Base
+        if ('CameraCoordinateSystem'.equalsIgnoreCase(name)) return Camera
+        if ('MachineCoordinateSystem'.equalsIgnoreCase(name)) return Machine
+        if ('MechanicalInterfaceCoordinateSystem'.equalsIgnoreCase(name)) return MechanicalInterface
+        if ('MobilePlatformCoordinateSystem'.equalsIgnoreCase(name)) return MobilePlatform
+        if ('ObjectCoordinateSystem'.equalsIgnoreCase(name)) return Object
+        if ('TaskCoordinateSystem'.equalsIgnoreCase(name)) return Task
+        if ('ToolCoordinateSystem'.equalsIgnoreCase(name)) return Tool
+        if ('WorldCoordinateSystem'.equalsIgnoreCase(name)) return World
+        null
+    }
 }

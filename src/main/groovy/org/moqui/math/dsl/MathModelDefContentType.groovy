@@ -58,4 +58,19 @@ enum MathModelDefContentType implements DslEnumValue {
         }
         null
     }
+
+    static MathModelDefContentType fromName(final String name) {
+        if (name == null) return null
+        for (MathModelDefContentType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('PythonScript'.equalsIgnoreCase(name)) return Python
+        if ('SympyScript'.equalsIgnoreCase(name)) return SymPy
+        if ('TorchscriptBundle'.equalsIgnoreCase(name)) return TorchScript
+        if ('JaxXlaProgram'.equalsIgnoreCase(name)) return Jax
+        if ('BinaryModelBlob'.equalsIgnoreCase(name)) return BinaryModel
+        if ('OnnxExports'.equalsIgnoreCase(name)) return Onnx
+        if ('Documentation'.equalsIgnoreCase(name)) return Docs
+        null
+    }
 }

@@ -51,4 +51,15 @@ enum MathModelSource implements DslEnumValue {
         }
         null
     }
+
+    static MathModelSource fromName(final String name) {
+        if (name == null) return null
+        for (MathModelSource val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('MeasuredExperimental'.equalsIgnoreCase(name)) return Measured
+        if ('SyntheticSimulation'.equalsIgnoreCase(name)) return Simulated
+        if ('ManuallyDefined'.equalsIgnoreCase(name)) return Manual
+        null
+    }
 }

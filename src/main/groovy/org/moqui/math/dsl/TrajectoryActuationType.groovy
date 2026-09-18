@@ -52,4 +52,16 @@ enum TrajectoryActuationType implements DslEnumValue {
         }
         null
     }
+
+    static TrajectoryActuationType fromName(final String name) {
+        if (name == null) return null
+        for (TrajectoryActuationType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('DirectMovementIsInitiatedByTheComponent'.equalsIgnoreCase(name)) return Direct
+        if ('IndirectMotionDerivedFromAParentComponentOrExternalForce'.equalsIgnoreCase(name)) return Indirect
+        if ('NoneNoActuationOfThisAxis'.equalsIgnoreCase(name)) return None
+        if ('VirtualMotionIsComputedAndUsedForExpressingAnImaginaryOrDerivedMovement'.equalsIgnoreCase(name)) return Virtual
+        null
+    }
 }

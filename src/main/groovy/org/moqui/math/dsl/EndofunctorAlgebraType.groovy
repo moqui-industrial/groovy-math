@@ -51,4 +51,15 @@ enum EndofunctorAlgebraType implements DslEnumValue {
         }
         null
     }
+
+    static EndofunctorAlgebraType fromName(final String name) {
+        if (name == null) return null
+        for (EndofunctorAlgebraType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('AlgebraFA'.equalsIgnoreCase(name)) return Algebra
+        if ('CoalgebraAF'.equalsIgnoreCase(name)) return Coalgebra
+        if ('EilenbergMooreAlgebra'.equalsIgnoreCase(name)) return EilenbergMoore
+        null
+    }
 }

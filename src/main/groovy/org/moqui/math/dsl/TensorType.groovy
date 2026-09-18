@@ -53,4 +53,17 @@ enum TensorType implements DslEnumValue {
         }
         null
     }
+
+    static TensorType fromName(final String name) {
+        if (name == null) return null
+        for (TensorType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('DenseTensor'.equalsIgnoreCase(name)) return Dense
+        if ('SparseTensor'.equalsIgnoreCase(name)) return Sparse
+        if ('SymmetricTensor'.equalsIgnoreCase(name)) return Symmetric
+        if ('DiagonalTensor'.equalsIgnoreCase(name)) return Diagonal
+        if ('JaggedRaggedTensor'.equalsIgnoreCase(name)) return Jagged
+        null
+    }
 }

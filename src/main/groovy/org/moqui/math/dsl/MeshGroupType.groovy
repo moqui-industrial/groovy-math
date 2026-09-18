@@ -52,4 +52,12 @@ enum MeshGroupType implements DslEnumValue {
         }
         null
     }
+
+    static MeshGroupType fromName(final String name) {
+        if (name == null) return null
+        for (MeshGroupType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        null
+    }
 }

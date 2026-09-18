@@ -52,4 +52,16 @@ enum DataSourceType implements DslEnumValue {
         }
         null
     }
+
+    static DataSourceType fromName(final String name) {
+        if (name == null) return null
+        for (DataSourceType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('PurchasedData'.equalsIgnoreCase(name)) return PURCHASED_DATA
+        if ('CustomerDataEntry'.equalsIgnoreCase(name)) return CUSTOMER_ENTRY
+        if ('InternalDataEntry'.equalsIgnoreCase(name)) return INTERNAL_ENTRY
+        if ('MailingListSignUp'.equalsIgnoreCase(name)) return MAILING_SIGNUP
+        null
+    }
 }

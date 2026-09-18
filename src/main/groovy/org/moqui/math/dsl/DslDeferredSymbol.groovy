@@ -23,13 +23,19 @@ import groovy.transform.EqualsAndHashCode
  * expected enumeration domain without global name collisions.
  */
 @CompileStatic
-@EqualsAndHashCode
+@EqualsAndHashCode(includes = ['name'])
 final class DslDeferredSymbol implements CharSequence, Serializable {
     private static final long serialVersionUID = 1L
     final String name
+    final String sourceFile
+    final int line
+    final int column
 
-    DslDeferredSymbol(final String name) {
+    DslDeferredSymbol(final String name, final String sourceFile = null, final int line = -1, final int column = -1) {
         this.name = Objects.requireNonNull(name, 'Symbol name must not be null')
+        this.sourceFile = sourceFile
+        this.line = line
+        this.column = column
     }
 
     @Override

@@ -51,11 +51,12 @@ class ParameterBlockDelegate {
         } else if (val instanceof DslSymbolicValue) {
             pVals.put('symbolicValue', ((DslSymbolicValue) val).id)
         } else if (val instanceof DslDeferredSymbol) {
-            String sym = ((DslDeferredSymbol) val).name
+            DslDeferredSymbol defSym = (DslDeferredSymbol) val
+            String sym = defSym.name
             if (sym == 'Minimize') pVals.put('symbolicValue', 'MINIMIZE')
             else if (sym == 'Maximize') pVals.put('symbolicValue', 'MAXIMIZE')
             else {
-                DslSymbol resolved = parent.root.vocabulary.resolveSymbol(sym)
+                DslSymbol resolved = parent.root.vocabulary.resolveSymbolForField(sym, 'OptimizationObjectiveSense', null, 'symbolicValue', defSym.sourceFile, defSym.line)
                 pVals.put('symbolicValue', resolved != null ? resolved.id : sym)
             }
         } else if (val instanceof DslSymbol) {
@@ -76,7 +77,7 @@ class ParameterBlockDelegate {
 
     @CompileStatic(TypeCheckingMode.SKIP)
     Object propertyMissing(final String name) {
-        new DslDeferredSymbol(name)
+        new DslDeferredSymbol(name, MathDslBuilder.getCallerFile(), MathDslBuilder.getCallerLine())
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)

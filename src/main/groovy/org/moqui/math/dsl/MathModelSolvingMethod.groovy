@@ -74,4 +74,35 @@ enum MathModelSolvingMethod implements DslEnumValue {
         }
         null
     }
+
+    static MathModelSolvingMethod fromName(final String name) {
+        if (name == null) return null
+        for (MathModelSolvingMethod val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('FiniteElementMethodFem'.equalsIgnoreCase(name)) return Fem
+        if ('FiniteVolumeMethodFvm'.equalsIgnoreCase(name)) return Fvm
+        if ('FiniteDifferenceMethodFdm'.equalsIgnoreCase(name)) return Fdm
+        if ('DiscontinuousGalerkinMethodDg'.equalsIgnoreCase(name)) return Dg
+        if ('SpectralElementMethodSem'.equalsIgnoreCase(name)) return Sem
+        if ('SimplexRevisedSimplex'.equalsIgnoreCase(name)) return Simplex
+        if ('BranchAndBoundBranchAndCut'.equalsIgnoreCase(name)) return BranchAndBound
+        if ('CuttingPlaneMethods'.equalsIgnoreCase(name)) return CuttingPlane
+        if ('AugmentedLagrangianPenalty'.equalsIgnoreCase(name)) return AugLag
+        if ('GeneticEvolutionaryHeuristics'.equalsIgnoreCase(name)) return HeuristicGA
+        if ('SimulatedAnnealing'.equalsIgnoreCase(name)) return SimAnn
+        if ('TabuSearch'.equalsIgnoreCase(name)) return Tabu
+        if ('OpencvComputerVisionRuntime'.equalsIgnoreCase(name)) return OpenCv
+        if ('OnnxRuntimeNeuralNetworkInferenceEngine'.equalsIgnoreCase(name)) return Onnx
+        if ('GoogleJaxOpenxlaRuntime'.equalsIgnoreCase(name)) return Jax
+        if ('GoogleJaxXlaJitCompiledAutogradRuntime'.equalsIgnoreCase(name)) return JaxJit
+        if ('LibtorchNativeRuntime'.equalsIgnoreCase(name)) return LibTorch
+        if ('LibtorchAutogradTrainingRuntime'.equalsIgnoreCase(name)) return LibTorchTraining
+        if ('PetscTaoNumericalOptimizer'.equalsIgnoreCase(name)) return PetscTao
+        if ('GoogleOrToolsMathematicalOptimization'.equalsIgnoreCase(name)) return OrTools
+        if ('OpenfoamFiniteVolumeCfdEngine'.equalsIgnoreCase(name)) return OpenFoam
+        if ('OpenfoamIncompressibleLaminarTransientSolver'.equalsIgnoreCase(name)) return OpenFoamIcoFoam
+        if ('OpenfoamIncompressibleTurbulentSteadyStateSolver'.equalsIgnoreCase(name)) return OpenFoamSimpleFoam
+        null
+    }
 }

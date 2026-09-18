@@ -53,4 +53,16 @@ enum MathModelEventType implements DslEnumValue {
         }
         null
     }
+
+    static MathModelEventType fromName(final String name) {
+        if (name == null) return null
+        for (MathModelEventType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('StartUp'.equalsIgnoreCase(name)) return Start
+        if ('CheckpointSaved'.equalsIgnoreCase(name)) return Checkpoint
+        if ('IterationProgress'.equalsIgnoreCase(name)) return Iteration
+        if ('DivergedError'.equalsIgnoreCase(name)) return Diverged
+        null
+    }
 }

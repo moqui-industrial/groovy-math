@@ -51,4 +51,15 @@ enum ApproxFuncDataStorage implements DslEnumValue {
         }
         null
     }
+
+    static ApproxFuncDataStorage fromName(final String name) {
+        if (name == null) return null
+        for (ApproxFuncDataStorage val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('RowPerPointTable'.equalsIgnoreCase(name)) return PointTable
+        if ('DenseTensorN3OrND'.equalsIgnoreCase(name)) return Tensor
+        if ('ExternalBlobOnlyForParametricPathsAndTrajectories'.equalsIgnoreCase(name)) return External
+        null
+    }
 }

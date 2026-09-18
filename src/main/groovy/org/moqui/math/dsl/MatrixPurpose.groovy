@@ -62,4 +62,26 @@ enum MatrixPurpose implements DslEnumValue {
         }
         null
     }
+
+    static MatrixPurpose fromName(final String name) {
+        if (name == null) return null
+        for (MatrixPurpose val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('OriginalMatrix'.equalsIgnoreCase(name)) return Original
+        if ('ApproximateMatrix'.equalsIgnoreCase(name)) return Approximate
+        if ('BlockMatrix'.equalsIgnoreCase(name)) return Block
+        if ('SvdUMatrix'.equalsIgnoreCase(name)) return SvdU
+        if ('SvdMatrix'.equalsIgnoreCase(name)) return SvdSigma
+        if ('SvdVMatrix'.equalsIgnoreCase(name)) return SvdV
+        if ('LuLMatrix'.equalsIgnoreCase(name)) return LuL
+        if ('LuUMatrix'.equalsIgnoreCase(name)) return LuU
+        if ('DynamicStateTransitionMatrix'.equalsIgnoreCase(name)) return State
+        if ('ControlInputMatrix'.equalsIgnoreCase(name)) return Input
+        if ('MeasurementOutputMatrix'.equalsIgnoreCase(name)) return Output
+        if ('DirectTransmissionFeedforwardMatrix'.equalsIgnoreCase(name)) return Feedforward
+        if ('StateFeedbackGainMatrix'.equalsIgnoreCase(name)) return FeedbackGain
+        if ('ObserverOrKalmanGainMatrix'.equalsIgnoreCase(name)) return ObserverGain
+        null
+    }
 }

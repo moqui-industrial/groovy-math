@@ -21,6 +21,7 @@ import org.moqui.math.entity.EntityDefinition
 import org.moqui.math.entity.FieldDefinition
 import org.moqui.math.entity.ModelProvider
 import org.moqui.math.entity.ModelValue
+import org.moqui.math.entity.NamedModelContainer
 import org.moqui.math.entity.RelationshipDefinition
 
 @CompileStatic
@@ -47,27 +48,25 @@ final class MathDslBuilder {
     ModelProvider matrix(final Object... args) {
         Map<String, Object> options = new LinkedHashMap<>()
         String key = null
-        int i = 0
-        if (args.length > i && args[i] instanceof CharSequence) {
-            key = args[i].toString()
-            i++
+        List<Number> positionalNumbers = new ArrayList<>()
+        for (Object arg : args) {
+            if (arg instanceof CharSequence && key == null) {
+                key = arg.toString()
+            } else if (arg instanceof Map) {
+                options.putAll((Map<String, Object>) arg)
+            } else if (arg instanceof List) {
+                options.put('componentArray', arg)
+            } else if (arg instanceof Number) {
+                positionalNumbers.add((Number) arg)
+            }
         }
-        if (args.length > i && args[i] instanceof Number && args.length > i + 1 && args[i + 1] instanceof Number) {
-            options.put('rows', ((Number) args[i]).intValue())
-            options.put('cols', ((Number) args[i + 1]).intValue())
-            i += 2
-        } else if (args.length > i && args[i] instanceof List) {
-            options.put('componentArray', args[i])
-            i++
-        }
-        while (i < args.length) {
-            if (args[i] instanceof Map) options.putAll((Map<String, Object>) args[i])
-            i++
+        if (positionalNumbers.size() >= 2) {
+            options.putIfAbsent('rows', positionalNumbers.get(0).intValue())
+            options.putIfAbsent('cols', positionalNumbers.get(1).intValue())
         }
         if (key == null) {
             key = options.remove('_key')?.toString() ?: options.get('name')?.toString() ?: "Matrix_${System.identityHashCode(options)}"
         }
-        if (!options.containsKey('name')) options.put('name', key)
         ModelProvider p = declare(vocabulary.findEntity('Matrix'), key, options, null, null, null).provider
         localVariables.put(key, p)
         p
@@ -76,26 +75,24 @@ final class MathDslBuilder {
     ModelProvider vector(final Object... args) {
         Map<String, Object> options = new LinkedHashMap<>()
         String key = null
-        int i = 0
-        if (args.length > i && args[i] instanceof CharSequence) {
-            key = args[i].toString()
-            i++
+        List<Number> positionalNumbers = new ArrayList<>()
+        for (Object arg : args) {
+            if (arg instanceof CharSequence && key == null) {
+                key = arg.toString()
+            } else if (arg instanceof Map) {
+                options.putAll((Map<String, Object>) arg)
+            } else if (arg instanceof List) {
+                options.put('componentArray', arg)
+            } else if (arg instanceof Number) {
+                positionalNumbers.add((Number) arg)
+            }
         }
-        if (args.length > i && args[i] instanceof Number) {
-            options.put('dimension', ((Number) args[i]).intValue())
-            i++
-        } else if (args.length > i && args[i] instanceof List) {
-            options.put('componentArray', args[i])
-            i++
-        }
-        while (i < args.length) {
-            if (args[i] instanceof Map) options.putAll((Map<String, Object>) args[i])
-            i++
+        if (positionalNumbers.size() >= 1) {
+            options.putIfAbsent('dimension', positionalNumbers.get(0).intValue())
         }
         if (key == null) {
             key = options.remove('_key')?.toString() ?: options.get('name')?.toString() ?: "Vector_${System.identityHashCode(options)}"
         }
-        if (!options.containsKey('name')) options.put('name', key)
         ModelProvider p = declare(vocabulary.findEntity('Vector'), key, options, null, null, null).provider
         localVariables.put(key, p)
         p
@@ -104,23 +101,18 @@ final class MathDslBuilder {
     ModelProvider tensor(final Object... args) {
         Map<String, Object> options = new LinkedHashMap<>()
         String key = null
-        int i = 0
-        if (args.length > i && args[i] instanceof CharSequence) {
-            key = args[i].toString()
-            i++
-        }
-        if (args.length > i && args[i] instanceof List) {
-            options.put('componentArray', args[i])
-            i++
-        }
-        while (i < args.length) {
-            if (args[i] instanceof Map) options.putAll((Map<String, Object>) args[i])
-            i++
+        for (Object arg : args) {
+            if (arg instanceof CharSequence && key == null) {
+                key = arg.toString()
+            } else if (arg instanceof Map) {
+                options.putAll((Map<String, Object>) arg)
+            } else if (arg instanceof List) {
+                options.put('componentArray', arg)
+            }
         }
         if (key == null) {
             key = options.remove('_key')?.toString() ?: options.get('name')?.toString() ?: "Tensor_${System.identityHashCode(options)}"
         }
-        if (!options.containsKey('name')) options.put('name', key)
         ModelProvider p = declare(vocabulary.findEntity('Tensor'), key, options, null, null, null).provider
         localVariables.put(key, p)
         p
@@ -292,7 +284,7 @@ final class MathDslBuilder {
     @CompileStatic(TypeCheckingMode.SKIP)
     Object propertyMissing(final String name) {
         if (localVariables.containsKey(name)) return localVariables.get(name)
-        new DslDeferredSymbol(name)
+        new DslDeferredSymbol(name, getCallerFile(), getCallerLine())
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
@@ -492,17 +484,101 @@ final class MathDslBuilder {
         values
     }
 
+    private static boolean isComputedField(final EntityDefinition definition, final String name) {
+        if (definition == null) return false
+        if (definition.fullName == 'moqui.math.Matrix' || definition.name == 'Matrix' ||
+            definition.fullName == 'moqui.math.Vector' || definition.name == 'Vector') {
+            return ['determinant', 'trace', 'rank', 'conditionNumber', 'frobeniusNorm', 'nnz'].contains(name)
+        }
+        if (definition.fullName == 'moqui.math.Tensor' || definition.name == 'Tensor') {
+            return ['determinant', 'trace', 'conditionNumber', 'frobeniusNorm', 'nnz'].contains(name)
+        }
+        return false
+    }
+
+    static int getCallerLine() {
+        for (StackTraceElement ste : Thread.currentThread().stackTrace) {
+            if (ste.fileName != null && (ste.fileName.endsWith('.groovy') || ste.fileName.endsWith('.gvy')) &&
+                !ste.className.startsWith('org.moqui.math.dsl.') &&
+                !ste.className.startsWith('org.codehaus.groovy.') &&
+                !ste.className.startsWith('groovy.lang.')) {
+                return ste.lineNumber
+            }
+        }
+        -1
+    }
+
+    static String getCallerFile() {
+        for (StackTraceElement ste : Thread.currentThread().stackTrace) {
+            if (ste.fileName != null && (ste.fileName.endsWith('.groovy') || ste.fileName.endsWith('.gvy')) &&
+                !ste.className.startsWith('org.moqui.math.dsl.') &&
+                !ste.className.startsWith('org.codehaus.groovy.') &&
+                !ste.className.startsWith('groovy.lang.')) {
+                return ste.fileName
+            }
+        }
+        null
+    }
+
+    void resolvePendingReferences(final String fileName = null) {
+        mathMeta.definition.entities.values().each { EntityDefinition ed ->
+            if (mathMeta.hasEntity(ed.fullName)) {
+                NamedModelContainer container = mathMeta.entity(ed.fullName)
+                container.each { ModelValue mv ->
+                    for (String fieldName : new ArrayList<String>(mv.keySet())) {
+                        Object val = mv.get(fieldName)
+                        if (val instanceof DslDeferredSymbol) {
+                            DslDeferredSymbol defSym = (DslDeferredSymbol) val
+                            String symName = defSym.name
+                            if (localVariables.containsKey(symName)) {
+                                Object local = localVariables.get(symName)
+                                mv.put(fieldName, local instanceof ModelProvider ? ((ModelProvider) local).name : local)
+                            } else {
+                                String enumTypeId = ed.enumTypeFor(fieldName) ?: (fieldName == 'statusId' ? 'Status' : null)
+                                if (enumTypeId != null) {
+                                    DslSymbol resolved = vocabulary.resolveSymbolForField(symName, enumTypeId, ed, fieldName, defSym.sourceFile ?: fileName, defSym.line)
+                                    mv.put(fieldName, resolved.id)
+                                } else if (fieldName.endsWith('Id') || fieldName.endsWith('Key') || fieldName.endsWith('Ref')) {
+                                    mv.put(fieldName, symName)
+                                } else {
+                                    DslSymbol resolved = vocabulary.resolveSymbolForField(symName, null, ed, fieldName, defSym.sourceFile ?: fileName, defSym.line)
+                                    mv.put(fieldName, resolved.id)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     @PackageScope
     Object normalizeValue(final Object value, final EntityDefinition entity = null, final String fieldName = null) {
         if (value instanceof DslDeferredSymbol) {
-            String symName = ((DslDeferredSymbol) value).name
-            String enumTypeId = entity != null && fieldName != null ? entity.enumTypeFor(fieldName) : null
-            DslSymbol resolved = vocabulary.resolveSymbolForField(symName, enumTypeId, entity, fieldName)
+            DslDeferredSymbol defSym = (DslDeferredSymbol) value
+            String symName = defSym.name
+            if (localVariables.containsKey(symName)) {
+                Object local = localVariables.get(symName)
+                return local instanceof ModelProvider ? ((ModelProvider) local).name : local
+            }
+            String enumTypeId = entity != null && fieldName != null ? (entity.enumTypeFor(fieldName) ?: (fieldName == 'statusId' ? 'Status' : null)) : null
+            if (enumTypeId != null) {
+                DslSymbol resolved = vocabulary.resolveSymbolForField(symName, enumTypeId, entity, fieldName, defSym.sourceFile, defSym.line)
+                if (resolved != null) return resolved.id
+                return symName
+            }
+            DslSymbol sym = vocabulary.resolveSymbol(symName)
+            if (sym != null) return sym.id
+            if (fieldName != null && (fieldName.endsWith('Id') || fieldName.endsWith('Key') || fieldName.endsWith('Ref') || fieldName.endsWith('Matrix') || fieldName.endsWith('Vector') || fieldName.endsWith('Tensor'))) {
+                return defSym
+            }
+            DslSymbol resolved = vocabulary.resolveSymbolForField(symName, null, entity, fieldName, defSym.sourceFile, defSym.line)
             if (resolved != null) return resolved.id
             return symName
         }
         if (value instanceof DslSymbol) return ((DslSymbol) value).id
         if (value instanceof DslEnumValue) return ((DslEnumValue) value).id
+        if (value instanceof DslSymbolicValue) return ((DslSymbolicValue) value).id
         if (value instanceof Enum<?>) return ((Enum<?>) value).name()
         if (value instanceof org.moqui.math.metamodel.EntityRef) return ((org.moqui.math.metamodel.EntityRef<?>) value).id
         if (value instanceof ModelProvider) return ((ModelProvider) value).name
@@ -583,7 +659,13 @@ final class MathDslBuilder {
                                                                  final LinkedHashMap<String, Object> source) {
         LinkedHashMap<String, Object> normalized = new LinkedHashMap<>()
         source.each { String name, Object rawValue ->
+            if (isComputedField(definition, name)) {
+                throw new IllegalArgumentException("campo calcolato: lo popola il provider o la regola entity-eca in Moqui")
+            }
             String resolved = resolveFieldName(definition, name)
+            if (isComputedField(definition, resolved)) {
+                throw new IllegalArgumentException("campo calcolato: lo popola il provider o la regola entity-eca in Moqui")
+            }
             if (normalized.containsKey(resolved) && resolved != name) {
                 throw new IllegalArgumentException(
                     "Duplicate DSL values for ${definition.fullName}.${resolved} via '${name}' alias")
@@ -594,35 +676,78 @@ final class MathDslBuilder {
         normalized
     }
 
+    private static void validateComponentArray(final Object comp) {
+        if (comp instanceof List) {
+            boolean hasNumber = false
+            boolean hasString = false
+            boolean hasNestedList = false
+            for (Object item : (List<?>) comp) {
+                if (item instanceof List) {
+                    hasNestedList = true
+                    validateComponentArray(item)
+                } else if (item instanceof Number) {
+                    hasNumber = true
+                } else if (item instanceof CharSequence) {
+                    hasString = true
+                }
+            }
+            if (!hasNestedList && hasNumber && hasString) {
+                throw new IllegalArgumentException("Non sono ammessi array con elementi misti di tipo stringa e numero")
+            }
+        }
+    }
+
+    private static List<Integer> inferShape(final Object comp) {
+        if (!(comp instanceof List)) return []
+        List<?> list = (List<?>) comp
+        List<Integer> shape = [list.size()]
+        if (!list.isEmpty() && list.get(0) instanceof List) {
+            shape.addAll(inferShape(list.get(0)))
+        }
+        shape
+    }
+
     private static void inferStructuralProperties(final EntityDefinition definition, final LinkedHashMap<String, Object> normalized) {
+        if (definition.fields.containsKey('statusId') && !normalized.containsKey('statusId')) {
+            if (definition.fullName == 'moqui.math.MathModel' || definition.name == 'MathModel') {
+                Object flowId = normalized.get('statusFlowId')
+                if (flowId == 'MathModelStatusFlow') normalized.put('statusId', 'MathModelDraft')
+            } else if (definition.fullName == 'moqui.math.MathModelRun' || definition.name == 'MathModelRun') {
+                Object flowId = normalized.get('statusFlowId')
+                if (flowId == 'MathModelRun') normalized.put('statusId', 'MmrQueued')
+            }
+        }
         if (definition.fullName == 'moqui.math.Matrix' || definition.name == 'Matrix') {
             if (definition.fields.containsKey('matrixTypeEnumId') && !normalized.containsKey('matrixTypeEnumId')) {
                 normalized.put('matrixTypeEnumId', 'MtDense')
             }
             Object comp = normalized.get('componentArray')
-            if (comp instanceof List) {
-                List<?> list = (List<?>) comp
-                if (!list.isEmpty() && list.get(0) instanceof List) {
-                    int infRows = list.size()
-                    int infCols = ((List<?>) list.get(0)).size()
-                    if (normalized.containsKey('rows')) {
-                        int decRows = ((Number) normalized.get('rows')).intValue()
-                        if (decRows != infRows) {
-                            throw new IllegalArgumentException("Declared rows (${decRows}) does not match literal rows (${infRows})")
+            if (comp != null) {
+                validateComponentArray(comp)
+                if (comp instanceof List) {
+                    List<?> list = (List<?>) comp
+                    if (!list.isEmpty() && list.get(0) instanceof List) {
+                        int infRows = list.size()
+                        int infCols = ((List<?>) list.get(0)).size()
+                        if (normalized.containsKey('rows')) {
+                            int decRows = ((Number) normalized.get('rows')).intValue()
+                            if (decRows != infRows) {
+                                throw new IllegalArgumentException("Declared rows (${decRows}) does not match literal rows (${infRows})")
+                            }
+                        } else if (definition.fields.containsKey('rows')) {
+                            normalized.put('rows', infRows)
                         }
-                    } else if (definition.fields.containsKey('rows')) {
-                        normalized.put('rows', infRows)
-                    }
-                    if (normalized.containsKey('cols')) {
-                        int decCols = ((Number) normalized.get('cols')).intValue()
-                        if (decCols != infCols) {
-                            throw new IllegalArgumentException("Declared cols (${decCols}) does not match literal cols (${infCols})")
+                        if (normalized.containsKey('cols')) {
+                            int decCols = ((Number) normalized.get('cols')).intValue()
+                            if (decCols != infCols) {
+                                throw new IllegalArgumentException("Declared cols (${decCols}) does not match literal cols (${infCols})")
+                            }
+                        } else if (definition.fields.containsKey('cols')) {
+                            normalized.put('cols', infCols)
                         }
-                    } else if (definition.fields.containsKey('cols')) {
-                        normalized.put('cols', infCols)
                     }
+                    normalized.put('componentArray', groovy.json.JsonOutput.toJson(comp))
                 }
-                normalized.put('componentArray', groovy.json.JsonOutput.toJson(comp))
             }
             if (definition.fields.containsKey('domainSpaceEnumId') && !normalized.containsKey('domainSpaceEnumId')) {
                 if (normalized.containsKey('cols') && ((Number) normalized.get('cols')).intValue() == 3) {
@@ -640,29 +765,68 @@ final class MathDslBuilder {
             }
         } else if (definition.fullName == 'moqui.math.Vector' || definition.name == 'Vector') {
             Object comp = normalized.get('componentArray')
-            if (comp instanceof List) {
-                List<?> list = (List<?>) comp
-                int infDim = list.size()
-                if (normalized.containsKey('dimension')) {
-                    int decDim = ((Number) normalized.get('dimension')).intValue()
-                    if (decDim != infDim) {
-                        throw new IllegalArgumentException("Declared dimension (${decDim}) does not match literal dimension (${infDim})")
+            if (comp != null) {
+                validateComponentArray(comp)
+                if (comp instanceof List) {
+                    List<?> list = (List<?>) comp
+                    int infDim = list.size()
+                    if (normalized.containsKey('dimension')) {
+                        int decDim = ((Number) normalized.get('dimension')).intValue()
+                        if (decDim != infDim) {
+                            throw new IllegalArgumentException("Declared dimension (${decDim}) does not match literal dimension (${infDim})")
+                        }
+                    } else if (definition.fields.containsKey('dimension')) {
+                        normalized.put('dimension', infDim)
                     }
-                } else if (definition.fields.containsKey('dimension')) {
-                    normalized.put('dimension', infDim)
+                    normalized.put('componentArray', groovy.json.JsonOutput.toJson(comp))
                 }
-                normalized.put('componentArray', groovy.json.JsonOutput.toJson(comp))
             }
         } else if (definition.fullName == 'moqui.math.Tensor' || definition.name == 'Tensor') {
-            Object comp = normalized.get('componentArray')
-            if (comp instanceof List) {
-                normalized.put('componentArray', groovy.json.JsonOutput.toJson(comp))
+            Object comp = normalized.remove('componentArray')
+            if (comp != null) {
+                validateComponentArray(comp)
+                if (comp instanceof List) {
+                    List<Integer> infShape = inferShape(comp)
+                    if (normalized.containsKey('shape')) {
+                        Object decShape = normalized.get('shape')
+                        List<Integer> decList = null
+                        if (decShape instanceof List) decList = (List<Integer>) decShape
+                        else if (decShape instanceof CharSequence) {
+                            try {
+                                Object parsed = new groovy.json.JsonSlurper().parseText(decShape.toString())
+                                if (parsed instanceof List) decList = (List<Integer>) parsed
+                            } catch (Exception ignored) {}
+                        }
+                        if (decList != null && decList != infShape) {
+                            throw new IllegalArgumentException("Declared shape (${decList}) does not match literal shape (${infShape})")
+                        }
+                    } else if (definition.fields.containsKey('shape')) {
+                        normalized.put('shape', groovy.json.JsonOutput.toJson(infShape))
+                    }
+                    if (!normalized.containsKey('rank') && definition.fields.containsKey('rank')) {
+                        normalized.put('rank', infShape.size())
+                    }
+                }
+            } else if (normalized.containsKey('shape') && !normalized.containsKey('rank') && definition.fields.containsKey('rank')) {
+                Object decShape = normalized.get('shape')
+                List<Integer> decList = null
+                if (decShape instanceof List) decList = (List<Integer>) decShape
+                else if (decShape instanceof CharSequence) {
+                    try {
+                        Object parsed = new groovy.json.JsonSlurper().parseText(decShape.toString())
+                        if (parsed instanceof List) decList = (List<Integer>) parsed
+                    } catch (Exception ignored) {}
+                }
+                if (decList != null) normalized.put('rank', decList.size())
             }
         }
     }
 
     private static void addSinglePrimaryKey(final EntityDefinition definition, final String modelKey,
                                              final Map<String, Object> values) {
+        if (modelKey != null && modelKey.length() > 250) {
+            throw new IllegalArgumentException("L'identificatore '${modelKey}' supera la lunghezza massima di 250 caratteri supportata da Moqui")
+        }
         List<FieldDefinition> primaryKeys = definition.primaryKeyFields
         if (primaryKeys.size() == 1) {
             String fieldName = primaryKeys.first().name

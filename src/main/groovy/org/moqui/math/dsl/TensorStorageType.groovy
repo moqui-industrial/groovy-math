@@ -77,4 +77,38 @@ enum TensorStorageType implements DslEnumValue {
         }
         null
     }
+
+    static TensorStorageType fromName(final String name) {
+        if (name == null) return null
+        for (TensorStorageType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('RowPerElement'.equalsIgnoreCase(name)) return RowElement
+        if ('ElementsStoredAsAnArrayField'.equalsIgnoreCase(name)) return ArrayField
+        if ('ElementsStoredAsABlobField'.equalsIgnoreCase(name)) return BlobField
+        if ('ElementsStoredAsAnExternalContent'.equalsIgnoreCase(name)) return Content
+        if ('DenseContiguousBuffer'.equalsIgnoreCase(name)) return DenseContig
+        if ('DenseColumnMajor'.equalsIgnoreCase(name)) return DenseColMajor
+        if ('DenseChannelsLast2D'.equalsIgnoreCase(name)) return DenseChLast2D
+        if ('DenseChannelsLast3D'.equalsIgnoreCase(name)) return DenseChLast3D
+        if ('SparseCoo'.equalsIgnoreCase(name)) return SparseCOO
+        if ('SparseCsrCsc'.equalsIgnoreCase(name)) return SparseCSR
+        if ('SparseBsc'.equalsIgnoreCase(name)) return SparseBSC
+        if ('SparseBsr'.equalsIgnoreCase(name)) return SparseBSR
+        if ('SparseCsc'.equalsIgnoreCase(name)) return SparseCSC
+        if ('ZarrDirectory'.equalsIgnoreCase(name)) return Zarr
+        if ('NumpyNpyFile'.equalsIgnoreCase(name)) return NPY
+        if ('SafetensorsBinary'.equalsIgnoreCase(name)) return SafeTensor
+        if ('ApacheArrowIpcStream'.equalsIgnoreCase(name)) return ArrowIPC
+        if ('Hdf5Dataset'.equalsIgnoreCase(name)) return HDF5
+        if ('Netcdf4'.equalsIgnoreCase(name)) return NetCDF4
+        if ('TiledbDenseArray'.equalsIgnoreCase(name)) return TileDBDense
+        if ('TiledbSparseArray'.equalsIgnoreCase(name)) return TileDBSparse
+        if ('ApacheParquet'.equalsIgnoreCase(name)) return ParquetArrow
+        if ('PosixWinMemoryMappedFile'.equalsIgnoreCase(name)) return MemMap
+        if ('DlpackCapsule'.equalsIgnoreCase(name)) return DLPack
+        if ('PytorchPtPthSerializedTensorFile'.equalsIgnoreCase(name)) return TorchPT
+        if ('TensorstoreJsonKvSpec'.equalsIgnoreCase(name)) return TensorStoreSpec
+        null
+    }
 }

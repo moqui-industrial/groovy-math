@@ -55,4 +55,18 @@ enum ThermodynamicDimension implements DslEnumValue {
         }
         null
     }
+
+    static ThermodynamicDimension fromName(final String name) {
+        if (name == null) return null
+        for (ThermodynamicDimension val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('VolumeDimension'.equalsIgnoreCase(name)) return Volume
+        if ('PressureDimension'.equalsIgnoreCase(name)) return Pressure
+        if ('TemperatureDimension'.equalsIgnoreCase(name)) return Temperature
+        if ('EnthalpyDimension'.equalsIgnoreCase(name)) return Enthalpy
+        if ('EntropyDimension'.equalsIgnoreCase(name)) return Entropy
+        if ('RelativeHumidityDimension'.equalsIgnoreCase(name)) return RelativeHumidity
+        null
+    }
 }

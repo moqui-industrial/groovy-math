@@ -52,4 +52,13 @@ enum MatrixConditionNorm implements DslEnumValue {
         }
         null
     }
+
+    static MatrixConditionNorm fromName(final String name) {
+        if (name == null) return null
+        for (MatrixConditionNorm val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('F'.equalsIgnoreCase(name)) return Fro
+        null
+    }
 }

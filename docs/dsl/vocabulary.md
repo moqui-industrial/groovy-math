@@ -635,13 +635,13 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `ES_BOUNCED` | `ES_BOUNCED` | `eS_BOUNCED` |
-| `ES_CANCELLED` | `ES_CANCELLED` | `eS_CANCELLED` |
-| `ES_DRAFT` | `ES_DRAFT` | `eS_DRAFT` |
-| `ES_READY` | `ES_READY` | `eS_READY` |
-| `ES_RECEIVED` | `ES_RECEIVED` | `eS_RECEIVED` |
-| `ES_SENT` | `ES_SENT` | `eS_SENT` |
-| `ES_VIEWED` | `ES_VIEWED` | `eS_VIEWED` |
+| `ES_BOUNCED` | `ES_BOUNCED` | `eS_BOUNCED`, `Bounced`, `bounced` |
+| `ES_CANCELLED` | `ES_CANCELLED` | `eS_CANCELLED`, `Cancelled`, `cancelled` |
+| `ES_DRAFT` | `ES_DRAFT` | `eS_DRAFT`, `Draft`, `draft` |
+| `ES_READY` | `ES_READY` | `eS_READY`, `Ready`, `ready` |
+| `ES_RECEIVED` | `ES_RECEIVED` | `eS_RECEIVED`, `Received`, `received` |
+| `ES_SENT` | `ES_SENT` | `eS_SENT`, `Sent`, `sent` |
+| `ES_VIEWED` | `ES_VIEWED` | `eS_VIEWED`, `Viewed`, `viewed` |
 
 ### Domain: `EmailType`
 
@@ -981,11 +981,11 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `MmrCancelled` | `MmrCancelled` | `mmrCancelled` |
-| `MmrFailed` | `MmrFailed` | `mmrFailed` |
-| `MmrQueued` | `MmrQueued` | `mmrQueued` |
-| `MmrRunning` | `MmrRunning` | `mmrRunning` |
-| `MmrSucceeded` | `MmrSucceeded` | `mmrSucceeded` |
+| `MmrCancelled` | `MmrCancelled` | `mmrCancelled`, `Cancelled`, `cancelled` |
+| `MmrFailed` | `MmrFailed` | `mmrFailed`, `Failed`, `failed` |
+| `MmrQueued` | `MmrQueued` | `mmrQueued`, `Queued`, `queued` |
+| `MmrRunning` | `MmrRunning` | `mmrRunning`, `Running`, `running` |
+| `MmrSucceeded` | `MmrSucceeded` | `mmrSucceeded`, `Succeeded`, `succeeded` |
 
 ### Domain: `MathModelSolvingMethod`
 
@@ -1538,15 +1538,15 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `PtjAborted` | `PtjAborted` | `ptjAborted` |
-| `PtjCanceled` | `PtjCanceled` | `ptjCanceled` |
-| `PtjCompleted` | `PtjCompleted` | `ptjCompleted` |
-| `PtjNotSent` | `PtjNotSent` | `ptjNotSent` |
-| `PtjPending` | `PtjPending` | `ptjPending` |
-| `PtjPendingHeld` | `PtjPendingHeld` | `ptjPendingHeld` |
-| `PtjProcessing` | `PtjProcessing` | `ptjProcessing` |
-| `PtjProcessingStopped` | `PtjProcessingStopped` | `ptjProcessingStopped` |
-| `PtjSendFailed` | `PtjSendFailed` | `ptjSendFailed` |
+| `PtjAborted` | `PtjAborted` | `ptjAborted`, `Aborted`, `aborted` |
+| `PtjCanceled` | `PtjCanceled` | `ptjCanceled`, `Canceled`, `canceled` |
+| `PtjCompleted` | `PtjCompleted` | `ptjCompleted`, `Completed`, `completed` |
+| `PtjNotSent` | `PtjNotSent` | `ptjNotSent`, `NotSent`, `notSent` |
+| `PtjPending` | `PtjPending` | `ptjPending`, `Pending`, `pending` |
+| `PtjPendingHeld` | `PtjPendingHeld` | `ptjPendingHeld`, `PendingHeld`, `pendingHeld` |
+| `PtjProcessing` | `PtjProcessing` | `ptjProcessing`, `Processing`, `processing` |
+| `PtjProcessingStopped` | `PtjProcessingStopped` | `ptjProcessingStopped`, `ProcessingStopped`, `processingStopped` |
+| `PtjSendFailed` | `PtjSendFailed` | `ptjSendFailed`, `SendFailed`, `sendFailed` |
 
 ### Domain: `SpaceDimension`
 
@@ -1560,36 +1560,36 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 
 | Preferred Symbol | Canonical Enum ID | Accepted Aliases |
 | :--- | :--- | :--- |
-| `ES_BOUNCED` | `ES_BOUNCED` | `eS_BOUNCED` |
+| `ES_BOUNCED` | `ES_BOUNCED` | `eS_BOUNCED`, `Bounced`, `bounced` |
 | `ES_CANCELLED` | `ES_CANCELLED` | `eS_CANCELLED` |
 | `ES_DRAFT` | `ES_DRAFT` | `eS_DRAFT` |
-| `ES_READY` | `ES_READY` | `eS_READY` |
-| `ES_RECEIVED` | `ES_RECEIVED` | `eS_RECEIVED` |
-| `ES_SENT` | `ES_SENT` | `eS_SENT` |
-| `ES_VIEWED` | `ES_VIEWED` | `eS_VIEWED` |
+| `ES_READY` | `ES_READY` | `eS_READY`, `Ready`, `ready` |
+| `ES_RECEIVED` | `ES_RECEIVED` | `eS_RECEIVED`, `Received`, `received` |
+| `ES_SENT` | `ES_SENT` | `eS_SENT`, `Sent`, `sent` |
+| `ES_VIEWED` | `ES_VIEWED` | `eS_VIEWED`, `Viewed`, `viewed` |
 | `MathModelApproved` | `MathModelApproved` | `mathModelApproved`, `Approved`, `approved` |
-| `MathModelCancelled` | `MathModelCancelled` | `mathModelCancelled`, `Cancelled`, `cancelled` |
+| `MathModelCancelled` | `MathModelCancelled` | `mathModelCancelled` |
 | `MathModelDeprecated` | `MathModelDeprecated` | `mathModelDeprecated`, `Deprecated`, `deprecated` |
-| `MathModelDraft` | `MathModelDraft` | `mathModelDraft`, `Draft`, `draft` |
+| `Draft` | `MathModelDraft` | `draft`, `MathModelDraft`, `mathModelDraft` |
 | `MathModelInReview` | `MathModelInReview` | `mathModelInReview`, `InReview`, `inReview` |
 | `MathModelProduction` | `MathModelProduction` | `mathModelProduction`, `Production`, `production` |
 | `MathModelRetired` | `MathModelRetired` | `mathModelRetired`, `Retired`, `retired` |
 | `MathModelTested` | `MathModelTested` | `mathModelTested`, `Tested`, `tested` |
-| `MmrCancelled` | `MmrCancelled` | `mmrCancelled` |
-| `MmrFailed` | `MmrFailed` | `mmrFailed` |
-| `MmrQueued` | `MmrQueued` | `mmrQueued` |
-| `MmrRunning` | `MmrRunning` | `mmrRunning` |
-| `MmrSucceeded` | `MmrSucceeded` | `mmrSucceeded` |
-| `PtjAborted` | `PtjAborted` | `ptjAborted` |
-| `PtjCanceled` | `PtjCanceled` | `ptjCanceled` |
-| `PtjCompleted` | `PtjCompleted` | `ptjCompleted` |
-| `PtjNotSent` | `PtjNotSent` | `ptjNotSent` |
-| `PtjPending` | `PtjPending` | `ptjPending` |
-| `PtjPendingHeld` | `PtjPendingHeld` | `ptjPendingHeld` |
-| `PtjProcessing` | `PtjProcessing` | `ptjProcessing` |
-| `PtjProcessingStopped` | `PtjProcessingStopped` | `ptjProcessingStopped` |
-| `PtjSendFailed` | `PtjSendFailed` | `ptjSendFailed` |
-| `A_` | `_NA_` | `_NA_` |
+| `Cancelled` | `MmrCancelled` | `cancelled`, `MmrCancelled`, `mmrCancelled` |
+| `MmrFailed` | `MmrFailed` | `mmrFailed`, `Failed`, `failed` |
+| `MmrQueued` | `MmrQueued` | `mmrQueued`, `Queued`, `queued` |
+| `MmrRunning` | `MmrRunning` | `mmrRunning`, `Running`, `running` |
+| `MmrSucceeded` | `MmrSucceeded` | `mmrSucceeded`, `Succeeded`, `succeeded` |
+| `PtjAborted` | `PtjAborted` | `ptjAborted`, `Aborted`, `aborted` |
+| `PtjCanceled` | `PtjCanceled` | `ptjCanceled`, `Canceled`, `canceled` |
+| `PtjCompleted` | `PtjCompleted` | `ptjCompleted`, `Completed`, `completed` |
+| `PtjNotSent` | `PtjNotSent` | `ptjNotSent`, `NotSent`, `notSent` |
+| `PtjPending` | `PtjPending` | `ptjPending`, `Pending`, `pending` |
+| `PtjPendingHeld` | `PtjPendingHeld` | `ptjPendingHeld`, `PendingHeld`, `pendingHeld` |
+| `PtjProcessing` | `PtjProcessing` | `ptjProcessing`, `Processing`, `processing` |
+| `PtjProcessingStopped` | `PtjProcessingStopped` | `ptjProcessingStopped`, `ProcessingStopped`, `processingStopped` |
+| `PtjSendFailed` | `PtjSendFailed` | `ptjSendFailed`, `SendFailed`, `sendFailed` |
+| `A_` | `_NA_` | `_NA_`, `NotApplicable`, `notApplicable` |
 
 ### Domain: `TensorApproxMethod`
 

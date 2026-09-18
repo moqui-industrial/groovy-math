@@ -50,4 +50,14 @@ enum BooleanYN implements DslEnumValue {
         }
         null
     }
+
+    static BooleanYN fromName(final String name) {
+        if (name == null) return null
+        for (BooleanYN val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('Yes'.equalsIgnoreCase(name)) return Y
+        if ('No'.equalsIgnoreCase(name)) return N
+        null
+    }
 }

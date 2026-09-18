@@ -61,4 +61,25 @@ enum ParametricPathProfile implements DslEnumValue {
         }
         null
     }
+
+    static ParametricPathProfile fromName(final String name) {
+        if (name == null) return null
+        for (ParametricPathProfile val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('ParameterProgressionProfile'.equalsIgnoreCase(name)) return PppfParameterProgression
+        if ('TrajectoryProfile'.equalsIgnoreCase(name)) return PppfTrajectoryProfile
+        if ('TrapezoidalVelocityProfile'.equalsIgnoreCase(name)) return PppfTrapezoidalProfile
+        if ('SCurveProfile'.equalsIgnoreCase(name)) return PppfSCurveProfile
+        if ('DoubleSCurveProfile'.equalsIgnoreCase(name)) return PppfDoubleSCurveProfile
+        if ('PolynomialProfile'.equalsIgnoreCase(name)) return PppfPolyProfile
+        if ('PolynomialOf3rdDegreeProfile'.equalsIgnoreCase(name)) return Pppf3rdDegPolyProfile
+        if ('PolynomialOf5thDegreeProfile'.equalsIgnoreCase(name)) return Pppf5thDegPolyProfile
+        if ('PolynomialOf7thDegreeProfile'.equalsIgnoreCase(name)) return Pppf7thDegPolyProfile
+        if ('PolynomialOfHigherDegreeProfile'.equalsIgnoreCase(name)) return PppfHighDegPolyProfile
+        if ('TrigonometricProfile'.equalsIgnoreCase(name)) return PppfTrigProfile
+        if ('CycloidalProfile'.equalsIgnoreCase(name)) return PppfCycloidalProfile
+        if ('EllipticProfile'.equalsIgnoreCase(name)) return PppfEllipticProfile
+        null
+    }
 }

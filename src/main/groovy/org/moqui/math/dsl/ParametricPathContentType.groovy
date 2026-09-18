@@ -54,4 +54,18 @@ enum ParametricPathContentType implements DslEnumValue {
         }
         null
     }
+
+    static ParametricPathContentType fromName(final String name) {
+        if (name == null) return null
+        for (ParametricPathContentType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('CsvParametricPathData'.equalsIgnoreCase(name)) return Csv
+        if ('JsonParametricPathData'.equalsIgnoreCase(name)) return Json
+        if ('XmlParametricPathData'.equalsIgnoreCase(name)) return Xml
+        if ('YamlParametricPathData'.equalsIgnoreCase(name)) return Yaml
+        if ('GCodeParametricPathData'.equalsIgnoreCase(name)) return GCode
+        if ('DxfGeometricPath'.equalsIgnoreCase(name)) return Dxf
+        null
+    }
 }

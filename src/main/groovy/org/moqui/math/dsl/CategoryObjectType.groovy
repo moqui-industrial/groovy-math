@@ -62,4 +62,20 @@ enum CategoryObjectType implements DslEnumValue {
         }
         null
     }
+
+    static CategoryObjectType fromName(final String name) {
+        if (name == null) return null
+        for (CategoryObjectType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('GenericObject'.equalsIgnoreCase(name)) return Generic
+        if ('TypingContext'.equalsIgnoreCase(name)) return Context
+        if ('PropositionAsType'.equalsIgnoreCase(name)) return Proposition
+        if ('UniverseOfTypes'.equalsIgnoreCase(name)) return Universe
+        if ('AlgebraicStructure'.equalsIgnoreCase(name)) return AlgebraicStruct
+        if ('AbelianGroup'.equalsIgnoreCase(name)) return AbGroup
+        if ('SpecificationOrObservablePredicate'.equalsIgnoreCase(name)) return Specification
+        if ('OperationalStateSpecification'.equalsIgnoreCase(name)) return OperationalState
+        null
+    }
 }

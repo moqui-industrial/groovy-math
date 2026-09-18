@@ -70,4 +70,25 @@ enum ParametricPathCompositionMethod implements DslEnumValue {
         }
         null
     }
+
+    static ParametricPathCompositionMethod fromName(final String name) {
+        if (name == null) return null
+        for (ParametricPathCompositionMethod val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('DoubleSCurveBlend'.equalsIgnoreCase(name)) return DoubleS
+        if ('CustomUserDefinedBlend'.equalsIgnoreCase(name)) return CustomBlend
+        if ('PlcopenAbortingAbortCurrentSegmentStartNextImmediately'.equalsIgnoreCase(name)) return PlcAborting
+        if ('PlcopenBufferedQueueNextSegmentStartAfterCurrentCompletes'.equalsIgnoreCase(name)) return PlcBuffered
+        if ('PlcopenBlendingLowBlendAtTheLowerOfTheTwoSegmentVelocities'.equalsIgnoreCase(name)) return PlcBlendingLow
+        if ('PlcopenBlendingPreviousBlendAtVelocityOfPreviousSegment'.equalsIgnoreCase(name)) return PlcBlendingPrev
+        if ('PlcopenBlendingNextBlendAtVelocityOfNextSegment'.equalsIgnoreCase(name)) return PlcBlendingNext
+        if ('PlcopenBlendingHighBlendAtTheHigherOfTheTwoSegmentVelocities'.equalsIgnoreCase(name)) return PlcBlendingHigh
+        if ('PlcopenTmnoneExactStopAtThePointNoGeometricBlending'.equalsIgnoreCase(name)) return PlcTMNone
+        if ('PlcopenTmcornerdistanceBlendWithinCornerRadius'.equalsIgnoreCase(name)) return PlcTMCornerDist
+        if ('PlcopenTmconstantvelocityMaintainConstantVelocityThroughTransition'.equalsIgnoreCase(name)) return PlcTMConstVel
+        if ('PlcopenTmstartvelocityContinueAtCurrentSpeedIntoNextSegment'.equalsIgnoreCase(name)) return PlcTMStartVel
+        if ('PlcopenTmmaxvelocityMaximizeVelocityThroughTheTransition'.equalsIgnoreCase(name)) return PlcTMMaxVel
+        null
+    }
 }

@@ -66,4 +66,15 @@ enum ParameterType implements DslEnumValue {
         }
         null
     }
+
+    static ParameterType fromName(final String name) {
+        if (name == null) return null
+        for (ParameterType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('Bitset'.equalsIgnoreCase(name)) return BitSet
+        if ('VectorParameter'.equalsIgnoreCase(name)) return Vector
+        if ('MatrixParameter'.equalsIgnoreCase(name)) return Matrix
+        null
+    }
 }

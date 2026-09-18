@@ -49,4 +49,13 @@ enum TimeDimension implements DslEnumValue {
         }
         null
     }
+
+    static TimeDimension fromName(final String name) {
+        if (name == null) return null
+        for (TimeDimension val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('TimeDimension'.equalsIgnoreCase(name)) return Time
+        null
+    }
 }

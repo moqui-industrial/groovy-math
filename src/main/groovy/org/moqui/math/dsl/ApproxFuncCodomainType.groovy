@@ -52,4 +52,16 @@ enum ApproxFuncCodomainType implements DslEnumValue {
         }
         null
     }
+
+    static ApproxFuncCodomainType fromName(final String name) {
+        if (name == null) return null
+        for (ApproxFuncCodomainType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('ScalarValuedFunction'.equalsIgnoreCase(name)) return Scalar
+        if ('VectorValuedFunction'.equalsIgnoreCase(name)) return Vector
+        if ('MatrixValuedFunction'.equalsIgnoreCase(name)) return Matrix
+        if ('TensorValuedFunction'.equalsIgnoreCase(name)) return Tensor
+        null
+    }
 }

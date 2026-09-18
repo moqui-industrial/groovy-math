@@ -52,4 +52,12 @@ enum MathModelDomain implements DslEnumValue {
         }
         null
     }
+
+    static MathModelDomain fromName(final String name) {
+        if (name == null) return null
+        for (MathModelDomain val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        null
+    }
 }

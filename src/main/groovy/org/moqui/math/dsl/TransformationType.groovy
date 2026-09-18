@@ -201,4 +201,137 @@ enum TransformationType implements DslEnumValue {
         }
         null
     }
+
+    static TransformationType fromName(final String name) {
+        if (name == null) return null
+        for (TransformationType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('LinearTransformation'.equalsIgnoreCase(name)) return Linear
+        if ('NonLinearTransformation'.equalsIgnoreCase(name)) return NonLinear
+        if ('MetaTransformation'.equalsIgnoreCase(name)) return Meta
+        if ('RelationalTransformationOrPredicate'.equalsIgnoreCase(name)) return Relation
+        if ('EqualityRelation'.equalsIgnoreCase(name)) return Equality
+        if ('InequalityRelation'.equalsIgnoreCase(name)) return Inequality
+        if ('NotEqualRelation'.equalsIgnoreCase(name)) return NotEqual
+        if ('LessThanRelation'.equalsIgnoreCase(name)) return LessThan
+        if ('LessThanOrEqualRelation'.equalsIgnoreCase(name)) return LessEqual
+        if ('GreaterThanRelation'.equalsIgnoreCase(name)) return GreaterThan
+        if ('GreaterThanOrEqualRelation'.equalsIgnoreCase(name)) return GreaterEqual
+        if ('SetOrTypeMembershipRelation'.equalsIgnoreCase(name)) return Membership
+        if ('UnaryLinearTransformation'.equalsIgnoreCase(name)) return UnaryLin
+        if ('BinaryLinearTransformation'.equalsIgnoreCase(name)) return BinaryLin
+        if ('UnaryNonLinearTransformation'.equalsIgnoreCase(name)) return UnaryNonLin
+        if ('BinaryNonLinearTransformation'.equalsIgnoreCase(name)) return BinaryNonLin
+        if ('NAryNonLinearTransformation'.equalsIgnoreCase(name)) return NaryNonLin
+        if ('MatrixConjugateTransposeAdjoint'.equalsIgnoreCase(name)) return MatrixAdjoint
+        if ('MatrixAntidiagonal'.equalsIgnoreCase(name)) return MatrixAntiDiagonal
+        if ('MatrixUpperTriangularExtract'.equalsIgnoreCase(name)) return MatrixUpperTriang
+        if ('MatrixLowerTriangularExtract'.equalsIgnoreCase(name)) return MatrixLowerTriang
+        if ('TensorAxisPermuteTranspose'.equalsIgnoreCase(name)) return TensorPermute
+        if ('TensorMatricizationUnfold'.equalsIgnoreCase(name)) return TensorUnfold
+        if ('ReverseTensorAlongGivenAxisAxes'.equalsIgnoreCase(name)) return TensorFlip
+        if ('FlipUpDown'.equalsIgnoreCase(name)) return TensorFlipUpDown
+        if ('FlipLeftRight'.equalsIgnoreCase(name)) return TensorFlipLeftRight
+        if ('Rotate90KTimesAroundTheLastTwoAxes'.equalsIgnoreCase(name)) return TensorRotate90
+        if ('VectorOrMatrixNormFrobeniusNuclearEtc'.equalsIgnoreCase(name)) return Norm
+        if ('MatrixInversion'.equalsIgnoreCase(name)) return MatrixInverse
+        if ('MatrixExponential'.equalsIgnoreCase(name)) return MatrixExp
+        if ('MatrixIntegerPower'.equalsIgnoreCase(name)) return MatrixPower
+        if ('PseudoInverseMatrix'.equalsIgnoreCase(name)) return MatrixPseudoInverse
+        if ('CompositionOfApproximatedFunctions'.equalsIgnoreCase(name)) return FunctionCompose
+        if ('DiagonalBandExtraction'.equalsIgnoreCase(name)) return DiagExtract
+        if ('ElementWiseExponentialYE'.equalsIgnoreCase(name)) return TensorExp
+        if ('ElementWiseNaturalLogYLnX'.equalsIgnoreCase(name)) return TensorLog
+        if ('ElementWiseSquareRootYX'.equalsIgnoreCase(name)) return TensorSqrt
+        if ('ReluYMax'.equalsIgnoreCase(name)) return TensorReLu
+        if ('SigmoidY1'.equalsIgnoreCase(name)) return TensorSigmoid
+        if ('GaussianErrorLinearUnit'.equalsIgnoreCase(name)) return TensorGelu
+        if ('SigmoidLinearUnitSwish'.equalsIgnoreCase(name)) return TensorSilu
+        if ('HyperbolicTangentTanh'.equalsIgnoreCase(name)) return TensorTanh
+        if ('LeakyReluMax'.equalsIgnoreCase(name)) return TensorLeakyReLu
+        if ('ExponentialLinearUnit'.equalsIgnoreCase(name)) return TensorElu
+        if ('SoftmaxNormalization'.equalsIgnoreCase(name)) return TensorSoftmax
+        if ('LogSoftmaxNormalization'.equalsIgnoreCase(name)) return TensorLogSoftmax
+        if ('LayerNormalization'.equalsIgnoreCase(name)) return LayerNorm
+        if ('RootMeanSquareLayerNormalization'.equalsIgnoreCase(name)) return RMSNorm
+        if ('BatchNormalization'.equalsIgnoreCase(name)) return BatchNorm
+        if ('GroupNormalization'.equalsIgnoreCase(name)) return GroupNorm
+        if ('TensorInverse'.equalsIgnoreCase(name)) return TensorInv
+        if ('GaussianBlurFilter'.equalsIgnoreCase(name)) return GaussianBlur
+        if ('SobelSpatialGradient'.equalsIgnoreCase(name)) return Sobel
+        if ('CannyEdgeDetector'.equalsIgnoreCase(name)) return Canny
+        if ('AffineGeometricTransformation'.equalsIgnoreCase(name)) return WarpAffine
+        if ('PerspectiveHomographyTransformation'.equalsIgnoreCase(name)) return WarpPerspective
+        if ('AttentionAdditiveMask'.equalsIgnoreCase(name)) return AttentionMask
+        if ('EmbeddingLookupTable'.equalsIgnoreCase(name)) return Embedding
+        if ('MatrixApplicationToAVectorMatrix'.equalsIgnoreCase(name)) return MatrixApply
+        if ('TensorContraction'.equalsIgnoreCase(name)) return TensorContract
+        if ('OuterKroneckerProduct'.equalsIgnoreCase(name)) return TensorOuter
+        if ('VectorDotProduct'.equalsIgnoreCase(name)) return VectorDot
+        if ('TensorElementWiseAddition'.equalsIgnoreCase(name)) return TensorAdd
+        if ('TensorElementWiseSubtraction'.equalsIgnoreCase(name)) return TensorSub
+        if ('TensorElementWiseMultiplication'.equalsIgnoreCase(name)) return TensorMul
+        if ('TensorElementWiseDivision'.equalsIgnoreCase(name)) return TensorDiv
+        if ('TensorElementWisePower'.equalsIgnoreCase(name)) return TensorPow
+        if ('TensorConcatenation'.equalsIgnoreCase(name)) return TensorConcat
+        if ('TensorSumReduction'.equalsIgnoreCase(name)) return TensorSum
+        if ('TensorMeanReduction'.equalsIgnoreCase(name)) return TensorMean
+        if ('TensorMaxReduction'.equalsIgnoreCase(name)) return TensorMax
+        if ('TensorMinReduction'.equalsIgnoreCase(name)) return TensorMin
+        if ('AffineMap'.equalsIgnoreCase(name)) return Affine
+        if ('NAryTransformation'.equalsIgnoreCase(name)) return NaryLin
+        if ('MultiMatrixDot'.equalsIgnoreCase(name)) return MultiDot
+        if ('HouseholderProduct'.equalsIgnoreCase(name)) return HouseholderProd
+        if ('CompositionOfTransformations'.equalsIgnoreCase(name)) return Composition
+        if ('DecompositionFactorisation'.equalsIgnoreCase(name)) return Decomp
+        if ('TensorDecompositionFactorisation'.equalsIgnoreCase(name)) return TensorDecomp
+        if ('MatrixDecompositionFactorisation'.equalsIgnoreCase(name)) return MatrixDecomp
+        if ('GradientF'.equalsIgnoreCase(name)) return Gradient
+        if ('JacobianJF'.equalsIgnoreCase(name)) return Jacobian
+        if ('HessianF'.equalsIgnoreCase(name)) return Hessian
+        if ('JustInTimeCompilation'.equalsIgnoreCase(name)) return JitCompile
+        if ('VectorisedMap'.equalsIgnoreCase(name)) return Vmap
+        if ('MeanSquaredErrorLoss'.equalsIgnoreCase(name)) return LossMse
+        if ('CrossEntropyClassificationLoss'.equalsIgnoreCase(name)) return LossCrossEntropy
+        if ('BinaryCrossEntropyWithLogits'.equalsIgnoreCase(name)) return LossBceWithLogits
+        if ('L1MeanAbsoluteErrorLoss'.equalsIgnoreCase(name)) return LossL1
+        if ('StochasticGradientDescentOptimizer'.equalsIgnoreCase(name)) return OptimizerSgd
+        if ('AdamOptimizer'.equalsIgnoreCase(name)) return OptimizerAdam
+        if ('AdamwOptimizer'.equalsIgnoreCase(name)) return OptimizerAdamW
+        if ('LogicalTransformation'.equalsIgnoreCase(name)) return Logical
+        if ('LogicalConjunction'.equalsIgnoreCase(name)) return And
+        if ('LogicalDisjunction'.equalsIgnoreCase(name)) return Or
+        if ('LogicalNegation'.equalsIgnoreCase(name)) return Not
+        if ('LogicalImplication'.equalsIgnoreCase(name)) return Implies
+        if ('LogicalExclusiveOr'.equalsIgnoreCase(name)) return Xor
+        if ('LogicalTrue'.equalsIgnoreCase(name)) return True
+        if ('LogicalFalse'.equalsIgnoreCase(name)) return False
+        if ('BlockMatrixExtractionFromAMatrix'.equalsIgnoreCase(name)) return BlockMatrixExtr
+        if ('GridOrRegularBlockingExtractionTheMatrixIsPartitionedIntoBlocksByBothRowsAndColumns'.equalsIgnoreCase(name)) return RegularBlockMatrixExtr
+        if ('HorizontalBlockingExtractionTheMatrixIsSplitIntoHorizontalStripsEachBlockContainsASetOfRows'.equalsIgnoreCase(name)) return HorizBlockMatrixExtr
+        if ('VerticalBlockingExtractionTheMatrixIsSplitIntoVerticalStripsEachBlockContainsASetOfColumns'.equalsIgnoreCase(name)) return VertBlockMatrixExtr
+        if ('HierarchicalOrRecursiveBlockingTheMatrixIsSplitIntoVerticalStripsAMatrixIsRecursivelyDividedIntoSmallerBlocksWithinBlocksCreatingAHierarchicalStructure'.equalsIgnoreCase(name)) return HierBlockMatrixExtr
+        if ('DiagonalBlockingExtractionTheMatrixIsDividedIntoBlocksAlongTheDiagonalWithEachBlockBeingASquareOrRectangularSubmatrixOffDiagonalBlocksAreTypicallyZero'.equalsIgnoreCase(name)) return DiagBlockMatrixExtr
+        if ('SymmetricBlockingExtractionBlocksAreExtractedInSuchAWayThatIfTheOriginalMatrixIsSymmetricTheBlockStructureAlsoRespectsThisSymmetry'.equalsIgnoreCase(name)) return SymBlockMatrixExtr
+        if ('IrregularBlockingExtractionTheMatrixIsDividedIntoBlocksThatMayHaveDifferentSizesDependingOnSpecificCriteriaSuchAsDataDistributionOrComputationalEfficiency'.equalsIgnoreCase(name)) return IrregBlockMatrixExtr
+        if ('DomainSpecificBlockingExtractionTheBlockingPatternIsChosenBasedOnTheApplicationDomainSuchAsSignalProcessingImageProcessingOrFiniteElementMethods'.equalsIgnoreCase(name)) return DomainBlockMatrixExtr
+        if ('EigenvalueDecomposition'.equalsIgnoreCase(name)) return EigenvalueDecomp
+        if ('Diagonalisation'.equalsIgnoreCase(name)) return Diagonalise
+        if ('SymmetricEigenvalueDecomposition'.equalsIgnoreCase(name)) return SymmetricEigenDecomp
+        if ('EighDecomposition'.equalsIgnoreCase(name)) return Eigh
+        if ('LuDecomposition'.equalsIgnoreCase(name)) return LuDecomp
+        if ('LuFactorDecomposition'.equalsIgnoreCase(name)) return LuFactorDecomp
+        if ('QrDecomposition'.equalsIgnoreCase(name)) return QrDecomp
+        if ('CholeskyDecomposition'.equalsIgnoreCase(name)) return CholeskyDecomp
+        if ('JordanDecomposition'.equalsIgnoreCase(name)) return JordanDecomp
+        if ('LdlDecomposition'.equalsIgnoreCase(name)) return LDLDecomp
+        if ('PolarDecomposition'.equalsIgnoreCase(name)) return PolarDecomp
+        if ('SchurDecomposition'.equalsIgnoreCase(name)) return SchurDecomp
+        if ('HessenbergDecomposition'.equalsIgnoreCase(name)) return HessenbergDecomp
+        if ('SingularValueDecompositionOnAMatrix'.equalsIgnoreCase(name)) return Svd
+        if ('TruncatedSingularValueDecompositionItIsUsedPrimarilyInDataCompressionInformationRetrieval'.equalsIgnoreCase(name)) return SvdTruncated
+        if ('EconomySingularValueDecompositionItRemovesRedundantZeroRowsOrColumnsFromUAndSigmaMatrices'.equalsIgnoreCase(name)) return SvdEconomy
+        null
+    }
 }

@@ -59,4 +59,21 @@ enum TensorAxisPurpose implements DslEnumValue {
         }
         null
     }
+
+    static TensorAxisPurpose fromName(final String name) {
+        if (name == null) return null
+        for (TensorAxisPurpose val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('DateAndTime'.equalsIgnoreCase(name)) return DateTime
+        if ('MeasurementMetric'.equalsIgnoreCase(name)) return Measurement
+        if ('BatchSample'.equalsIgnoreCase(name)) return Batch
+        if ('ChannelFeatureMap'.equalsIgnoreCase(name)) return Channel
+        if ('SpatialHeightY'.equalsIgnoreCase(name)) return Height
+        if ('SpatialWidthX'.equalsIgnoreCase(name)) return Width
+        if ('SpatialDepthZ'.equalsIgnoreCase(name)) return Depth
+        if ('TemporalSequenceStep'.equalsIgnoreCase(name)) return Time
+        if ('GenericFeatureDimension'.equalsIgnoreCase(name)) return Feature
+        null
+    }
 }

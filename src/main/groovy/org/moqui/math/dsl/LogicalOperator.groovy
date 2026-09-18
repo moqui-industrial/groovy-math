@@ -63,4 +63,27 @@ enum LogicalOperator implements DslEnumValue {
         }
         null
     }
+
+    static LogicalOperator fromName(final String name) {
+        if (name == null) return null
+        for (LogicalOperator val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('ConjunctionAnd'.equalsIgnoreCase(name)) return And
+        if ('AlternativeDenialNand'.equalsIgnoreCase(name)) return Nand
+        if ('DisjunctionOr'.equalsIgnoreCase(name)) return Or
+        if ('JointDenialNor'.equalsIgnoreCase(name)) return Nor
+        if ('ExclusiveOrXor'.equalsIgnoreCase(name)) return Xor
+        if ('NegationNot'.equalsIgnoreCase(name)) return Not
+        if ('BiconditionalXnor'.equalsIgnoreCase(name)) return Xnor
+        if ('EqualityEq'.equalsIgnoreCase(name)) return Eq
+        if ('InequalityNe'.equalsIgnoreCase(name)) return Ne
+        if ('LessThanLt'.equalsIgnoreCase(name)) return Lt
+        if ('LessThanOrEqualLe'.equalsIgnoreCase(name)) return Le
+        if ('GreaterThanGt'.equalsIgnoreCase(name)) return Gt
+        if ('GreaterThanOrEqualGe'.equalsIgnoreCase(name)) return Ge
+        if ('ImplicationImplies'.equalsIgnoreCase(name)) return Implies
+        if ('MembershipIn'.equalsIgnoreCase(name)) return In
+        null
+    }
 }

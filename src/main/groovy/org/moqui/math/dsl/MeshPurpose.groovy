@@ -52,4 +52,16 @@ enum MeshPurpose implements DslEnumValue {
         }
         null
     }
+
+    static MeshPurpose fromName(final String name) {
+        if (name == null) return null
+        for (MeshPurpose val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('FiniteElementMesh'.equalsIgnoreCase(name)) return FEM
+        if ('FiniteVolumeMesh'.equalsIgnoreCase(name)) return FVM
+        if ('ComputationalFluidDynamicsMesh'.equalsIgnoreCase(name)) return CFD
+        if ('TopologicalAnalysisMesh'.equalsIgnoreCase(name)) return TopologicalMesh
+        null
+    }
 }

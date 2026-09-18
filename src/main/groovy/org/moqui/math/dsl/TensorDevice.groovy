@@ -53,4 +53,17 @@ enum TensorDevice implements DslEnumValue {
         }
         null
     }
+
+    static TensorDevice fromName(final String name) {
+        if (name == null) return null
+        for (TensorDevice val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('HostCpu'.equalsIgnoreCase(name)) return Cpu
+        if ('NvidiaCudaDevice'.equalsIgnoreCase(name)) return Cuda
+        if ('AmdRocmDevice'.equalsIgnoreCase(name)) return Rocm
+        if ('AppleMetalPerformanceShaders'.equalsIgnoreCase(name)) return Mps
+        if ('TensorProcessingUnit'.equalsIgnoreCase(name)) return Tpu
+        null
+    }
 }

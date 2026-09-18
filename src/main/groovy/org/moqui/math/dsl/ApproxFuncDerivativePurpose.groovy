@@ -59,4 +59,23 @@ enum ApproxFuncDerivativePurpose implements DslEnumValue {
         }
         null
     }
+
+    static ApproxFuncDerivativePurpose fromName(final String name) {
+        if (name == null) return null
+        for (ApproxFuncDerivativePurpose val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('FirstDerivativeMatrixIncludesGeometricDerivativesOrVelocityTransformation'.equalsIgnoreCase(name)) return TangentMatrix
+        if ('SecondDerivativeMatrixDescribesHowDirectionOrVelocityChangesIncludesAcceleration'.equalsIgnoreCase(name)) return NormalMatrix
+        if ('ThirdDerivativeMatrix'.equalsIgnoreCase(name)) return BinormalMatrix
+        if ('FourthDerivativeMatrixOftenUsedInSmoothMotionGenerationOrSymbolicModeling'.equalsIgnoreCase(name)) return SnapMatrix
+        if ('CurvatureTensorMatrixRepresentsCurvatureBehaviorForMultiparameterPathsOrGeometricDomains'.equalsIgnoreCase(name)) return CurvatureTensor
+        if ('MatrixRepresentationOfTorsionOrTwistingBehaviorAlongThePath'.equalsIgnoreCase(name)) return TorsionTensor
+        if ('PlaneMatrixSpannedByTangentAndNormalVectorsAtThePoint'.equalsIgnoreCase(name)) return OsculatingPlaneMatrix
+        if ('MatrixFormRepresentingGeodesicCurvatureOnCurvedSurfaces'.equalsIgnoreCase(name)) return GeodesicCurvatureMatrix
+        if ('SurfaceNormalExpressedAsAMatrixTransformation'.equalsIgnoreCase(name)) return SurfaceNormalMatrix
+        if ('HighOrderTensorForJerkWithSymbolicOrMultiParameterDomains'.equalsIgnoreCase(name)) return JerkTensor
+        if ('SymbolicOrMultiAxisMatrixFor4thDerivativeBehavior'.equalsIgnoreCase(name)) return SnapTensor
+        null
+    }
 }

@@ -50,4 +50,14 @@ enum ParameterClass implements DslEnumValue {
         }
         null
     }
+
+    static ParameterClass fromName(final String name) {
+        if (name == null) return null
+        for (ParameterClass val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('MainParameter'.equalsIgnoreCase(name)) return Main
+        if ('AuxiliaryParameter'.equalsIgnoreCase(name)) return Auxiliary
+        null
+    }
 }

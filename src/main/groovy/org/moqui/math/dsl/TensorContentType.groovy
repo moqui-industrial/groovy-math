@@ -55,4 +55,18 @@ enum TensorContentType implements DslEnumValue {
         }
         null
     }
+
+    static TensorContentType fromName(final String name) {
+        if (name == null) return null
+        for (TensorContentType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('NumpyBinary'.equalsIgnoreCase(name)) return Npy
+        if ('ZarrChunkedArray'.equalsIgnoreCase(name)) return Zarr
+        if ('SafetensorsBinary'.equalsIgnoreCase(name)) return SafTen
+        if ('ArrowIpcStream'.equalsIgnoreCase(name)) return ArrowIpc
+        if ('CborEncodedDenseTensor'.equalsIgnoreCase(name)) return CBOR
+        if ('ExternalManifestMetadataFile'.equalsIgnoreCase(name)) return Manifest
+        null
+    }
 }

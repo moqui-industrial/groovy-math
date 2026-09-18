@@ -105,6 +105,10 @@ final class CanonicalDump {
                 for (String field : fieldNames) {
                     // In structural mode, ignore synthetic primary key fields or foreign keys with synthetic IDs
                     if (structural && isPureIdField(field, entityName)) continue
+                    if (structural && field == 'name' && (entityName.endsWith('Matrix') || entityName.endsWith('Vector') || entityName.endsWith('Tensor')) &&
+                        (record.get('name') == record.modelKey || record.get('name') == record.get('symbol'))) {
+                        continue
+                    }
 
                     Object val = record.get(field)
                     if (val == null) continue

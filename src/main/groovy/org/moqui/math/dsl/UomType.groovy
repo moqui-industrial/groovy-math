@@ -64,4 +64,28 @@ enum UomType implements DslEnumValue {
         }
         null
     }
+
+    static UomType fromName(final String name) {
+        if (name == null) return null
+        for (UomType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('Currency'.equalsIgnoreCase(name)) return CURRENCY_MEASURE
+        if ('DataSize'.equalsIgnoreCase(name)) return DATA_MEASURE
+        if ('DataSpeed'.equalsIgnoreCase(name)) return DATASPD_MEASURE
+        if ('TimeFrequency'.equalsIgnoreCase(name)) return TIME_FREQ_MEASURE
+        if ('Length'.equalsIgnoreCase(name)) return LENGTH_MEASURE
+        if ('Velocity'.equalsIgnoreCase(name)) return VELOCITY_MEASURE
+        if ('Area'.equalsIgnoreCase(name)) return AREA_MEASURE
+        if ('LiquidVolume'.equalsIgnoreCase(name)) return VOLUME_LIQ_MEAS
+        if ('DryVolume'.equalsIgnoreCase(name)) return VOLUME_DRY_MEAS
+        if ('Density'.equalsIgnoreCase(name)) return DENSITY_MEAS
+        if ('Weight'.equalsIgnoreCase(name)) return WEIGHT_MEASURE
+        if ('Energy'.equalsIgnoreCase(name)) return ENERGY_MEASURE
+        if ('Power'.equalsIgnoreCase(name)) return POWER_MEASURE
+        if ('Pressure'.equalsIgnoreCase(name)) return PRESSURE_MEASURE
+        if ('Temperature'.equalsIgnoreCase(name)) return TEMP_MEASURE
+        if ('Other'.equalsIgnoreCase(name)) return OTHER_MEASURE
+        null
+    }
 }

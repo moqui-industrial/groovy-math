@@ -268,6 +268,13 @@ def escape_groovy(s):
     if s is None: return ''
     return s.replace('\\', '\\\\').replace("'", "\\'")
 
+def description_alias(desc):
+    if not desc: return ''
+    cleaned = re.sub(r'\(.*?\)', '', desc)
+    words = [w for w in re.split(r'[^a-zA-Z0-9]+', cleaned) if w]
+    camel = ''.join(w.capitalize() for w in words)
+    return camel if is_valid_ident(camel) and camel[0].isupper() else ''
+
 def generate_enum_class(type_id, enum_list, out_class_name=None):
     cname = out_class_name or type_id
     if not clean_identifier(cname) == cname:
@@ -285,8 +292,15 @@ def generate_enum_class(type_id, enum_list, out_class_name=None):
                 break
             rem_set.add(rem)
 
+    alias_counts = {}
+    for e in enum_list:
+        alias = description_alias(e.get('description', ''))
+        if alias:
+            alias_counts[alias] = alias_counts.get(alias, 0) + 1
+
     seen = set()
     constants = []
+    const_names = []
 
     for e in enum_list:
         eid = e['enumId']
@@ -315,7 +329,7 @@ def generate_enum_class(type_id, enum_list, out_class_name=None):
 
         # Rule 4: description normalized in CamelCase as last resort if needed
         if not name or name in seen:
-            desc_camel = ''.join(w.capitalize() for w in re.split(r'[^a-zA-Z0-9]+', desc) if w)
+            desc_camel = description_alias(desc)
             if desc_camel and is_valid_ident(desc_camel) and desc_camel[0].isupper() and desc_camel not in seen:
                 name = desc_camel
 
@@ -324,6 +338,7 @@ def generate_enum_class(type_id, enum_list, out_class_name=None):
         if name in seen:
             name = f"{name}_{clean_identifier(eid)}"
         seen.add(name)
+        const_names.append(name)
 
         constants.append(f"    {name}('{escape_groovy(eid)}', '{escape_groovy(code)}', '{escape_groovy(desc)}', '{escape_groovy(parent)}')")
 
@@ -374,6 +389,18 @@ def generate_enum_class(type_id, enum_list, out_class_name=None):
         e_lines.append(f"        for ({cname} val : values()) {{")
         e_lines.append("            if (val.enumCode == code) return val")
         e_lines.append("        }")
+        e_lines.append("        null")
+        e_lines.append("    }\n")
+
+        e_lines.append(f"    static {ret_type} fromName(final String name) {{")
+        e_lines.append("        if (name == null) return null")
+        e_lines.append(f"        for ({cname} val : values()) {{")
+        e_lines.append("            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val")
+        e_lines.append("        }")
+        for e, c_name in zip(enum_list, const_names):
+            alias = description_alias(e.get('description', ''))
+            if alias and alias_counts.get(alias) == 1 and alias != c_name:
+                e_lines.append(f"        if ('{escape_groovy(alias)}'.equalsIgnoreCase(name)) return {c_name}")
         e_lines.append("        null")
         e_lines.append("    }")
 

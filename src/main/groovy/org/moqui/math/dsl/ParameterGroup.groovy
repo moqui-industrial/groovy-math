@@ -52,4 +52,16 @@ enum ParameterGroup implements DslEnumValue {
         }
         null
     }
+
+    static ParameterGroup fromName(final String name) {
+        if (name == null) return null
+        for (ParameterGroup val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('ControlParameter'.equalsIgnoreCase(name)) return Control
+        if ('MainControlParameter'.equalsIgnoreCase(name)) return MainControl
+        if ('AdvancedControlParameter'.equalsIgnoreCase(name)) return AdvancedControl
+        if ('MonitoringParameter'.equalsIgnoreCase(name)) return Monitoring
+        null
+    }
 }

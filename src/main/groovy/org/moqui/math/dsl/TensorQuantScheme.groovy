@@ -51,4 +51,15 @@ enum TensorQuantScheme implements DslEnumValue {
         }
         null
     }
+
+    static TensorQuantScheme fromName(final String name) {
+        if (name == null) return null
+        for (TensorQuantScheme val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('PerTensorAffine'.equalsIgnoreCase(name)) return TensorAff
+        if ('PerChannelAffine'.equalsIgnoreCase(name)) return ChannelAff
+        if ('PerTensorSymmetric'.equalsIgnoreCase(name)) return TensorSym
+        null
+    }
 }

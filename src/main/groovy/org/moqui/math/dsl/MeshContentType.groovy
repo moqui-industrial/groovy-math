@@ -54,4 +54,18 @@ enum MeshContentType implements DslEnumValue {
         }
         null
     }
+
+    static MeshContentType fromName(final String name) {
+        if (name == null) return null
+        for (MeshContentType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('Custom'.equalsIgnoreCase(name)) return CntCustom
+        if ('GltfBinary'.equalsIgnoreCase(name)) return CtnGltf
+        if ('WavefrontObjCompressed'.equalsIgnoreCase(name)) return CntObj
+        if ('VtkVtuBinary'.equalsIgnoreCase(name)) return CntVtk
+        if ('StlBinary'.equalsIgnoreCase(name)) return CntStl
+        if ('PlyBinaryLittleEndian'.equalsIgnoreCase(name)) return CntPly
+        null
+    }
 }

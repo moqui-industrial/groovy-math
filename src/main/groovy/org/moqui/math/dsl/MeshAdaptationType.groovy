@@ -57,4 +57,21 @@ enum MeshAdaptationType implements DslEnumValue {
         }
         null
     }
+
+    static MeshAdaptationType fromName(final String name) {
+        if (name == null) return null
+        for (MeshAdaptationType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('NoAdaptation'.equalsIgnoreCase(name)) return None
+        if ('HTypeRefinement'.equalsIgnoreCase(name)) return HRefinement
+        if ('HTypeDerefinement'.equalsIgnoreCase(name)) return HDerefinement
+        if ('RTypeRefinement'.equalsIgnoreCase(name)) return RRefinement
+        if ('PTypeRefinement'.equalsIgnoreCase(name)) return PRefinement
+        if ('AdaptiveRemeshing'.equalsIgnoreCase(name)) return Remeshing
+        if ('RhTypeRefinement'.equalsIgnoreCase(name)) return RhRefinement
+        if ('AutomaticAdaptationBasedOnErrorEstimation'.equalsIgnoreCase(name)) return Automatic
+        if ('CustomManualMeshAdaptationStrategy'.equalsIgnoreCase(name)) return Custom
+        null
+    }
 }

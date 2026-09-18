@@ -55,4 +55,19 @@ enum MeshShaderProfile implements DslEnumValue {
         }
         null
     }
+
+    static MeshShaderProfile fromName(final String name) {
+        if (name == null) return null
+        for (MeshShaderProfile val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('FlatShading'.equalsIgnoreCase(name)) return Flat
+        if ('GouraudShading'.equalsIgnoreCase(name)) return Gouraud
+        if ('PhongShading'.equalsIgnoreCase(name)) return Phong
+        if ('BlinnPhongShading'.equalsIgnoreCase(name)) return BlinnPhong
+        if ('ToonShading'.equalsIgnoreCase(name)) return Toon
+        if ('WireframeRendering'.equalsIgnoreCase(name)) return Wireframe
+        if ('UnlitColor'.equalsIgnoreCase(name)) return Unlit
+        null
+    }
 }

@@ -58,4 +58,14 @@ enum UniversalConstructionType implements DslEnumValue {
         }
         null
     }
+
+    static UniversalConstructionType fromName(final String name) {
+        if (name == null) return null
+        for (UniversalConstructionType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('InitialObject'.equalsIgnoreCase(name)) return Initial
+        if ('TerminalObject'.equalsIgnoreCase(name)) return Terminal
+        null
+    }
 }

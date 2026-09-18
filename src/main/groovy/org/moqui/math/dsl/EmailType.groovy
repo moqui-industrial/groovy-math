@@ -59,4 +59,23 @@ enum EmailType implements DslEnumValue {
         }
         null
     }
+
+    static EmailType fromName(final String name) {
+        if (name == null) return null
+        for (EmailType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('System'.equalsIgnoreCase(name)) return SYSTEM
+        if ('PasswordReset'.equalsIgnoreCase(name)) return PWD_RESET
+        if ('SingleUseCode'.equalsIgnoreCase(name)) return SINGLE_USE_CODE
+        if ('AddedEmailAuthenticationType'.equalsIgnoreCase(name)) return ADDED_EMAIL_AUTHC_FACTOR
+        if ('EmailAuthenticationCodeSent'.equalsIgnoreCase(name)) return EMAIL_AUTHC_FACTOR_SENT
+        if ('Notification'.equalsIgnoreCase(name)) return NOTIFICATION
+        if ('ScreenRender'.equalsIgnoreCase(name)) return SCREEN_RENDER
+        if ('RegistrationConfirmation'.equalsIgnoreCase(name)) return REG_CONFIRM
+        if ('UpdatePersonalInfoConfirmation'.equalsIgnoreCase(name)) return UPD_INFO_CONFIRM
+        if ('EmailAddressVerification'.equalsIgnoreCase(name)) return EMAIL_VERIFY
+        if ('AccountInvitation'.equalsIgnoreCase(name)) return ACCOUNT_INVITE
+        null
+    }
 }

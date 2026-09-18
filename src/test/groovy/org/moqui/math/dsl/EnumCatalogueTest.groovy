@@ -187,6 +187,18 @@ class EnumCatalogueTest {
         assert malformed.isEmpty() : "Malformed constant names in generated enums:\n${malformed.join('\n')}"
     }
 
+    @Test
+    void descriptionAliasesResolve() {
+        assert MathModelType.fromName('LinearProgram') == MathModelType.Lp
+        assert MathModelType.fromName('QuadraticProgram') == MathModelType.Qp
+        assert MathModelType.fromName('MixedIntegerLinearProgram') == MathModelType.Milp
+        assert MathModelDataPurpose.fromName('RightHandSide') == MathModelDataPurpose.RhsVector
+        assert MathModelDataPurpose.fromName('DecisionVariables') == MathModelDataPurpose.DecisionVars
+        assert MathModelDataPurpose.fromName('VariableBounds') == MathModelDataPurpose.VarBounds
+        assert MathModelDataPurpose.fromName('ObjectiveFunction') == MathModelDataPurpose.Objective
+        assert MathModelDataPurpose.fromName('CostVector') == MathModelDataPurpose.CostVector
+    }
+
     private static List<Class<?>> dslEnumClasses() {
         List<Class<?>> found = []
         new File('src/main/groovy/org/moqui/math/dsl').listFiles()

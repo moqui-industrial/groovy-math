@@ -54,4 +54,18 @@ enum CoordinateSystemType implements DslEnumValue {
         }
         null
     }
+
+    static CoordinateSystemType fromName(final String name) {
+        if (name == null) return null
+        for (CoordinateSystemType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('CartesianCoordinateSystem'.equalsIgnoreCase(name)) return Cartesian
+        if ('PolarCoordinateSystem'.equalsIgnoreCase(name)) return Polar
+        if ('CylindricalCoordinateSystem'.equalsIgnoreCase(name)) return Cylindrical
+        if ('SphericalCoordinateSystem'.equalsIgnoreCase(name)) return Spherical
+        if ('HomogeneousCoordinateSystem'.equalsIgnoreCase(name)) return Homogeneous
+        if ('CurvilinearCoordinateSystem'.equalsIgnoreCase(name)) return Curvilinear
+        null
+    }
 }

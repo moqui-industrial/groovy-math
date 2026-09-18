@@ -53,4 +53,15 @@ enum VectorType implements DslEnumValue {
         }
         null
     }
+
+    static VectorType fromName(final String name) {
+        if (name == null) return null
+        for (VectorType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('OrdinaryVector'.equalsIgnoreCase(name)) return Ordinary
+        if ('ZeroVector'.equalsIgnoreCase(name)) return Zero
+        if ('UnitVector'.equalsIgnoreCase(name)) return Unit
+        null
+    }
 }

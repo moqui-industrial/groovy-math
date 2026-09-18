@@ -52,4 +52,16 @@ enum TrajectoryActuatorType implements DslEnumValue {
         }
         null
     }
+
+    static TrajectoryActuatorType fromName(final String name) {
+        if (name == null) return null
+        for (TrajectoryActuatorType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('ContinuousRevolvesAroundAnAxisWithAContinuousRangeOfMotion'.equalsIgnoreCase(name)) return Continuous
+        if ('FixedAxisDoesNotMove'.equalsIgnoreCase(name)) return Fixed
+        if ('PrismaticLinearSlidingMotionAlongAnAxisWithinAFixedRange'.equalsIgnoreCase(name)) return Prismatic
+        if ('RevoluteRotatesAroundAnAxisWithinAFixedRangeOfMotion'.equalsIgnoreCase(name)) return Revolute
+        null
+    }
 }

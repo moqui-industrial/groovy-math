@@ -51,4 +51,15 @@ enum NormDomain implements DslEnumValue {
         }
         null
     }
+
+    static NormDomain fromName(final String name) {
+        if (name == null) return null
+        for (NormDomain val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('VectorNorm'.equalsIgnoreCase(name)) return Vector
+        if ('MatrixNorm'.equalsIgnoreCase(name)) return Matrix
+        if ('HigherOrderTensorNorm'.equalsIgnoreCase(name)) return Tensor
+        null
+    }
 }

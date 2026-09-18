@@ -55,4 +55,19 @@ enum MathModelBasisFunc implements DslEnumValue {
         }
         null
     }
+
+    static MathModelBasisFunc fromName(final String name) {
+        if (name == null) return null
+        for (MathModelBasisFunc val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('LagrangePolynomial'.equalsIgnoreCase(name)) return Lagrange
+        if ('HermitePolynomial'.equalsIgnoreCase(name)) return Hermite
+        if ('SerendipityFamily'.equalsIgnoreCase(name)) return Serendipity
+        if ('NurbsIgaBasis'.equalsIgnoreCase(name)) return Nurbs
+        if ('ChebyshevBasis'.equalsIgnoreCase(name)) return Chebyshev
+        if ('LegendreBasis'.equalsIgnoreCase(name)) return Legendre
+        if ('FourierBasis'.equalsIgnoreCase(name)) return Fourier
+        null
+    }
 }

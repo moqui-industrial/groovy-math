@@ -63,4 +63,27 @@ enum MeshMaterialType implements DslEnumValue {
         }
         null
     }
+
+    static MeshMaterialType fromName(final String name) {
+        if (name == null) return null
+        for (MeshMaterialType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('LambertMaterial'.equalsIgnoreCase(name)) return MmtLambert
+        if ('StandardMaterial'.equalsIgnoreCase(name)) return MmtStandard
+        if ('PhongMaterial'.equalsIgnoreCase(name)) return MmtPhong
+        if ('ToonMaterial'.equalsIgnoreCase(name)) return MmtToon
+        if ('CustomShadermaterial'.equalsIgnoreCase(name)) return MmtShader
+        if ('Steel'.equalsIgnoreCase(name)) return MatSteel
+        if ('Aluminum'.equalsIgnoreCase(name)) return MatAluminum
+        if ('Glass'.equalsIgnoreCase(name)) return MatGlass
+        if ('Wood'.equalsIgnoreCase(name)) return MatWood
+        if ('Concrete'.equalsIgnoreCase(name)) return MatConcrete
+        if ('Plastic'.equalsIgnoreCase(name)) return MatPlastic
+        if ('Rubber'.equalsIgnoreCase(name)) return MatRubber
+        if ('Copper'.equalsIgnoreCase(name)) return MatCopper
+        if ('Titanium'.equalsIgnoreCase(name)) return MatTitanium
+        if ('CarbonFiber'.equalsIgnoreCase(name)) return MatCarbonFiber
+        null
+    }
 }

@@ -53,4 +53,17 @@ enum GraphEdgeType implements DslEnumValue {
         }
         null
     }
+
+    static GraphEdgeType fromName(final String name) {
+        if (name == null) return null
+        for (GraphEdgeType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('UndirectedEdge'.equalsIgnoreCase(name)) return Undirected
+        if ('DirectedEdge'.equalsIgnoreCase(name)) return Directed
+        if ('BoundaryEdge'.equalsIgnoreCase(name)) return Boundary
+        if ('SharpEdge'.equalsIgnoreCase(name)) return Sharp
+        if ('SmoothEdge'.equalsIgnoreCase(name)) return Smooth
+        null
+    }
 }

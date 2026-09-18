@@ -103,4 +103,58 @@ enum MathModelType implements DslEnumValue {
         }
         null
     }
+
+    static MathModelType fromName(final String name) {
+        if (name == null) return null
+        for (MathModelType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('ModelDrivenPhysicsBasedConstructedModel'.equalsIgnoreCase(name)) return ModelDriven
+        if ('OptimizationProblem'.equalsIgnoreCase(name)) return Optimization
+        if ('SymbolicAnalyticModel'.equalsIgnoreCase(name)) return Symbolic
+        if ('ElementaryEquation'.equalsIgnoreCase(name)) return ElementaryFunc
+        if ('FunctionalModel'.equalsIgnoreCase(name)) return Functional
+        if ('AlgebraicEquations'.equalsIgnoreCase(name)) return Algebraic
+        if ('RationalFunction'.equalsIgnoreCase(name)) return RationalFunc
+        if ('PartialDifferentialEquationPdeSystem'.equalsIgnoreCase(name)) return PDEs
+        if ('ComputationalFluidDynamics'.equalsIgnoreCase(name)) return CFD
+        if ('OrdinaryDifferentialEquationsOdeSystem'.equalsIgnoreCase(name)) return ODEs
+        if ('LinearEquationSystem'.equalsIgnoreCase(name)) return LinearEqSystem
+        if ('NonLinearEquationSystem'.equalsIgnoreCase(name)) return NonLinearEqSystem
+        if ('DataDrivenModel'.equalsIgnoreCase(name)) return DataDriven
+        if ('MachineLearningModel'.equalsIgnoreCase(name)) return MlModel
+        if ('DeepLearningModel'.equalsIgnoreCase(name)) return DlModel
+        if ('ComputerVisionImageProcessing'.equalsIgnoreCase(name)) return ComputerVision
+        if ('LinearProgram'.equalsIgnoreCase(name)) return Lp
+        if ('QuadraticProgram'.equalsIgnoreCase(name)) return Qp
+        if ('MixedIntegerLinearProgram'.equalsIgnoreCase(name)) return Milp
+        if ('MixedIntegerQuadraticProgram'.equalsIgnoreCase(name)) return Miqp
+        if ('SecondOrderConeProgram'.equalsIgnoreCase(name)) return Socp
+        if ('SemidefiniteProgram'.equalsIgnoreCase(name)) return Sdp
+        if ('QuadraticallyConstrainedQp'.equalsIgnoreCase(name)) return Qcqp
+        if ('NonlinearProgram'.equalsIgnoreCase(name)) return Nlp
+        if ('ConstraintProgramming'.equalsIgnoreCase(name)) return Cp
+        if ('BirthDeathProcess'.equalsIgnoreCase(name)) return BirthDeath
+        if ('QueueingModel'.equalsIgnoreCase(name)) return Queueing
+        if ('MarkovDecisionProcess'.equalsIgnoreCase(name)) return Mdp
+        if ('SemiMarkovDecisionProcess'.equalsIgnoreCase(name)) return Smdp
+        if ('PartiallyObservableMdp'.equalsIgnoreCase(name)) return Pomdp
+        if ('ConvolutionalNeuralNetwork'.equalsIgnoreCase(name)) return DlCnn
+        if ('RecurrentNeuralNetwork'.equalsIgnoreCase(name)) return DlRnn
+        if ('FeedforwardNeuralNetwork'.equalsIgnoreCase(name)) return DlFeedforward
+        if ('GenerativeAdversarialNeuralNetwork'.equalsIgnoreCase(name)) return DlGenerative
+        if ('LongShortTermMemoryNeuralNetwork'.equalsIgnoreCase(name)) return DlLongShort
+        if ('DeepNeuralNetwork'.equalsIgnoreCase(name)) return DlDeep
+        if ('RadialBasisFunctionNeuralNetwork'.equalsIgnoreCase(name)) return DlRadialBasisFunc
+        if ('PerceptronNeuralNetwork'.equalsIgnoreCase(name)) return DlPerceptron
+        if ('ModularNeuralNetwork'.equalsIgnoreCase(name)) return DlModular
+        if ('DeconvolutionalNeuralNetwork'.equalsIgnoreCase(name)) return DlDeconvolutional
+        if ('Autoencoder'.equalsIgnoreCase(name)) return DlAutoencoder
+        if ('SelfOrganizingMaps'.equalsIgnoreCase(name)) return DlSoms
+        if ('TransformerNeuralNetwork'.equalsIgnoreCase(name)) return DlTransformer
+        if ('SequenceToSequenceNeuralNetwork'.equalsIgnoreCase(name)) return DlSeqToSeq
+        if ('StatisticalRegression'.equalsIgnoreCase(name)) return Regression
+        if ('MeasuredDataSeriesModel'.equalsIgnoreCase(name)) return MeasuredDataSeries
+        null
+    }
 }

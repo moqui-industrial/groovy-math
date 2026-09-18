@@ -51,4 +51,14 @@ enum TensorArrayEncoding implements DslEnumValue {
         }
         null
     }
+
+    static TensorArrayEncoding fromName(final String name) {
+        if (name == null) return null
+        for (TensorArrayEncoding val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('JsonNumbers'.equalsIgnoreCase(name)) return Json
+        if ('MessagePack'.equalsIgnoreCase(name)) return MsgPack
+        null
+    }
 }

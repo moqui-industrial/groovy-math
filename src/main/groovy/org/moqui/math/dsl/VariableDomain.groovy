@@ -52,4 +52,12 @@ enum VariableDomain implements DslEnumValue {
         }
         null
     }
+
+    static VariableDomain fromName(final String name) {
+        if (name == null) return null
+        for (VariableDomain val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        null
+    }
 }

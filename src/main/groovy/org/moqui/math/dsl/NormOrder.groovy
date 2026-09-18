@@ -65,4 +65,27 @@ enum NormOrder implements DslEnumValue {
         }
         null
     }
+
+    static NormOrder fromName(final String name) {
+        if (name == null) return null
+        for (NormOrder val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('Vector2'.equalsIgnoreCase(name)) return VecDefault
+        if ('LNumberOfNonZeros'.equalsIgnoreCase(name)) return Vec0
+        if ('LManhattan'.equalsIgnoreCase(name)) return Vec1
+        if ('LEuclidean'.equalsIgnoreCase(name)) return Vec2
+        if ('LMax'.equalsIgnoreCase(name)) return VecInf
+        if ('LMin'.equalsIgnoreCase(name)) return VecNegInf
+        if ('FrobeniusAF'.equalsIgnoreCase(name)) return MatFrobenius
+        if ('NuclearA'.equalsIgnoreCase(name)) return MatNuclear
+        if ('AMaxColumnSum'.equalsIgnoreCase(name)) return Mat1
+        if ('A1'.equalsIgnoreCase(name)) return MatNeg1
+        if ('SpectralA'.equalsIgnoreCase(name)) return Mat2
+        if ('A2'.equalsIgnoreCase(name)) return MatNeg2
+        if ('AMaxRowSum'.equalsIgnoreCase(name)) return MatInf
+        if ('AMinRowSum'.equalsIgnoreCase(name)) return MatNegInf
+        if ('ArbitraryPNormOptionvalueHoldsP'.equalsIgnoreCase(name)) return GenericP
+        null
+    }
 }

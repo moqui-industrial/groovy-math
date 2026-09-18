@@ -65,4 +65,29 @@ enum MeshGroupPurpose implements DslEnumValue {
         }
         null
     }
+
+    static MeshGroupPurpose fromName(final String name) {
+        if (name == null) return null
+        for (MeshGroupPurpose val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('BoundaryConditionRegion'.equalsIgnoreCase(name)) return BoundaryCondition
+        if ('SolverComputationRegion'.equalsIgnoreCase(name)) return SolverRegion
+        if ('MaterialDomainForFemEquations'.equalsIgnoreCase(name)) return MaterialRegion
+        if ('ShadingRenderingRegion'.equalsIgnoreCase(name)) return ShadingRegion
+        if ('RegionOfTheMeshWhereThermalEquationsAreApplied'.equalsIgnoreCase(name)) return ThermalDomain
+        if ('RegionWhereStructuralEquationsAreApplied'.equalsIgnoreCase(name)) return StructuralDomain
+        if ('SupportOrScaffoldCells'.equalsIgnoreCase(name)) return SupportStructure
+        if ('RegionUsedForFluidDynamicsSimulation'.equalsIgnoreCase(name)) return FluidDomain
+        if ('RegionUsedForElectromagneticSimulation'.equalsIgnoreCase(name)) return ElectromagneticDomain
+        if ('RegionSupportingCoupledPhysicsModels'.equalsIgnoreCase(name)) return MultiphysicsDomain
+        if ('ZoneWhereInitialValuesAreApplied'.equalsIgnoreCase(name)) return InitialConditionRegion
+        if ('ControlDomainForActiveFeedbackModelPredictiveControlOrSensorInfluence'.equalsIgnoreCase(name)) return ControlRegion
+        if ('RegionUsedToSampleOrExtractData'.equalsIgnoreCase(name)) return SamplingZone
+        if ('AreaWhereLoadsSourcesAreApplied'.equalsIgnoreCase(name)) return LoadRegion
+        if ('InternalInterfaceBetweenSubDomains'.equalsIgnoreCase(name)) return Interface
+        if ('CellsSelectedByProximityToAParametricpath'.equalsIgnoreCase(name)) return PathRegion
+        if ('ToolContactBandForCamOperations'.equalsIgnoreCase(name)) return ToolContactBand
+        null
+    }
 }

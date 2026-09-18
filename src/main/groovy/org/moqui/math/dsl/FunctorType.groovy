@@ -61,4 +61,23 @@ enum FunctorType implements DslEnumValue {
         }
         null
     }
+
+    static FunctorType fromName(final String name) {
+        if (name == null) return null
+        for (FunctorType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('Covariant'.equalsIgnoreCase(name)) return Cov
+        if ('Contravariant'.equalsIgnoreCase(name)) return Contra
+        if ('FaithfulAndFull'.equalsIgnoreCase(name)) return Embedding
+        if ('Equivalence'.equalsIgnoreCase(name)) return Equiv
+        if ('ForgetfulFunctor'.equalsIgnoreCase(name)) return Forgetful
+        if ('HomCovariant'.equalsIgnoreCase(name)) return HomCov
+        if ('HomContravariant'.equalsIgnoreCase(name)) return HomContra
+        if ('PowerSetFunctor'.equalsIgnoreCase(name)) return Powerset
+        if ('TypeConstructorFunctor'.equalsIgnoreCase(name)) return TypeConstructor
+        if ('ExecutionInterpretationFunctor'.equalsIgnoreCase(name)) return Execution
+        if ('DiagramFunctor'.equalsIgnoreCase(name)) return Diagram
+        null
+    }
 }

@@ -51,4 +51,15 @@ enum TensorMemoryFormat implements DslEnumValue {
         }
         null
     }
+
+    static TensorMemoryFormat fromName(final String name) {
+        if (name == null) return null
+        for (TensorMemoryFormat val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('Contiguous'.equalsIgnoreCase(name)) return Contig
+        if ('ChannelsLast2D'.equalsIgnoreCase(name)) return ChLast2
+        if ('ChannelsLast3D'.equalsIgnoreCase(name)) return ChLast3
+        null
+    }
 }

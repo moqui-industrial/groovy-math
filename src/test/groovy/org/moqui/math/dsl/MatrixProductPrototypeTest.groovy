@@ -39,16 +39,16 @@ MathModelDef('MatrixAlgebra',
 
         Matrix('A', matrixTypeEnum: MatrixType.Dense, purposeEnum: MatrixPurpose.Original,
             domainSpaceEnum: MathSpace.R3, codomainSpaceEnum: MathSpace.R2,
-            name: 'A', symbol: 'A', rows: 2, cols: 3)
+            symbol: 'A', rows: 2, cols: 3)
 
         Matrix('B', matrixTypeEnum: MatrixType.Dense, purposeEnum: MatrixPurpose.Original,
             domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R3,
-            name: 'B', symbol: 'B', rows: 3, cols: 2,
+            symbol: 'B', rows: 3, cols: 2,
             componentArray: '[[7,8],[9,10],[11,12]]')
 
         Matrix('C', matrixTypeEnum: MatrixType.Dense,
             domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
-            name: 'C', symbol: 'C', rows: 2, cols: 2)
+            symbol: 'C', rows: 2, cols: 2)
     }
 }
 '''

@@ -45,14 +45,16 @@ final class MathDslPrettyPrinter {
                     NamedModelContainer pipes = meta.entity('MathModelDefPipeline')
                     pipes.findAll { ModelValue p -> p.get('mathModelDefId') == md.modelKey }.each { ModelValue p ->
                         sb.append("    pipeline('").append(p.modelKey).append("'")
-                        appendAttributes(sb, p, vocab, ['mathModelDefPipelineId', 'mathModelDefId', 'pipelineId'], "        ")
-                        
-                        // Check nested transformation
                         String tId = (String) p.get('transformationId')
-                        if (tId && meta.hasEntity('Transformation') && meta.entity('Transformation').findByName(tId) != null) {
+                        boolean hasNestedTrans = tId && meta.hasEntity('Transformation') && meta.entity('Transformation').findByName(tId) != null
+                        
+                        List<String> pipelineExcluded = ['mathModelDefPipelineId', 'mathModelDefId', 'pipelineId']
+                        appendAttributes(sb, p, vocab, pipelineExcluded, "        ")
+                        
+                        if (hasNestedTrans) {
                             sb.append(") {\n")
                             ModelValue trans = meta.entity('Transformation').findByName(tId)
-                            sb.append("        transformation('").append(trans.modelKey).append("'")
+                            sb.append("        Transformation('").append(trans.modelKey).append("'")
                             appendAttributes(sb, trans, vocab, ['transformationId'], "            ")
                             sb.append(") {\n")
 

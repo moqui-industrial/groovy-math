@@ -51,4 +51,15 @@ enum TensorElementType implements DslEnumValue {
         }
         null
     }
+
+    static TensorElementType fromName(final String name) {
+        if (name == null) return null
+        for (TensorElementType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('DenseEntry'.equalsIgnoreCase(name)) return Dense
+        if ('SparseNonZeroEntry'.equalsIgnoreCase(name)) return Sparse
+        if ('SymbolicEntry'.equalsIgnoreCase(name)) return Symbolic
+        null
+    }
 }

@@ -51,4 +51,15 @@ enum ParametricPathEventType implements DslEnumValue {
         }
         null
     }
+
+    static ParametricPathEventType fromName(final String name) {
+        if (name == null) return null
+        for (ParametricPathEventType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('StartEvent'.equalsIgnoreCase(name)) return Start
+        if ('StopEvent'.equalsIgnoreCase(name)) return Stop
+        if ('CustomAction'.equalsIgnoreCase(name)) return Custom
+        null
+    }
 }

@@ -63,4 +63,14 @@ enum ApproxFuncSampleType implements DslEnumValue {
         }
         null
     }
+
+    static ApproxFuncSampleType fromName(final String name) {
+        if (name == null) return null
+        for (ApproxFuncSampleType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('CalculatedOrDerivedPoint'.equalsIgnoreCase(name)) return CalculatedPoint
+        if ('CornerPoint'.equalsIgnoreCase(name)) return Corner
+        null
+    }
 }

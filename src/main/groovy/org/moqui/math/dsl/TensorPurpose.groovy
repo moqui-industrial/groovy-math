@@ -69,4 +69,33 @@ enum TensorPurpose implements DslEnumValue {
         }
         null
     }
+
+    static TensorPurpose fromName(final String name) {
+        if (name == null) return null
+        for (TensorPurpose val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('OriginalTensor'.equalsIgnoreCase(name)) return Original
+        if ('GradientTensor'.equalsIgnoreCase(name)) return Gradient
+        if ('HessianTensor'.equalsIgnoreCase(name)) return Hessian
+        if ('StressTensor'.equalsIgnoreCase(name)) return Stress
+        if ('StrainTensor'.equalsIgnoreCase(name)) return Strain
+        if ('MassInertiaTensor'.equalsIgnoreCase(name)) return Inertia
+        if ('TrainableModelParameters'.equalsIgnoreCase(name)) return ModelParams
+        if ('ImageFeatureMapData'.equalsIgnoreCase(name)) return ImageRep
+        if ('PhysicalSimulationState'.equalsIgnoreCase(name)) return PhysicalState
+        if ('SampledDiscreteFunction'.equalsIgnoreCase(name)) return FuncSampling
+        if ('CovarianceCorrelationMatrix'.equalsIgnoreCase(name)) return Covariance
+        if ('DynamicStateTransitionMatrix'.equalsIgnoreCase(name)) return StateMatrix
+        if ('ControlInputMatrix'.equalsIgnoreCase(name)) return InputMatrix
+        if ('MeasurementOutputMatrix'.equalsIgnoreCase(name)) return OutputMatrix
+        if ('DirectTransmissionFeedforwardMatrix'.equalsIgnoreCase(name)) return FeedforwardMatrix
+        if ('StateVectorX'.equalsIgnoreCase(name)) return StateVector
+        if ('ControlInputVectorU'.equalsIgnoreCase(name)) return ControlVector
+        if ('StateFeedbackGainMatrix'.equalsIgnoreCase(name)) return FeedbackGain
+        if ('ObserverKalmanGainMatrix'.equalsIgnoreCase(name)) return ObserverGain
+        if ('ProcessNoiseCovarianceMatrix'.equalsIgnoreCase(name)) return CovarianceProcess
+        if ('MeasurementNoiseCovarianceMatrix'.equalsIgnoreCase(name)) return CovarianceMeasurement
+        null
+    }
 }

@@ -70,4 +70,31 @@ enum GraphType implements DslEnumValue {
         }
         null
     }
+
+    static GraphType fromName(final String name) {
+        if (name == null) return null
+        for (GraphType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('DirectedSimpleGraph'.equalsIgnoreCase(name)) return DirectedSimple
+        if ('DirectedSimpleGraphPermittingLoops'.equalsIgnoreCase(name)) return DirectedSimpleWithLoops
+        if ('DirectedMultigraph'.equalsIgnoreCase(name)) return DirectedMulti
+        if ('DirectedMultigraphPermittingLoops'.equalsIgnoreCase(name)) return DirectedMultiWithLoops
+        if ('OrientedGraph'.equalsIgnoreCase(name)) return Oriented
+        if ('DirectedRegularGraph'.equalsIgnoreCase(name)) return DirectedRegular
+        if ('DirectedAcyclicGraph'.equalsIgnoreCase(name)) return DAG
+        if ('PolytreeGraph'.equalsIgnoreCase(name)) return Polytree
+        if ('PolyforestGraph'.equalsIgnoreCase(name)) return Polyforest
+        if ('UndirectedSimpleGraph'.equalsIgnoreCase(name)) return UndirectedSimple
+        if ('UndirectedSimpleGraphPermittingLoops'.equalsIgnoreCase(name)) return UndirectedSimpleWithLoops
+        if ('UndirectedMultigraph'.equalsIgnoreCase(name)) return UndirectedMulti
+        if ('UndirectedMultigraphPermittingLoops'.equalsIgnoreCase(name)) return UndirectedMultiWithLoops
+        if ('UndirectedRegularGraph'.equalsIgnoreCase(name)) return UndirectedRegular
+        if ('TreeGraph'.equalsIgnoreCase(name)) return Tree
+        if ('ForestGraph'.equalsIgnoreCase(name)) return Forest
+        if ('MixedGraph'.equalsIgnoreCase(name)) return Mixed
+        if ('WeightedGraph'.equalsIgnoreCase(name)) return Weighted
+        if ('LatticeGraph'.equalsIgnoreCase(name)) return Lattice
+        null
+    }
 }

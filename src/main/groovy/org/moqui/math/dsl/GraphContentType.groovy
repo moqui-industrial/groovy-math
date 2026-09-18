@@ -54,4 +54,17 @@ enum GraphContentType implements DslEnumValue {
         }
         null
     }
+
+    static GraphContentType fromName(final String name) {
+        if (name == null) return null
+        for (GraphContentType val : values()) {
+            if (val.name().equalsIgnoreCase(name) || val.id.equalsIgnoreCase(name) || (val.enumCode != null && val.enumCode.equalsIgnoreCase(name))) return val
+        }
+        if ('ProtobufEncodedAdjacencyList'.equalsIgnoreCase(name)) return Protobuf
+        if ('CsvEdgeListCompressed'.equalsIgnoreCase(name)) return CsvEdge
+        if ('GraphmlCompressed'.equalsIgnoreCase(name)) return GraphML
+        if ('ApacheArrowIpcStream'.equalsIgnoreCase(name)) return ArrowIPC
+        if ('GraphsonCompressed'.equalsIgnoreCase(name)) return GraphSON
+        null
+    }
 }
