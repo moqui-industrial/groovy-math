@@ -160,14 +160,13 @@ MathModel('Simulator') {
     }
 
     @Test
-    void evaluatesNestedEntityMorphismExampleAgainstEmbeddedSchema() {
-        File example = new File(System.getProperty('user.dir'), 'examples/entity-morphism.groovy')
+    void evaluatesJenaKnowledgeGraphExampleAgainstEmbeddedSchema() {
+        File example = new File(System.getProperty('user.dir'), 'examples/jena-knowledge-graph.groovy')
         MathMeta mathMeta = MathDsl.evaluate(example).validate()
 
-        assert mathMeta.CategoryObject.named('AgEntObj_BillingAccount').get().categoryId == 'AgentEntityModel'
-        assert mathMeta.Morphism.named('AgEntSchema_BillingAccount').get().categoryId == 'AgentEntityModel'
-        assert mathMeta.Parameter.named('AgEntSchema_BillingAccount_001').get().morphismId ==
-            'AgEntSchema_BillingAccount'
+        assert mathMeta.Graph.named('ResearchLabGraph').get().name == 'AI Research Institute Graph'
+        assert mathMeta.GraphVertex.named('Alice').get().label == 'Alice Cooper'
+        assert mathMeta.GraphEdge.named('Edge_H1').get().fromVertexId == 'Class_SeniorResearcher'
     }
 
     @Test

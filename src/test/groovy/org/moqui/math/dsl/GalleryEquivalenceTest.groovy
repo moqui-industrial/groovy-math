@@ -23,11 +23,12 @@ class GalleryEquivalenceTest {
         'energy-dispatch.groovy',
         'opencv-vision-pipeline.groovy',
         'openfoam-cavity.groovy',
-        'jena-knowledge-graph.groovy'
+        'jena-knowledge-graph.groovy',
+        'product-catalog-graph.groovy'
     ])
     void testCanonicalAndCompactEquivalence(String filename) {
-        File canonicalFile = new File("examples/${filename}")
-        File compactFile = new File("examples/compact/${filename}")
+        File canonicalFile = new File("examples/canonical/${filename}")
+        File compactFile = new File("examples/${filename}")
 
         assertTrue(canonicalFile.exists(), "Canonical example file does not exist: ${canonicalFile.path}")
         assertTrue(compactFile.exists(), "Compact example file does not exist: ${compactFile.path}")
@@ -38,6 +39,6 @@ class GalleryEquivalenceTest {
         assertNotNull(canonicalMeta, "Failed to evaluate canonical file: ${filename}")
         assertNotNull(compactMeta, "Failed to evaluate compact file: ${filename}")
 
-        CanonicalDump.assertEquals(canonicalMeta, compactMeta)
+        CanonicalDump.assertStructuralEquals(canonicalMeta, compactMeta)
     }
 }

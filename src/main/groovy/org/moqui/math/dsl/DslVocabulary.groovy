@@ -8,7 +8,11 @@ package org.moqui.math.dsl
 import groovy.transform.CompileStatic
 import org.moqui.math.entity.EntityDefinition
 import org.moqui.math.entity.EnumerationDefinition
+import org.moqui.math.entity.FieldDefinition
 import org.moqui.math.entity.ModelDefinition
+import org.moqui.math.entity.RelationshipDefinition
+import org.moqui.math.entity.StatusDefinition
+import org.moqui.math.moqui.MoquiSchemaInspector
 
 import java.util.concurrent.ConcurrentHashMap
 
@@ -23,6 +27,7 @@ final class DslVocabulary {
     final Map<String, DslSymbol> symbols = new LinkedHashMap<>()
     final Map<String, List<DslSymbol>> ambiguousSymbols = new LinkedHashMap<>()
     final Map<String, DslSymbol> enumIdToPreferredSymbol = new LinkedHashMap<>()
+    final Map<String, Map<String, DslSymbol>> symbolsByEnumType = new LinkedHashMap<>()
 
     static DslVocabulary of(final ModelDefinition modelDefinition) {
         Objects.requireNonNull(modelDefinition, 'ModelDefinition must not be null')
@@ -58,11 +63,27 @@ final class DslVocabulary {
                 entityKeywords.putIfAbsent(uncapitalize(ed.shortAlias), ed)
             }
         }
+
+        if (modelDefinition.hasEntity('moqui.math.ct.CategoryObject')) {
+            EntityDefinition ed = modelDefinition.entity('moqui.math.ct.CategoryObject')
+            entityKeywords.put('object', ed)
+            entityKeywords.put('Object', ed)
+        }
+        if (modelDefinition.hasEntity('moqui.math.GraphVertex')) {
+            EntityDefinition ed = modelDefinition.entity('moqui.math.GraphVertex')
+            entityKeywords.put('vertex', ed)
+            entityKeywords.put('Vertex', ed)
+        }
+        if (modelDefinition.hasEntity('moqui.math.GraphEdge')) {
+            EntityDefinition ed = modelDefinition.entity('moqui.math.GraphEdge')
+            entityKeywords.put('edge', ed)
+            entityKeywords.put('Edge', ed)
+        }
     }
 
     private void indexTransformations() {
         modelDefinition.entities.values().each { EntityDefinition ed ->
-            if (ed.fullName == 'moqui.math.Transformation') {
+            if (ed.fullName == 'moqui.math.Transformation' || ed.fullName.startsWith('moqui.math.sat.')) {
                 transformationEntities.add(ed.fullName)
             } else if (ed.fields.containsKey('transformationId') &&
                        ed.relationships.values().any { it.relatedEntityName == 'moqui.math.Transformation' }) {
@@ -85,18 +106,29 @@ final class DslVocabulary {
         }
     }
 
-    final Map<String, Map<String, DslSymbol>> symbolsByEnumType = new LinkedHashMap<>()
-
     private void indexSymbols() {
         // 1. Registered DSL enums implementing DslEnumValue
         List<Class<?>> dslEnums = [
             MathModelType, DataType, OptimizationObjectiveSense, MathModelSolvingMethod,
             DeviceType, MatrixType, MatrixPurpose, ParameterPurpose, ParameterType,
-            TensorPurpose, TransformationType, MeshType, MorphismType, NormOrder,
+            TensorPurpose, TransformationType, MeshType, MorphismType, NormDomain, NormOrder,
             MathSpace, MathModelUsageContext, MathModelSource, MathModelDataType,
             MathModelDataPurpose, CategoryType, CategoryObjectType, MeshAdaptationType,
             MeshPurpose, TensorDecompMethod, TransformationPurpose, TriangularExtractionType
         ]
+
+        Map<String, Class<?>> enumClassByType = new LinkedHashMap<>()
+        for (Class<?> cls : dslEnums) {
+            String typeName = cls.simpleName
+            enumClassByType.put(typeName, cls)
+            if (typeName == 'OptimizationObjectiveSense') enumClassByType.put('ObjectiveSense', cls)
+            if (typeName == 'DataType') enumClassByType.put('TensorDataType', cls)
+            if (typeName == 'DeviceType') enumClassByType.put('TensorDevice', cls)
+            if (typeName == 'MathSpace') {
+                enumClassByType.put('DomainVectorSpace', cls)
+                enumClassByType.put('CodomainVectorSpace', cls)
+            }
+        }
 
         for (Class<?> cls : dslEnums) {
             if (Enum.isAssignableFrom(cls)) {
@@ -104,9 +136,10 @@ final class DslVocabulary {
                     Enum<?> e = (Enum<?>) constant
                     if (e instanceof DslEnumValue) {
                         String id = ((DslEnumValue) e).id
-                        addSymbol(e.name(), id, cls.simpleName)
-                        addSymbol(uncapitalize(e.name()), id, cls.simpleName)
-                        enumIdToPreferredSymbol.putIfAbsent(id, new DslSymbol(e.name(), id, cls.simpleName))
+                        String typeName = cls.simpleName
+                        addSymbol(e.name(), id, typeName)
+                        addSymbol(uncapitalize(e.name()), id, typeName)
+                        enumIdToPreferredSymbol.putIfAbsent(id, new DslSymbol(e.name(), id, typeName))
                     }
                 }
             }
@@ -120,78 +153,117 @@ final class DslVocabulary {
         }
 
         byType.each { String type, List<EnumerationDefinition> list ->
-            // Compute Longest Common Prefix (LCP) dynamically among all enumIds for this enumTypeId
             String lcp = computeLongestCommonPrefix(list.collect { it.enumId })
+
+            // Check if stripped prefix produces unique names within this enumTypeId
+            Map<String, Integer> strippedCounts = new LinkedHashMap<>()
+            list.each { EnumerationDefinition ed ->
+                String id = ed.enumId
+                if (lcp.length() > 0 && id.startsWith(lcp) && id.length() > lcp.length()) {
+                    String stripped = id.substring(lcp.length())
+                    strippedCounts.put(stripped, (strippedCounts.get(stripped) ?: 0) + 1)
+                }
+                if (id.startsWith(type) && id.length() > type.length()) {
+                    String stripped = id.substring(type.length())
+                    strippedCounts.put(stripped, (strippedCounts.get(stripped) ?: 0) + 1)
+                }
+            }
 
             list.each { EnumerationDefinition ed ->
                 String id = ed.enumId
 
-                // 1. Direct ID
-                addSymbol(id, id, type)
+                // Determine preferred symbol:
+                // 1. Groovy enum constant if exists
+                // 2. enumCode if exists
+                // 3. stripped unique prefix
+                // 4. full enumId
+                String preferred = null
+                if (enumIdToPreferredSymbol.containsKey(id)) {
+                    preferred = enumIdToPreferredSymbol.get(id).name
+                } else if (ed.enumCode && isCleanIdentifier(ed.enumCode)) {
+                    preferred = ed.enumCode
+                } else if (lcp.length() > 0 && id.startsWith(lcp) && id.length() > lcp.length()) {
+                    String stripped = id.substring(lcp.length())
+                    if (strippedCounts.get(stripped) == 1 && isCleanIdentifier(stripped)) {
+                        preferred = stripped
+                    }
+                }
+                if (preferred == null) preferred = id
+                enumIdToPreferredSymbol.putIfAbsent(id, new DslSymbol(preferred, id, type))
 
-                // 2. enumCode if available
+                // Register all accepted forms in order:
+                // 1. Full enumId
+                addSymbol(id, id, type)
+                addSymbol(uncapitalize(id), id, type)
+
+                // 2. enumCode
                 if (ed.enumCode) {
                     addSymbol(ed.enumCode, id, type)
                     addSymbol(uncapitalize(ed.enumCode), id, type)
                 }
 
-                // 3. Normalized CamelCase description
-                String descCamel = null
+                // 3. Stripped unique prefix
+                if (lcp.length() > 0 && id.startsWith(lcp) && id.length() > lcp.length()) {
+                    String stripped = id.substring(lcp.length())
+                    if (strippedCounts.get(stripped) == 1) {
+                        addSymbol(stripped, id, type)
+                        addSymbol(uncapitalize(stripped), id, type)
+                    }
+                }
+                if (id.startsWith(type) && id.length() > type.length()) {
+                    String stripped = id.substring(type.length())
+                    if (strippedCounts.get(stripped) == 1) {
+                        addSymbol(stripped, id, type)
+                        addSymbol(uncapitalize(stripped), id, type)
+                    }
+                }
+
+                // 4. Normalized CamelCase description
                 if (ed.description) {
                     String cleanDesc = ed.description.replaceAll(/\(.*?\)/, '').trim()
-                    descCamel = toCamelCase(cleanDesc)
-                    if (descCamel && descCamel != id && descCamel != ed.enumCode) {
+                    String descCamel = toCamelCase(cleanDesc)
+                    if (descCamel && isCleanIdentifier(descCamel)) {
                         addSymbol(descCamel, id, type)
                         addSymbol(uncapitalize(descCamel), id, type)
                     }
-                    String fullDescCamel = toCamelCase(ed.description)
-                    if (fullDescCamel && fullDescCamel != descCamel && fullDescCamel != id && fullDescCamel != ed.enumCode) {
-                        addSymbol(fullDescCamel, id, type)
-                        addSymbol(uncapitalize(fullDescCamel), id, type)
-                    }
                 }
-
-                // 4. Stripped LCP prefix
-                if (lcp.length() > 0 && id.startsWith(lcp) && id.length() > lcp.length()) {
-                    String stripped = id.substring(lcp.length())
-                    addSymbol(stripped, id, type)
-                    addSymbol(uncapitalize(stripped), id, type)
-                }
-
-                // 5. Stripped enumTypeId prefix if enumId starts with it
-                if (id.startsWith(type) && id.length() > type.length()) {
-                    String stripped = id.substring(type.length())
-                    addSymbol(stripped, id, type)
-                    addSymbol(uncapitalize(stripped), id, type)
-                }
-
-                // Determine preferred symbol for this enumId
-                String preferred = null
-                if (descCamel != null && !descCamel.contains(' ') && isCleanIdentifier(descCamel)) {
-                    preferred = descCamel
-                } else if (lcp.length() > 0 && id.startsWith(lcp) && id.length() > lcp.length()) {
-                    preferred = id.substring(lcp.length())
-                } else if (ed.enumCode) {
-                    preferred = ed.enumCode
-                } else {
-                    preferred = id
-                }
-                enumIdToPreferredSymbol.putIfAbsent(id, new DslSymbol(preferred, id, type))
             }
         }
 
-        // ObjectiveSense common synonyms derived from schema
+        // Common domain aliases & synonyms
         addSymbol('minimise', 'MINIMIZE', 'OptimizationObjectiveSense')
         addSymbol('minimize', 'MINIMIZE', 'OptimizationObjectiveSense')
         addSymbol('maximise', 'MAXIMIZE', 'OptimizationObjectiveSense')
         addSymbol('maximize', 'MAXIMIZE', 'OptimizationObjectiveSense')
+
+        // Status items (MathModelStatus, etc.)
+        for (StatusDefinition sd : modelDefinition.statuses.values()) {
+            String type = sd.statusTypeId ?: 'Status'
+            String id = sd.statusId
+            addSymbol(id, id, type)
+            addSymbol(uncapitalize(id), id, type)
+            addSymbol(id, id, 'Status')
+            addSymbol(uncapitalize(id), id, 'Status')
+            if (sd.statusCode) {
+                addSymbol(sd.statusCode, id, type)
+                addSymbol(uncapitalize(sd.statusCode), id, type)
+                addSymbol(sd.statusCode, id, 'Status')
+                addSymbol(uncapitalize(sd.statusCode), id, 'Status')
+            }
+            if (id.startsWith('MathModel') && id.length() > 9) {
+                String rest = id.substring(9)
+                addSymbol(rest, id, type)
+                addSymbol(uncapitalize(rest), id, type)
+                addSymbol(rest, id, 'Status')
+                addSymbol(uncapitalize(rest), id, 'Status')
+            }
+        }
     }
 
     private static String computeLongestCommonPrefix(final List<String> strings) {
         if (!strings || strings.isEmpty()) return ''
         if (strings.size() == 1) {
             String single = strings[0]
-            // Extract leading uppercase + lowercase prefix before the next capital letter (e.g. DevCpu -> Dev, DtFloat32 -> Dt)
             for (int i = 1; i < single.length(); i++) {
                 if (Character.isUpperCase(single.charAt(i))) {
                     return single.substring(0, i)
@@ -240,11 +312,7 @@ final class DslVocabulary {
 
         if (symbols.containsKey(name)) {
             DslSymbol existing = symbols.get(name)
-            if (existing.id == id) {
-                // Same canonical ID, compatible duplicate
-                return
-            }
-            // Distinct target IDs -> ambiguous symbol
+            if (existing.id == id) return
             List<DslSymbol> list = ambiguousSymbols.computeIfAbsent(name) { new ArrayList<DslSymbol>() }
             if (!list.contains(existing)) list.add(existing)
             if (!list.contains(sym)) list.add(sym)
@@ -263,6 +331,8 @@ final class DslVocabulary {
         if (enumTypeId != null && symbolsByEnumType.containsKey(enumTypeId)) {
             DslSymbol typeSym = symbolsByEnumType.get(enumTypeId).get(name)
             if (typeSym != null) return typeSym
+            DslSymbol uncap = symbolsByEnumType.get(enumTypeId).get(uncapitalize(name))
+            if (uncap != null) return uncap
         }
         if (ambiguousSymbols.containsKey(name)) {
             if (enumTypeId != null) {
@@ -274,6 +344,100 @@ final class DslVocabulary {
             throw new IllegalArgumentException("Ambiguous DSL symbol '${name}' matches multiple enumeration types: ${details}")
         }
         symbols.get(name)
+    }
+
+    DslSymbol resolveSymbolForField(final String symbolName, final String enumTypeId,
+                                   final EntityDefinition entity = null, final String fieldName = null) {
+        if (!symbolName) return null
+        String targetType = enumTypeId
+        if (targetType == null && entity != null && fieldName != null) {
+            targetType = entity.enumTypeFor(fieldName)
+            if (targetType == null && (fieldName == 'statusId' || fieldName.endsWith('StatusId') || fieldName == 'status')) {
+                targetType = 'MathModelStatus'
+                if (!symbolsByEnumType.containsKey(targetType)) targetType = 'Status'
+            }
+            if (targetType == null && (fieldName == 'symbolicValue' || fieldName == 'symbolic')) {
+                targetType = 'OptimizationObjectiveSense'
+            }
+        }
+        if (targetType == 'DomainVectorSpace' || targetType == 'CodomainVectorSpace') {
+            targetType = 'MathSpace'
+        }
+        if (targetType == 'ObjectiveSense') {
+            targetType = 'OptimizationObjectiveSense'
+        }
+
+        Map<String, DslSymbol> typeSymbols = targetType != null ? symbolsByEnumType.get(targetType) : null
+        if (typeSymbols != null) {
+            if (typeSymbols.containsKey(symbolName)) return typeSymbols.get(symbolName)
+            if (typeSymbols.containsKey(uncapitalize(symbolName))) return typeSymbols.get(uncapitalize(symbolName))
+            if (typeSymbols.containsKey(symbolName.toUpperCase())) return typeSymbols.get(symbolName.toUpperCase())
+
+            // Try case-insensitive matching
+            for (Map.Entry<String, DslSymbol> entry : typeSymbols.entrySet()) {
+                if (entry.key.equalsIgnoreCase(symbolName)) return entry.value
+            }
+
+            // Not found in expected target domain -> compute edit distance suggestion
+            Set<String> allowed = typeSymbols.keySet()
+            String suggestion = findClosestSymbol(symbolName, allowed)
+            String didYouMean = suggestion ? " Did you mean '${suggestion}'?" : ""
+            throw new IllegalArgumentException(
+                "Invalid symbol '${symbolName}' for field '${fieldName ?: 'unknown'}' " +
+                "on entity '${entity?.name ?: 'unknown'}' (expected domain '${targetType}'). " +
+                "Allowed values: ${allowed.take(15).join(', ')}${allowed.size() > 15 ? '...' : ''}.${didYouMean}"
+            )
+        }
+
+        if (entity != null && fieldName != null) {
+            throw new IllegalArgumentException(
+                "Field '${fieldName}' on entity '${entity.name}' has no known enumeration domain; " +
+                "cannot resolve bare symbol '${symbolName}'"
+            )
+        }
+
+        // Global fallback when neither targetType nor entity/fieldName were provided
+        DslSymbol global = resolveSymbol(symbolName)
+        if (global != null) return global
+
+        throw new IllegalArgumentException("Unresolved bare symbol '${symbolName}'")
+    }
+
+    static int editDistance(final String s1, final String s2) {
+        if (s1 == null) return s2 == null ? 0 : s2.length()
+        if (s2 == null) return s1.length()
+        String a = s1.toLowerCase()
+        String b = s2.toLowerCase()
+        int[] costs = new int[b.length() + 1]
+        for (int j = 0; j <= b.length(); j++) costs[j] = j
+        for (int i = 1; i <= a.length(); i++) {
+            costs[0] = i
+            int nw = i - 1
+            for (int j = 1; j <= b.length(); j++) {
+                int cj = Math.min(1 + Math.min(costs[j], costs[j - 1]),
+                        a.charAt(i - 1) == b.charAt(j - 1) ? nw : nw + 1)
+                nw = costs[j]
+                costs[j] = cj
+            }
+        }
+        costs[b.length()]
+    }
+
+    static String findClosestSymbol(final String name, final Collection<String> candidates) {
+        if (!candidates || !name) return null
+        String best = null
+        int bestDist = Integer.MAX_VALUE
+        for (String cand : candidates) {
+            int dist = editDistance(name, cand)
+            if (dist < bestDist) {
+                bestDist = dist
+                best = cand
+            }
+        }
+        if (best != null && bestDist <= Math.max(3, best.length() / 2)) {
+            return best
+        }
+        null
     }
 
     String preferredSymbolForId(final String enumId) {
@@ -304,6 +468,57 @@ final class DslVocabulary {
 
     String getOperandTypeEnumId(final String methodName) {
         operandTypeMap.get(methodName)
+    }
+
+    String generateMarkdownSnapshot() {
+        StringBuilder sb = new StringBuilder()
+        sb.append('# DSL Vocabulary Reference Snapshot\n\n')
+        sb.append('This document is automatically generated from the schema-derived `DslVocabulary`. Do not edit manually.\n\n')
+
+        sb.append('## 1. Entity Keywords\n\n')
+        sb.append('| Keyword | Entity Full Name | Short Alias |\n')
+        sb.append('| :--- | :--- | :--- |\n')
+        Map<String, EntityDefinition> sortedEntities = new TreeMap<>(entityKeywords)
+        sortedEntities.each { String kw, EntityDefinition ed ->
+            sb.append("| `${kw}` | `${ed.fullName}` | `${ed.shortAlias ?: '-'}` |\n")
+        }
+
+        sb.append('\n## 2. Transformation Entities & Derived Functions\n\n')
+        sb.append('| Transformation Entity | Derived LowerCamel Function |\n')
+        sb.append('| :--- | :--- |\n')
+        transformationEntities.toSorted().each { String te ->
+            String name = te.tokenize('.').last()
+            sb.append("| `${te}` | `${uncapitalize(name)}` |\n")
+        }
+
+        sb.append('\n## 3. Enumeration Symbols by Type\n\n')
+        Map<String, Map<String, DslSymbol>> sortedByDomain = new TreeMap<>(symbolsByEnumType)
+        sortedByDomain.each { String domain, Map<String, DslSymbol> syms ->
+            sb.append("### Domain: `${domain}`\n\n")
+            sb.append('| Preferred Symbol | Canonical Enum ID | Accepted Aliases |\n')
+            sb.append('| :--- | :--- | :--- |\n')
+            Map<String, List<String>> idToAliases = new TreeMap<>()
+            syms.each { String symName, DslSymbol sym ->
+                idToAliases.computeIfAbsent(sym.id) { new ArrayList<String>() }.add(symName)
+            }
+            idToAliases.each { String eid, List<String> aliases ->
+                String pref = enumIdToPreferredSymbol.get(eid)?.name ?: aliases.first()
+                List<String> otherAliases = aliases.findAll { it != pref }
+                String aliasStr = otherAliases.collect { "`" + it + "`" }.join(', ') ?: '-'
+                sb.append("| `${pref}` | `${eid}` | ${aliasStr} |\n")
+            }
+            sb.append('\n')
+        }
+
+        sb.toString()
+    }
+
+    static void main(String[] args) {
+        DslVocabulary vocab = of(MoquiSchemaInspector.embedded())
+        File target = new File('docs/dsl/vocabulary.md')
+        target.parentFile.mkdirs()
+        target.text = vocab.generateMarkdownSnapshot()
+        println "Updated ${target.path}"
     }
 
     private static String uncapitalize(final String s) {

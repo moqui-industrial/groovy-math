@@ -7,36 +7,36 @@ Graph('ResearchLabGraph', name: 'AI Research Institute Graph',
     description: 'Knowledge Graph of Researchers, Roles, Departments and Projects') {
 
     // Ontology Classes (as Vertices)
-    GraphVertex('Class_Person', label: 'Person')
-    GraphVertex('Class_Researcher', label: 'Researcher')
-    GraphVertex('Class_SeniorResearcher', label: 'SeniorResearcher')
-    GraphVertex('Class_Department', label: 'Department')
+    vertex('Class_Person', label: 'Person')
+    vertex('Class_Researcher', label: 'Researcher')
+    vertex('Class_SeniorResearcher', label: 'SeniorResearcher')
+    vertex('Class_Department', label: 'Department')
 
     // Instances (as Vertices) with Parameters
-    GraphVertex('Alice', label: 'Alice Cooper') {
-        Parameter('Param_Alice_Role', parameterDefId: 'jobTitle', textValue: 'Principal AI Scientist')
-        Parameter('Param_Alice_Email', parameterDefId: 'email', textValue: 'alice@moqui-ai.org')
+    vertex('Alice', label: 'Alice Cooper') {
+        parameter('Param_Alice_Role', def: 'jobTitle', text: 'Principal AI Scientist')
+        parameter('Param_Alice_Email', def: 'email', text: 'alice@moqui-ai.org')
     }
-    GraphVertex('Bob', label: 'Bob Martin') {
-        Parameter('Param_Bob_Role', parameterDefId: 'jobTitle', textValue: 'Postdoc Researcher')
+    vertex('Bob', label: 'Bob Martin') {
+        parameter('Param_Bob_Role', def: 'jobTitle', text: 'Postdoc Researcher')
     }
-    GraphVertex('Charlie', label: 'Charlie Brown')
-    GraphVertex('AI_Department', label: 'Deep Learning & Neuro-Symbolic Lab') {
-        Parameter('Param_Dept_Loc', parameterDefId: 'location', textValue: 'Rome Innovation Hub')
+    vertex('Charlie', label: 'Charlie Brown')
+    vertex('AI_Department', label: 'Deep Learning & Neuro-Symbolic Lab') {
+        parameter('Param_Dept_Loc', def: 'location', text: 'Rome Innovation Hub')
     }
 
     // Class Hierarchy (RDFS SubClassOf Edges)
-    GraphEdge('Edge_H1', fromVertexId: 'Class_SeniorResearcher', toVertexId: 'Class_Researcher', label: 'subClassOf')
-    GraphEdge('Edge_H2', fromVertexId: 'Class_Researcher', toVertexId: 'Class_Person', label: 'subClassOf')
+    edge('Edge_H1', from: 'Class_SeniorResearcher', to: 'Class_Researcher', label: 'subClassOf')
+    edge('Edge_H2', from: 'Class_Researcher', to: 'Class_Person', label: 'subClassOf')
 
     // Instance Types (RDF Type Edges)
-    GraphEdge('Edge_T1', fromVertexId: 'Alice', toVertexId: 'Class_SeniorResearcher', label: 'type')
-    GraphEdge('Edge_T2', fromVertexId: 'Bob', toVertexId: 'Class_Researcher', label: 'type')
-    GraphEdge('Edge_T3', fromVertexId: 'Charlie', toVertexId: 'Class_Person', label: 'type')
-    GraphEdge('Edge_T4', fromVertexId: 'AI_Department', toVertexId: 'Class_Department', label: 'type')
+    edge('Edge_T1', from: 'Alice', to: 'Class_SeniorResearcher', label: 'type')
+    edge('Edge_T2', from: 'Bob', to: 'Class_Researcher', label: 'type')
+    edge('Edge_T3', from: 'Charlie', to: 'Class_Person', label: 'type')
+    edge('Edge_T4', from: 'AI_Department', to: 'Class_Department', label: 'type')
 
     // Semantic Relationships (Graph Edges)
-    GraphEdge('Edge_R1', fromVertexId: 'Alice', toVertexId: 'AI_Department', label: 'leads')
-    GraphEdge('Edge_R2', fromVertexId: 'Bob', toVertexId: 'AI_Department', label: 'memberOf')
-    GraphEdge('Edge_R3', fromVertexId: 'Alice', toVertexId: 'Bob', label: 'supervises')
+    edge('Edge_R1', from: 'Alice', to: 'AI_Department', label: 'leads')
+    edge('Edge_R2', from: 'Bob', to: 'AI_Department', label: 'memberOf')
+    edge('Edge_R3', from: 'Alice', to: 'Bob', label: 'supervises')
 }

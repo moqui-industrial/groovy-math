@@ -3,33 +3,22 @@
  * Grant of Patent License.
  */
 
-MathModelDef('OpenCvVisionModel',
-    modelTypeEnum: MathModelType.ComputerVision,
-    usageContextEnum: MathModelUsageContext.Inference,
+MathModelDef('OpenCvVisionModel', type: ComputerVision, usage: Inference,
     modelName: 'OpenCV Computer Vision Filtering Pipeline',
     description: 'Gaussian Blur followed by Sobel Gradient and 2D Spatial Filtering') {
 
     pipeline('BlurStep', stepSeqId: '01', sequenceNum: 10,
-        transformationId: 'GaussianBlur', stepName: 'Gaussian Smoothing',
-        solvingMethodEnum: MathModelSolvingMethod.OpenCv) {
-        Transformation('GaussianBlur', transformationTypeEnum: TransformationType.GaussianBlur,
-            name: 'Gaussian Smoothing')
+        transformationId: 'GaussianBlur', stepName: 'Gaussian Smoothing', method: OpenCv) {
+        Transformation('GaussianBlur', type: GaussianBlur, name: 'Gaussian Smoothing')
     }
 
     pipeline('SobelStep', stepSeqId: '02', sequenceNum: 20,
-        transformationId: 'SobelGradient', stepName: 'Sobel Horizontal Gradient',
-        solvingMethodEnum: MathModelSolvingMethod.OpenCv) {
-        Transformation('SobelGradient', transformationTypeEnum: TransformationType.Sobel,
-            name: 'Sobel Horizontal Gradient')
+        transformationId: 'SobelGradient', stepName: 'Sobel Horizontal Gradient', method: OpenCv) {
+        Transformation('SobelGradient', type: Sobel, name: 'Sobel Horizontal Gradient')
     }
 
-    MathModel('EdgePipeline',
-        modelAlias: 'edge_detection',
-        statusId: 'MathModelDraft',
+    MathModel('EdgePipeline', alias: 'edge_detection', status: Draft,
         description: 'Gaussian smoothing and Sobel edge detection') {
-
-        Matrix('InputImage', matrixTypeEnum: MatrixType.Dense, purposeEnum: MatrixPurpose.Original,
-            domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
-            name: 'InputImage', rows: 8, cols: 8)
+        matrix('InputImage', rows: 8, cols: 8, purpose: Original)
     }
 }

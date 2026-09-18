@@ -3,74 +3,26 @@
  * Grant of Patent License.
  */
 
-ParameterDef('OptimizationObjectiveSense',
-    parameterTypeEnum: ParameterType.TextShort,
-    purposeEnum: ParameterPurpose.MathModel,
-    parameterCode: 'objectiveSense',
-    parameterName: 'Optimization objective sense')
+ParameterDef('OptimizationObjectiveSense', type: TextShort, purpose: MathModel,
+    code: 'objectiveSense', name: 'Optimization objective sense')
 
-MathModelDef('LinearProductionPlanning',
-    modelTypeEnum: MathModelType.LinearProgram,
-    usageContextEnum: MathModelUsageContext.Optimisation,
+MathModelDef('LinearProductionPlanning', type: LinearProgram, usage: Optimisation,
     modelName: 'Linear production planning',
     description: 'Maximize production margin under machine-capacity constraints') {
 
-    pipeline('SolveStep', stepSeqId: '01', sequenceNum: 1, stepName: 'SimplexSolve',
-        solvingMethodEnum: MathModelSolvingMethod.Simplex)
+    pipeline('SolveStep', stepSeqId: '01', sequenceNum: 1, stepName: 'SimplexSolve', method: Simplex)
 
-    MathModel('ProductionPlan',
-        modelAlias: 'production_plan',
-        sourceEnum: MathModelSource.Manual,
-        description: 'Choose Standard and Premium production quantities',
-        statusId: 'MathModelDraft') {
+    MathModel('ProductionPlan', alias: 'production_plan', source: Manual,
+        description: 'Choose Standard and Premium production quantities', status: Draft) {
 
-        parameters('ProductionPlan.ObjectiveSense',
-            parameterDefId: 'OptimizationObjectiveSense',
-            parameterAlias: 'objectiveSense',
-            symbolicValue: OptimizationObjectiveSense.Maximize)
-
-        data('ProductionVariablesData',
-            dataTypeEnum: MathModelDataType.Vector,
-            purposeEnum: MathModelDataPurpose.DecisionVariables,
-            vectorId: 'ProductionVariables', sequenceNum: 0) {
-            Vector('ProductionVariables', name: 'Production quantities', dimension: 2,
-                componentArray: '["Standard","Premium"]')
+        parameters {
+            objectiveSense = Maximize
         }
 
-        data('UnitMarginData',
-            dataTypeEnum: MathModelDataType.Vector,
-            purposeEnum: MathModelDataPurpose.CostVector,
-            vectorId: 'UnitMargin', sequenceNum: 1) {
-            Vector('UnitMargin', name: 'Unit contribution margin', dimension: 2,
-                componentArray: '[40,30]')
-        }
-
-        data('MachineCapacityCoefficientsData',
-            dataTypeEnum: MathModelDataType.Matrix,
-            purposeEnum: MathModelDataPurpose.ConstraintMatrix,
-            matrixId: 'MachineCapacityCoefficients', sequenceNum: 2) {
-            Matrix('MachineCapacityCoefficients', matrixTypeEnum: MatrixType.Rectangular,
-                domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
-                name: 'Machine capacity coefficients', rows: 2, cols: 2,
-                componentArray: '[[2,1],[1,2]]')
-        }
-
-        data('MachineCapacityData',
-            dataTypeEnum: MathModelDataType.Vector,
-            purposeEnum: MathModelDataPurpose.RightHandSide,
-            vectorId: 'MachineCapacity', sequenceNum: 3) {
-            Vector('MachineCapacity', name: 'Available machine capacity', dimension: 2,
-                componentArray: '[100,80]')
-        }
-
-        data('ProductionBoundsData',
-            dataTypeEnum: MathModelDataType.Matrix,
-            purposeEnum: MathModelDataPurpose.VariableBounds,
-            matrixId: 'ProductionBounds', sequenceNum: 4) {
-            Matrix('ProductionBounds', matrixTypeEnum: MatrixType.Rectangular,
-                domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
-                name: 'Lower and upper production bounds', rows: 2, cols: 2,
-                componentArray: '[[0,0],[40,50]]')
-        }
+        vector('ProductionVariables', ['Standard', 'Premium'], purpose: DecisionVariables, name: 'Production quantities')
+        vector('UnitMargin', [40, 30], purpose: CostVector, name: 'Unit contribution margin')
+        matrix('MachineCapacityCoefficients', [[2, 1], [1, 2]], purpose: ConstraintMatrix, type: Rectangular, name: 'Machine capacity coefficients')
+        vector('MachineCapacity', [100, 80], purpose: RightHandSide, name: 'Available machine capacity')
+        matrix('ProductionBounds', [[0, 0], [40, 50]], purpose: VariableBounds, type: Rectangular, name: 'Lower and upper production bounds')
     }
 }

@@ -557,6 +557,13 @@ tasks.register('pushMoquiSchema', Exec) {
     commandLine 'python3', file('scripts/sync_schema.py').absolutePath, '--push'
 }
 
+tasks.register('generateVocabularySnapshot', JavaExec) {
+    group = 'Documentation'
+    description = 'Generates docs/dsl/vocabulary.md from embedded Moqui schema'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'org.moqui.math.dsl.DslVocabulary'
+}
+
 tasks.register('checkMoquiSchema', Exec) {
     group = 'Moqui schema'
     description = 'Fails if the schema differs between moqui-math and groovy-math.'

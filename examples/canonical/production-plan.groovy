@@ -1,21 +1,26 @@
+/*
+ * This software is in the public domain under CC0 1.0 Universal plus a
+ * Grant of Patent License.
+ */
+
 ParameterDef('OptimizationObjectiveSense',
-    parameterType: TextShort,
-    purpose: ParameterPurpose.MathModel,
+    parameterTypeEnum: ParameterType.TextShort,
+    purposeEnum: ParameterPurpose.MathModel,
     parameterCode: 'objectiveSense',
     parameterName: 'Optimization objective sense')
 
 MathModelDef('LinearProductionPlanning',
-    modelType: LinearProgram,
-    usageContext: Optimisation,
+    modelTypeEnum: MathModelType.LinearProgram,
+    usageContextEnum: MathModelUsageContext.Optimisation,
     modelName: 'Linear production planning',
     description: 'Maximize production margin under machine-capacity constraints') {
 
     pipeline('SolveStep', stepSeqId: '01', sequenceNum: 1, stepName: 'SimplexSolve',
-        solvingMethod: Simplex)
+        solvingMethodEnum: MathModelSolvingMethod.Simplex)
 
     MathModel('ProductionPlan',
         modelAlias: 'production_plan',
-        source: Manual,
+        sourceEnum: MathModelSource.Manual,
         description: 'Choose Standard and Premium production quantities',
         statusId: 'MathModelDraft') {
 
@@ -25,45 +30,45 @@ MathModelDef('LinearProductionPlanning',
             symbolicValue: OptimizationObjectiveSense.Maximize)
 
         data('ProductionVariablesData',
-            dataType: MathModelDataType.Vector,
-            purpose: DecisionVariables,
+            dataTypeEnum: MathModelDataType.Vector,
+            purposeEnum: MathModelDataPurpose.DecisionVariables,
             vectorId: 'ProductionVariables', sequenceNum: 0) {
             Vector('ProductionVariables', name: 'Production quantities', dimension: 2,
                 componentArray: '["Standard","Premium"]')
         }
 
         data('UnitMarginData',
-            dataType: MathModelDataType.Vector,
-            purpose: CostVector,
+            dataTypeEnum: MathModelDataType.Vector,
+            purposeEnum: MathModelDataPurpose.CostVector,
             vectorId: 'UnitMargin', sequenceNum: 1) {
             Vector('UnitMargin', name: 'Unit contribution margin', dimension: 2,
                 componentArray: '[40,30]')
         }
 
         data('MachineCapacityCoefficientsData',
-            dataType: MathModelDataType.Matrix,
-            purpose: ConstraintMatrix,
+            dataTypeEnum: MathModelDataType.Matrix,
+            purposeEnum: MathModelDataPurpose.ConstraintMatrix,
             matrixId: 'MachineCapacityCoefficients', sequenceNum: 2) {
-            Matrix('MachineCapacityCoefficients', matrixType: MatrixType.Rectangular,
-                domainSpace: R2, codomainSpace: R2,
+            Matrix('MachineCapacityCoefficients', matrixTypeEnum: MatrixType.Rectangular,
+                domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
                 name: 'Machine capacity coefficients', rows: 2, cols: 2,
                 componentArray: '[[2,1],[1,2]]')
         }
 
         data('MachineCapacityData',
-            dataType: MathModelDataType.Vector,
-            purpose: RightHandSide,
+            dataTypeEnum: MathModelDataType.Vector,
+            purposeEnum: MathModelDataPurpose.RightHandSide,
             vectorId: 'MachineCapacity', sequenceNum: 3) {
             Vector('MachineCapacity', name: 'Available machine capacity', dimension: 2,
                 componentArray: '[100,80]')
         }
 
         data('ProductionBoundsData',
-            dataType: MathModelDataType.Matrix,
-            purpose: VariableBounds,
+            dataTypeEnum: MathModelDataType.Matrix,
+            purposeEnum: MathModelDataPurpose.VariableBounds,
             matrixId: 'ProductionBounds', sequenceNum: 4) {
-            Matrix('ProductionBounds', matrixType: MatrixType.Rectangular,
-                domainSpace: R2, codomainSpace: R2,
+            Matrix('ProductionBounds', matrixTypeEnum: MatrixType.Rectangular,
+                domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
                 name: 'Lower and upper production bounds', rows: 2, cols: 2,
                 componentArray: '[[0,0],[40,50]]')
         }

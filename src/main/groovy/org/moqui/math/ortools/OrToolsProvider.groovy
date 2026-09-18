@@ -49,17 +49,32 @@ final class OrToolsProvider implements MathProvider<OrToolsPlan, OrToolsResult> 
         ModelValue coefficients = requiredMatrix(mathMeta, modelData, 'MmdpConstraintMatrix')
         ModelValue rightHandSide = requiredVector(mathMeta, modelData, 'MmdpRhsVector')
         ModelValue bounds = optionalMatrix(mathMeta, modelData, 'MmdpVarBounds')
+        ModelValue constraintSenses = optionalVector(mathMeta, modelData, 'MmdpConstraint')
 
         List<String> variableNames = stringVector(decisions, 'decision variables')
         double[] objectiveCoefficients = numericVector(costs, 'cost vector')
         double[][] constraintCoefficients = numericMatrix(coefficients, 'constraint matrix')
-        double[] constraintUpperBounds = numericVector(rightHandSide, 'right-hand side')
-        validateDimensions(variableNames, objectiveCoefficients, constraintCoefficients, constraintUpperBounds)
+        double[] constraintRhs = numericVector(rightHandSide, 'right-hand side')
+        List<String> senses = constraintSenses != null ? stringVector(constraintSenses, 'constraint sense') : null
+
+        validateDimensions(variableNames, objectiveCoefficients, constraintCoefficients, constraintRhs)
         double[][] variableBounds = bounds == null ? defaultBounds(variableNames.size()) :
             numericMatrix(bounds, 'variable bounds')
-        if (variableBounds.length != 2 || variableBounds[0].length != variableNames.size() ||
-            variableBounds[1].length != variableNames.size()) {
-            throw new IllegalStateException('Variable bounds must be a 2 x variable-count matrix: [lower, upper]')
+        
+        double[] lowerBounds = new double[variableNames.size()]
+        double[] upperBounds = new double[variableNames.size()]
+        if (variableBounds.length == 2 && variableBounds[0].length == variableNames.size() && variableBounds[1].length == variableNames.size()) {
+            for (int i = 0; i < variableNames.size(); i++) {
+                lowerBounds[i] = variableBounds[0][i]
+                upperBounds[i] = variableBounds[1][i]
+            }
+        } else if (variableBounds.length == variableNames.size() && variableBounds[0].length == 2) {
+            for (int i = 0; i < variableNames.size(); i++) {
+                lowerBounds[i] = variableBounds[i][0]
+                upperBounds[i] = variableBounds[i][1]
+            }
+        } else {
+            throw new IllegalStateException('Variable bounds must be a 2 x N or N x 2 matrix: [lower, upper]')
         }
 
         String objectiveSense = objectiveSense(mathMeta)
@@ -69,8 +84,8 @@ final class OrToolsProvider implements MathProvider<OrToolsPlan, OrToolsResult> 
         try {
             List<MPVariable> variables = []
             for (int column = 0; column < variableNames.size(); column++) {
-                double lower = variableBounds[0][column]
-                double upper = variableBounds[1][column]
+                double lower = lowerBounds[column]
+                double upper = upperBounds[column]
                 if (lower > upper) {
                     throw new IllegalStateException("Variable '${variableNames[column]}' has lower bound ${lower} greater than upper bound ${upper}")
                 }
@@ -78,8 +93,17 @@ final class OrToolsProvider implements MathProvider<OrToolsPlan, OrToolsResult> 
             }
 
             for (int row = 0; row < constraintCoefficients.length; row++) {
-                MPConstraint constraint = solver.makeConstraint(
-                    Double.NEGATIVE_INFINITY, constraintUpperBounds[row], "constraint_${row}")
+                String sense = senses != null && senses.size() > row ? senses[row] : 'LE'
+                MPConstraint constraint
+                if (sense == 'LE' || sense == 'OpLe' || sense == '<=') {
+                    constraint = solver.makeConstraint(Double.NEGATIVE_INFINITY, constraintRhs[row], "constraint_${row}")
+                } else if (sense == 'GE' || sense == 'OpGe' || sense == '>=') {
+                    constraint = solver.makeConstraint(constraintRhs[row], Double.POSITIVE_INFINITY, "constraint_${row}")
+                } else if (sense == 'EQ' || sense == 'OpEq' || sense == '==') {
+                    constraint = solver.makeConstraint(constraintRhs[row], constraintRhs[row], "constraint_${row}")
+                } else {
+                    constraint = solver.makeConstraint(Double.NEGATIVE_INFINITY, constraintRhs[row], "constraint_${row}")
+                }
                 for (int column = 0; column < variables.size(); column++) {
                     constraint.setCoefficient(variables[column], constraintCoefficients[row][column])
                 }
@@ -182,6 +206,16 @@ final class OrToolsProvider implements MathProvider<OrToolsPlan, OrToolsResult> 
         ModelValue matrix = mathMeta.entity('Matrix').findByName(matrixId)
         if (matrix == null) throw new IllegalStateException("Missing Matrix '${matrixId}'")
         matrix
+    }
+
+    private static ModelValue optionalVector(final MathMeta mathMeta, final List<ModelValue> modelData,
+                                             final String purpose) {
+        List<ModelValue> matches = byPurpose(modelData, purpose)
+        if (matches.empty) return null
+        if (matches.size() != 1) throw new IllegalStateException("Expected at most one ${purpose}; found ${matches.size()}")
+        String vectorId = matches.first().get('vectorId') as String
+        if (!vectorId) throw new IllegalStateException("${purpose} must reference a Vector")
+        mathMeta.entity('Vector').findByName(vectorId)
     }
 
     private static ModelValue exactlyOne(final List<ModelValue> modelData, final String purpose) {

@@ -68,8 +68,8 @@ class MoquiSchemaInspectorTest {
         assert model.extensionCount == 4
         // Raw element count across the three sources; unique ids are fewer because MathData.xml
         // is allowed to redeclare a value from MathEntities.xml.
-        assert model.enumerationCount == 1204
-        assert model.enumerations.size() == 1163
+        assert model.enumerationCount == 1205
+        assert model.enumerations.size() == 1164
 
         // The moqui.basic allowlist: the enum catalogue, the status-flow family and units.
         assert model.entities.keySet().findAll { String name -> name.startsWith('moqui.basic') } as Set ==

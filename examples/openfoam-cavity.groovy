@@ -3,98 +3,50 @@
  * Grant of Patent License.
  */
 
-import org.moqui.math.dsl.MathModelType
-import org.moqui.math.dsl.MathModelSolvingMethod
-import org.moqui.math.dsl.MeshType
-import org.moqui.math.dsl.MeshPurpose
-import org.moqui.math.dsl.MeshAdaptationType
-import org.moqui.math.dsl.ParameterPurpose
-import org.moqui.math.dsl.ParameterType
-
 // =========================================================================
 // OpenFOAM Standard Tutorial: Lid-Driven Cavity Flow (icoFoam / simpleFoam)
 // Structured with SimScale Simulation Setup Taxonomy & Moqui Math Metamodel
 // =========================================================================
 
-// -------------------------------------------------------------------------
 // 1. SimScale Simulation Setup: Physical & Material Parameters
-// -------------------------------------------------------------------------
-ParameterDef('nuDef',
-    parameterCode: 'kinematicViscosity',
-    parameterName: 'Fluid Kinematic Viscosity',
-    purposeEnum: ParameterPurpose.FluidProperty,
-    parameterTypeEnum: ParameterType.NumberDecimal,
-    defaultValue: 0.01) // m^2/s
+ParameterDef('nuDef', code: 'kinematicViscosity', name: 'Fluid Kinematic Viscosity',
+    purpose: FluidProperty, type: NumberDecimal, defaultValue: 0.01)
+ParameterDef('rhoDef', code: 'density', name: 'Fluid Density',
+    purpose: FluidProperty, type: NumberDecimal, defaultValue: 1000.0)
 
-ParameterDef('rhoDef',
-    parameterCode: 'density',
-    parameterName: 'Fluid Density',
-    purposeEnum: ParameterPurpose.FluidProperty,
-    parameterTypeEnum: ParameterType.NumberDecimal,
-    defaultValue: 1000.0) // kg/m^3
-
-// -------------------------------------------------------------------------
 // 2. SimScale Simulation Setup: Boundary & Operating Parameters
-// -------------------------------------------------------------------------
-ParameterDef('lidVelocityDef',
-    parameterCode: 'lidVelocityX',
-    parameterName: 'Lid Velocity X',
-    purposeEnum: ParameterPurpose.BoundaryCondition,
-    parameterTypeEnum: ParameterType.NumberDecimal,
-    defaultValue: 1.0) // m/s (movingWall)
+ParameterDef('lidVelocityDef', code: 'lidVelocityX', name: 'Lid Velocity X',
+    purpose: BoundaryCondition, type: NumberDecimal, defaultValue: 1.0)
 
-// -------------------------------------------------------------------------
 // 3. SimScale Simulation Setup: Simulation Controls & Numerics
-// -------------------------------------------------------------------------
-ParameterDef('dtDef',
-    parameterCode: 'deltaT',
-    parameterName: 'Time Step Size',
-    purposeEnum: ParameterPurpose.SolverControl,
-    parameterTypeEnum: ParameterType.NumberDecimal,
-    defaultValue: 0.005)
+ParameterDef('dtDef', code: 'deltaT', name: 'Time Step Size',
+    purpose: SolverControl, type: NumberDecimal, defaultValue: 0.005)
+ParameterDef('endTimeDef', code: 'endTime', name: 'Simulation End Time',
+    purpose: SolverControl, type: NumberDecimal, defaultValue: 0.1)
+ParameterDef('pTolDef', code: 'residualToleranceP', name: 'Pressure Residual Tolerance',
+    purpose: NumericalScheme, type: NumberDecimal, defaultValue: 1e-6)
 
-ParameterDef('endTimeDef',
-    parameterCode: 'endTime',
-    parameterName: 'Simulation End Time',
-    purposeEnum: ParameterPurpose.SolverControl,
-    parameterTypeEnum: ParameterType.NumberDecimal,
-    defaultValue: 0.1)
-
-ParameterDef('pTolDef',
-    parameterCode: 'residualToleranceP',
-    parameterName: 'Pressure Residual Tolerance',
-    purposeEnum: ParameterPurpose.NumericalScheme,
-    parameterTypeEnum: ParameterType.NumberDecimal,
-    defaultValue: 1e-6)
-
-// -------------------------------------------------------------------------
 // 4. Mesh Spatial Bounds & Discretization Parameter Definitions
-// -------------------------------------------------------------------------
-ParameterDef('xMinDef', parameterCode: 'xMin', parameterName: 'X Min', purposeEnum: ParameterPurpose.Mesh, parameterTypeEnum: ParameterType.NumberDecimal, defaultValue: 0.0)
-ParameterDef('xMaxDef', parameterCode: 'xMax', parameterName: 'X Max', purposeEnum: ParameterPurpose.Mesh, parameterTypeEnum: ParameterType.NumberDecimal, defaultValue: 0.1)
-ParameterDef('yMinDef', parameterCode: 'yMin', parameterName: 'Y Min', purposeEnum: ParameterPurpose.Mesh, parameterTypeEnum: ParameterType.NumberDecimal, defaultValue: 0.0)
-ParameterDef('yMaxDef', parameterCode: 'yMax', parameterName: 'Y Max', purposeEnum: ParameterPurpose.Mesh, parameterTypeEnum: ParameterType.NumberDecimal, defaultValue: 0.1)
-ParameterDef('zMinDef', parameterCode: 'zMin', parameterName: 'Z Min', purposeEnum: ParameterPurpose.Mesh, parameterTypeEnum: ParameterType.NumberDecimal, defaultValue: 0.0)
-ParameterDef('zMaxDef', parameterCode: 'zMax', parameterName: 'Z Max', purposeEnum: ParameterPurpose.Mesh, parameterTypeEnum: ParameterType.NumberDecimal, defaultValue: 0.01)
+ParameterDef('xMinDef', code: 'xMin', name: 'X Min', purpose: Mesh, type: NumberDecimal, defaultValue: 0.0)
+ParameterDef('xMaxDef', code: 'xMax', name: 'X Max', purpose: Mesh, type: NumberDecimal, defaultValue: 0.1)
+ParameterDef('yMinDef', code: 'yMin', name: 'Y Min', purpose: Mesh, type: NumberDecimal, defaultValue: 0.0)
+ParameterDef('yMaxDef', code: 'yMax', name: 'Y Max', purpose: Mesh, type: NumberDecimal, defaultValue: 0.1)
+ParameterDef('zMinDef', code: 'zMin', name: 'Z Min', purpose: Mesh, type: NumberDecimal, defaultValue: 0.0)
+ParameterDef('zMaxDef', code: 'zMax', name: 'Z Max', purpose: Mesh, type: NumberDecimal, defaultValue: 0.01)
 
-ParameterDef('nxDef', parameterCode: 'nx', parameterName: 'Cells in X', purposeEnum: ParameterPurpose.Mesh, parameterTypeEnum: ParameterType.NumberInteger, defaultValue: 20)
-ParameterDef('nyDef', parameterCode: 'ny', parameterName: 'Cells in Y', purposeEnum: ParameterPurpose.Mesh, parameterTypeEnum: ParameterType.NumberInteger, defaultValue: 20)
-ParameterDef('nzDef', parameterCode: 'nz', parameterName: 'Cells in Z', purposeEnum: ParameterPurpose.Mesh, parameterTypeEnum: ParameterType.NumberInteger, defaultValue: 1)
+ParameterDef('nxDef', code: 'nx', name: 'Cells in X', purpose: Mesh, type: NumberInteger, defaultValue: 20)
+ParameterDef('nyDef', code: 'ny', name: 'Cells in Y', purpose: Mesh, type: NumberInteger, defaultValue: 20)
+ParameterDef('nzDef', code: 'nz', name: 'Cells in Z', purpose: Mesh, type: NumberInteger, defaultValue: 1)
 
-ParameterDef('gradingXDef', parameterCode: 'gradingX', parameterName: 'Grading X', purposeEnum: ParameterPurpose.Mesh, parameterTypeEnum: ParameterType.NumberDecimal, defaultValue: 1.0)
-ParameterDef('gradingYDef', parameterCode: 'gradingY', parameterName: 'Grading Y', purposeEnum: ParameterPurpose.Mesh, parameterTypeEnum: ParameterType.NumberDecimal, defaultValue: 2.0)
-ParameterDef('gradingZDef', parameterCode: 'gradingZ', parameterName: 'Grading Z', purposeEnum: ParameterPurpose.Mesh, parameterTypeEnum: ParameterType.NumberDecimal, defaultValue: 1.0)
+ParameterDef('gradingXDef', code: 'gradingX', name: 'Grading X', purpose: Mesh, type: NumberDecimal, defaultValue: 1.0)
+ParameterDef('gradingYDef', code: 'gradingY', name: 'Grading Y', purpose: Mesh, type: NumberDecimal, defaultValue: 2.0)
+ParameterDef('gradingZDef', code: 'gradingZ', name: 'Grading Z', purpose: Mesh, type: NumberDecimal, defaultValue: 1.0)
 
-// -------------------------------------------------------------------------
 // 5. Domain & Mesh Discretization: Local Geometric Grading / Refinement
-// -------------------------------------------------------------------------
 Graph('CavityGraph', description: 'Discrete topology graph for cavity mesh')
 
-Mesh('CavityMesh',
-    graphId: 'CavityGraph',
-    meshTypeEnumId: 'MtHexahedral',
-    purposeEnumId: 'MpCFD',
-    adaptationTypeEnumId: 'MatRRefinement',
+Mesh('CavityMesh', graphId: 'CavityGraph', type: Hexahedral, purpose: CFD,
+    adaptation: RRefinement,
     description: 'Hexahedral block mesh with geometric grading towards walls for boundary layer resolution')
 
 // Boundary patches modeled as MeshGroup entities (SimScale / OpenFOAM patches)
@@ -102,83 +54,73 @@ MeshGroup('movingWall', meshId: 'CavityMesh', groupName: 'movingWall', descripti
 MeshGroup('fixedWalls', meshId: 'CavityMesh', groupName: 'fixedWalls', description: 'Side and bottom stationary no-slip walls')
 MeshGroup('frontAndBack', meshId: 'CavityMesh', groupName: 'frontAndBack', description: '2D symmetry empty boundary patches')
 
-// -------------------------------------------------------------------------
 // 6. Concrete Simulation Model Instance (icoFoam transient laminar solver)
-// -------------------------------------------------------------------------
-MathModelDef('IncompressibleCavityFlow', modelTypeEnum: MathModelType.CFD) {
-    description 'Standard OpenFOAM Lid-Driven Cavity benchmark for laminar incompressible flow'
+MathModelDef('IncompressibleCavityFlow', type: CFD,
+    description: 'Standard OpenFOAM Lid-Driven Cavity benchmark for laminar incompressible flow') {
 
     pipeline('IcoFoamStep', stepSeqId: '01', sequenceNum: 1, stepName: 'IcoFoamSolve',
-        solvingMethodEnum: MathModelSolvingMethod.OpenFoamIcoFoam)
+        method: OpenFoamIcoFoam)
 
-    MathModel('CavityIcoFoam',
-        meshId: 'CavityMesh',
-        statusId: 'MathModelDraft') {
-        description 'Transient laminar incompressible solver instance for cavity'
+    MathModel('CavityIcoFoam', meshId: 'CavityMesh', status: Draft,
+        description: 'Transient laminar incompressible solver instance for cavity') {
 
         // Bind physical & numerical parameters
-        parameters('Param.nu', parameterDefId: 'nuDef', parameterAlias: 'nu', numericValue: 0.01)
-        parameters('Param.rho', parameterDefId: 'rhoDef', parameterAlias: 'rho', numericValue: 1000.0)
-        parameters('Param.lidVelocity', parameterDefId: 'lidVelocityDef', parameterAlias: 'lidVelocity', numericValue: 1.0)
-        parameters('Param.deltaT', parameterDefId: 'dtDef', parameterAlias: 'deltaT', numericValue: 0.005)
-        parameters('Param.endTime', parameterDefId: 'endTimeDef', parameterAlias: 'endTime', numericValue: 0.1)
-        parameters('Param.pTolerance', parameterDefId: 'pTolDef', parameterAlias: 'pTolerance', numericValue: 1e-6)
+        parameters('Param.nu', def: 'nuDef', alias: 'nu', value: 0.01)
+        parameters('Param.rho', def: 'rhoDef', alias: 'rho', value: 1000.0)
+        parameters('Param.lidVelocity', def: 'lidVelocityDef', alias: 'lidVelocity', value: 1.0)
+        parameters('Param.deltaT', def: 'dtDef', alias: 'deltaT', value: 0.005)
+        parameters('Param.endTime', def: 'endTimeDef', alias: 'endTime', value: 0.1)
+        parameters('Param.pTolerance', def: 'pTolDef', alias: 'pTolerance', value: 1e-6)
 
         // Mesh spatial bounds and cell division parameters
-        parameters('Mesh.xMin', parameterDefId: 'xMinDef', parameterAlias: 'xMin', numericValue: 0.0)
-        parameters('Mesh.xMax', parameterDefId: 'xMaxDef', parameterAlias: 'xMax', numericValue: 0.1)
-        parameters('Mesh.yMin', parameterDefId: 'yMinDef', parameterAlias: 'yMin', numericValue: 0.0)
-        parameters('Mesh.yMax', parameterDefId: 'yMaxDef', parameterAlias: 'yMax', numericValue: 0.1)
-        parameters('Mesh.zMin', parameterDefId: 'zMinDef', parameterAlias: 'zMin', numericValue: 0.0)
-        parameters('Mesh.zMax', parameterDefId: 'zMaxDef', parameterAlias: 'zMax', numericValue: 0.01)
-        parameters('Mesh.nx', parameterDefId: 'nxDef', parameterAlias: 'nx', numericValue: 20)
-        parameters('Mesh.ny', parameterDefId: 'nyDef', parameterAlias: 'ny', numericValue: 20)
-        parameters('Mesh.nz', parameterDefId: 'nzDef', parameterAlias: 'nz', numericValue: 1)
+        parameters('Mesh.xMin', def: 'xMinDef', alias: 'xMin', value: 0.0)
+        parameters('Mesh.xMax', def: 'xMaxDef', alias: 'xMax', value: 0.1)
+        parameters('Mesh.yMin', def: 'yMinDef', alias: 'yMin', value: 0.0)
+        parameters('Mesh.yMax', def: 'yMaxDef', alias: 'yMax', value: 0.1)
+        parameters('Mesh.zMin', def: 'zMinDef', alias: 'zMin', value: 0.0)
+        parameters('Mesh.zMax', def: 'zMaxDef', alias: 'zMax', value: 0.01)
+        parameters('Mesh.nx', def: 'nxDef', alias: 'nx', value: 20)
+        parameters('Mesh.ny', def: 'nyDef', alias: 'ny', value: 20)
+        parameters('Mesh.nz', def: 'nzDef', alias: 'nz', value: 1)
 
         // Local grading refinement: grading towards walls
-        parameters('Mesh.gradingX', parameterDefId: 'gradingXDef', parameterAlias: 'gradingX', numericValue: 1.0)
-        parameters('Mesh.gradingY', parameterDefId: 'gradingYDef', parameterAlias: 'gradingY', numericValue: 2.0)
-        parameters('Mesh.gradingZ', parameterDefId: 'gradingZDef', parameterAlias: 'gradingZ', numericValue: 1.0)
+        parameters('Mesh.gradingX', def: 'gradingXDef', alias: 'gradingX', value: 1.0)
+        parameters('Mesh.gradingY', def: 'gradingYDef', alias: 'gradingY', value: 2.0)
+        parameters('Mesh.gradingZ', def: 'gradingZDef', alias: 'gradingZ', value: 1.0)
     }
 }
 
-// -------------------------------------------------------------------------
 // 7. Standalone Incompressible FVM Model Instance (built-in finite volume)
-// -------------------------------------------------------------------------
-MathModelDef('IncompressibleCavityFlowFvm', modelTypeEnum: MathModelType.CFD) {
-    description 'Built-in Finite Volume Method benchmark for laminar incompressible flow'
+MathModelDef('IncompressibleCavityFlowFvm', type: CFD,
+    description: 'Built-in Finite Volume Method benchmark for laminar incompressible flow') {
 
-    pipeline('FvmStep', stepSeqId: '01', sequenceNum: 1, stepName: 'FvmSolve',
-        solvingMethodEnum: MathModelSolvingMethod.Fvm)
+    pipeline('FvmStep', stepSeqId: '01', sequenceNum: 1, stepName: 'FvmSolve', method: Fvm)
 
-    MathModel('CavityFvm',
-        meshId: 'CavityMesh',
-        statusId: 'MathModelDraft') {
-        description 'Transient laminar incompressible solver instance using built-in FVM'
+    MathModel('CavityFvm', meshId: 'CavityMesh', status: Draft,
+        description: 'Transient laminar incompressible solver instance using built-in FVM') {
 
         // Bind physical & numerical parameters
-        parameters('Param.Fvm.nu', parameterDefId: 'nuDef', parameterAlias: 'nu', numericValue: 0.01)
-        parameters('Param.Fvm.rho', parameterDefId: 'rhoDef', parameterAlias: 'rho', numericValue: 1000.0)
-        parameters('Param.Fvm.lidVelocity', parameterDefId: 'lidVelocityDef', parameterAlias: 'lidVelocity', numericValue: 1.0)
-        parameters('Param.Fvm.deltaT', parameterDefId: 'dtDef', parameterAlias: 'deltaT', numericValue: 0.005)
-        parameters('Param.Fvm.endTime', parameterDefId: 'endTimeDef', parameterAlias: 'endTime', numericValue: 0.1)
-        parameters('Param.Fvm.pTolerance', parameterDefId: 'pTolDef', parameterAlias: 'pTolerance', numericValue: 1e-4)
+        parameters('Param.Fvm.nu', def: 'nuDef', alias: 'nu', value: 0.01)
+        parameters('Param.Fvm.rho', def: 'rhoDef', alias: 'rho', value: 1000.0)
+        parameters('Param.Fvm.lidVelocity', def: 'lidVelocityDef', alias: 'lidVelocity', value: 1.0)
+        parameters('Param.Fvm.deltaT', def: 'dtDef', alias: 'deltaT', value: 0.005)
+        parameters('Param.Fvm.endTime', def: 'endTimeDef', alias: 'endTime', value: 0.1)
+        parameters('Param.Fvm.pTolerance', def: 'pTolDef', alias: 'pTolerance', value: 1e-4)
 
         // Mesh spatial bounds and cell division parameters
-        parameters('Mesh.Fvm.xMin', parameterDefId: 'xMinDef', parameterAlias: 'xMin', numericValue: 0.0)
-        parameters('Mesh.Fvm.xMax', parameterDefId: 'xMaxDef', parameterAlias: 'xMax', numericValue: 0.1)
-        parameters('Mesh.Fvm.yMin', parameterDefId: 'yMinDef', parameterAlias: 'yMin', numericValue: 0.0)
-        parameters('Mesh.Fvm.yMax', parameterDefId: 'yMaxDef', parameterAlias: 'yMax', numericValue: 0.1)
-        parameters('Mesh.Fvm.zMin', parameterDefId: 'zMinDef', parameterAlias: 'zMin', numericValue: 0.0)
-        parameters('Mesh.Fvm.zMax', parameterDefId: 'zMaxDef', parameterAlias: 'zMax', numericValue: 0.01)
-        parameters('Mesh.Fvm.nx', parameterDefId: 'nxDef', parameterAlias: 'nx', numericValue: 20)
-        parameters('Mesh.Fvm.ny', parameterDefId: 'nyDef', parameterAlias: 'ny', numericValue: 20)
-        parameters('Mesh.Fvm.nz', parameterDefId: 'nzDef', parameterAlias: 'nz', numericValue: 1)
+        parameters('Mesh.Fvm.xMin', def: 'xMinDef', alias: 'xMin', value: 0.0)
+        parameters('Mesh.Fvm.xMax', def: 'xMaxDef', alias: 'xMax', value: 0.1)
+        parameters('Mesh.Fvm.yMin', def: 'yMinDef', alias: 'yMin', value: 0.0)
+        parameters('Mesh.Fvm.yMax', def: 'yMaxDef', alias: 'yMax', value: 0.1)
+        parameters('Mesh.Fvm.zMin', def: 'zMinDef', alias: 'zMin', value: 0.0)
+        parameters('Mesh.Fvm.zMax', def: 'zMaxDef', alias: 'zMax', value: 0.01)
+        parameters('Mesh.Fvm.nx', def: 'nxDef', alias: 'nx', value: 20)
+        parameters('Mesh.Fvm.ny', def: 'nyDef', alias: 'ny', value: 20)
+        parameters('Mesh.Fvm.nz', def: 'nzDef', alias: 'nz', value: 1)
 
         // Local grading refinement: grading towards walls
-        parameters('Mesh.Fvm.gradingX', parameterDefId: 'gradingXDef', parameterAlias: 'gradingX', numericValue: 1.0)
-        parameters('Mesh.Fvm.gradingY', parameterDefId: 'gradingYDef', parameterAlias: 'gradingY', numericValue: 2.0)
-        parameters('Mesh.Fvm.gradingZ', parameterDefId: 'gradingZDef', parameterAlias: 'gradingZ', numericValue: 1.0)
+        parameters('Mesh.Fvm.gradingX', def: 'gradingXDef', alias: 'gradingX', value: 1.0)
+        parameters('Mesh.Fvm.gradingY', def: 'gradingYDef', alias: 'gradingY', value: 2.0)
+        parameters('Mesh.Fvm.gradingZ', def: 'gradingZDef', alias: 'gradingZ', value: 1.0)
     }
 }
-

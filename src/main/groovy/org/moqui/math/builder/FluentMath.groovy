@@ -128,6 +128,24 @@ class FluentMath {
         matrix(null, matrixId, closure)
     }
 
+    EntityRef<Matrix> matrix(final Map<String, Object> args, final String matrixId, final List<?> data) {
+        Map<String, Object> merged = new LinkedHashMap<>()
+        if (args) merged.putAll(args)
+        merged.put('data', data)
+        matrix(merged, matrixId, (Closure<?>) null)
+    }
+
+    EntityRef<Matrix> matrix(final String matrixId, final List<?> data, final Map<String, Object> args = null) {
+        Map<String, Object> merged = new LinkedHashMap<>()
+        if (args) merged.putAll(args)
+        merged.put('data', data)
+        matrix(merged, matrixId, (Closure<?>) null)
+    }
+
+    EntityRef<Matrix> matrix(final String matrixId, final Map<String, Object> args) {
+        matrix(args, matrixId, (Closure<?>) null)
+    }
+
     EntityRef<Vector> vector(final Map<String, Object> args, final String vectorId = null,
                              @DelegatesTo(value = VectorBuilder, strategy = Closure.DELEGATE_FIRST) final Closure<?> closure = null) {
         String id = vectorId ?: (args?.get('vectorId') as String) ?: (args?.get('id') as String)
@@ -653,9 +671,15 @@ class MatrixBuilder {
     MatrixBuilder purpose(MatrixPurpose p) { this.purpose = p; this }
     MatrixBuilder purpose(Object p) {
         if (p instanceof MatrixPurpose) this.purpose = (MatrixPurpose) p
-        else if (p instanceof org.moqui.math.dsl.DslSymbol) {
+        else if (p instanceof org.moqui.math.dsl.DslDeferredSymbol) {
+            String symName = ((org.moqui.math.dsl.DslDeferredSymbol) p).name
+            this.purpose = MatrixPurpose.values().find { it.name() == symName || it.id == symName }
+        } else if (p instanceof org.moqui.math.dsl.DslSymbol) {
             String symName = ((org.moqui.math.dsl.DslSymbol) p).name
             this.purpose = MatrixPurpose.values().find { it.name() == symName || it.id == ((org.moqui.math.dsl.DslSymbol) p).id }
+        } else if (p instanceof DslEnumValue) {
+            String symId = ((DslEnumValue) p).id
+            this.purpose = MatrixPurpose.values().find { it.name() == ((Enum) p).name() || it.id == symId }
         } else if (p instanceof String) {
             this.purpose = MatrixPurpose.values().find { it.name() == p || it.id == p }
         }
@@ -664,9 +688,15 @@ class MatrixBuilder {
     MatrixBuilder domainSpace(MathSpace s) { this.domainSpace = s; this }
     MatrixBuilder domainSpace(Object s) {
         if (s instanceof MathSpace) this.domainSpace = (MathSpace) s
-        else if (s instanceof org.moqui.math.dsl.DslSymbol) {
+        else if (s instanceof org.moqui.math.dsl.DslDeferredSymbol) {
+            String symName = ((org.moqui.math.dsl.DslDeferredSymbol) s).name
+            this.domainSpace = MathSpace.values().find { it.name() == symName || it.id == symName }
+        } else if (s instanceof org.moqui.math.dsl.DslSymbol) {
             String symName = ((org.moqui.math.dsl.DslSymbol) s).name
             this.domainSpace = MathSpace.values().find { it.name() == symName || it.id == ((org.moqui.math.dsl.DslSymbol) s).id }
+        } else if (s instanceof DslEnumValue) {
+            String symId = ((DslEnumValue) s).id
+            this.domainSpace = MathSpace.values().find { it.name() == ((Enum) s).name() || it.id == symId }
         } else if (s instanceof String) {
             this.domainSpace = MathSpace.values().find { it.name() == s || it.id == s }
         }
@@ -675,9 +705,15 @@ class MatrixBuilder {
     MatrixBuilder codomainSpace(MathSpace s) { this.codomainSpace = s; this }
     MatrixBuilder codomainSpace(Object s) {
         if (s instanceof MathSpace) this.codomainSpace = (MathSpace) s
-        else if (s instanceof org.moqui.math.dsl.DslSymbol) {
+        else if (s instanceof org.moqui.math.dsl.DslDeferredSymbol) {
+            String symName = ((org.moqui.math.dsl.DslDeferredSymbol) s).name
+            this.codomainSpace = MathSpace.values().find { it.name() == symName || it.id == symName }
+        } else if (s instanceof org.moqui.math.dsl.DslSymbol) {
             String symName = ((org.moqui.math.dsl.DslSymbol) s).name
             this.codomainSpace = MathSpace.values().find { it.name() == symName || it.id == ((org.moqui.math.dsl.DslSymbol) s).id }
+        } else if (s instanceof DslEnumValue) {
+            String symId = ((DslEnumValue) s).id
+            this.codomainSpace = MathSpace.values().find { it.name() == ((Enum) s).name() || it.id == symId }
         } else if (s instanceof String) {
             this.codomainSpace = MathSpace.values().find { it.name() == s || it.id == s }
         }
@@ -688,7 +724,22 @@ class MatrixBuilder {
         this.componentArray = obj instanceof String ? (String) obj : JsonOutput.toJson(obj)
         this
     }
-    MatrixBuilder data(Object obj) { componentArray(obj) }
+    MatrixBuilder data(Object obj) {
+        if (obj instanceof List) {
+            List<?> list = (List<?>) obj
+            if (!list.isEmpty() && list.get(0) instanceof List) {
+                if (rows == null) rows = (long) list.size()
+                if (cols == null) cols = (long) ((List<?>) list.get(0)).size()
+                if (domainSpace == null) {
+                    domainSpace = cols == 3L ? MathSpace.R3 : MathSpace.R2
+                }
+                if (codomainSpace == null) {
+                    codomainSpace = rows == 3L ? MathSpace.R3 : MathSpace.R2
+                }
+            }
+        }
+        componentArray(obj)
+    }
     String contentLocation
     String contentTypeEnumId
     DslEnumValue contentType
@@ -755,6 +806,14 @@ class MatrixBuilder {
         values.put('cols', cols != null ? cols : 1L)
         values.put('matrixTypeEnumId', matrixType ? matrixType.id : 'MtDense')
         values.put('purposeEnumId', purpose ? purpose.id : 'MpOriginal')
+        if (domainSpace == null && cols != null) {
+            if (cols == 3L) domainSpace = MathSpace.R3
+            else if (cols == 2L) domainSpace = MathSpace.R2
+        }
+        if (codomainSpace == null && rows != null) {
+            if (rows == 3L) codomainSpace = MathSpace.R3
+            else if (rows == 2L) codomainSpace = MathSpace.R2
+        }
         values.put('domainSpaceEnumId', domainSpace ? domainSpace.id : 'Eng2DEuclideanSpace')
         values.put('codomainSpaceEnumId', codomainSpace ? codomainSpace.id : 'Eng2DEuclideanSpace')
         if (componentArray) values.put('componentArray', componentArray)
@@ -762,6 +821,7 @@ class MatrixBuilder {
         if (contentType) values.put('contentTypeEnumId', contentType.id)
         else if (contentTypeEnumId) values.put('contentTypeEnumId', contentTypeEnumId)
         if (name) values.put('name', name)
+        else if (matrixId) values.put('name', matrixId)
         if (symbol) values.put('symbol', symbol)
         if (description) values.put('description', description)
         mathMeta.declare('moqui.math.Matrix', matrixId, values)
@@ -863,6 +923,7 @@ class VectorBuilder {
         if (contentType) values.put('contentTypeEnumId', contentType.id)
         else if (contentTypeEnumId) values.put('contentTypeEnumId', contentTypeEnumId)
         if (name) values.put('name', name)
+        else if (vectorId) values.put('name', vectorId)
         if (symbol) values.put('symbol', symbol)
         if (description) values.put('description', description)
         mathMeta.declare('moqui.math.Vector', vectorId, values)
@@ -880,9 +941,13 @@ class TensorBuilder {
     DslEnumValue dataType
     DslEnumValue device
     String componentArray
+    String contentLocation
+    String contentTypeEnumId
+    DslEnumValue contentType
     String name
     String symbol
     String description
+    Long tensorSize
 
     TensorBuilder(final MathMeta mathMeta, final String tensorId) {
         this.mathMeta = mathMeta
@@ -891,10 +956,8 @@ class TensorBuilder {
 
     TensorBuilder rank(long r) { this.rank = r; this }
     TensorBuilder rank(int r) { this.rank = (long) r; this }
-    TensorBuilder dimensions(long d) { this.rank = d; this }
-    TensorBuilder dimensions(int d) { this.rank = (long) d; this }
-    TensorBuilder shape(List<?> s) { this.shape = JsonOutput.toJson(s); this }
     TensorBuilder shape(String s) { this.shape = s; this }
+    TensorBuilder shape(List<Integer> dims) { this.shape = JsonOutput.toJson(dims); this }
     TensorBuilder purpose(DslEnumValue p) { this.purpose = p; this }
     TensorBuilder dataType(DslEnumValue dt) { this.dataType = dt; this }
     TensorBuilder device(DslEnumValue dev) { this.device = dev; this }
@@ -904,10 +967,6 @@ class TensorBuilder {
         this
     }
     TensorBuilder data(Object obj) { componentArray(obj) }
-    String contentLocation
-    String contentTypeEnumId
-    DslEnumValue contentType
-
     TensorBuilder contentLocation(String loc) { this.contentLocation = loc; this }
     TensorBuilder contentType(DslEnumValue type) { this.contentType = type; this }
     TensorBuilder contentType(String typeId) { this.contentTypeEnumId = typeId; this }
@@ -928,14 +987,16 @@ class TensorBuilder {
     TensorBuilder name(String n) { this.name = n; this }
     TensorBuilder symbol(String s) { this.symbol = s; this }
     TensorBuilder description(String d) { this.description = d; this }
+    TensorBuilder size(long s) { this.tensorSize = s; this }
+    TensorBuilder size(int s) { this.tensorSize = (long) s; this }
+    private void rank(Number n) { if (n != null) this.rank = n.longValue() }
+    private void size(Number n) { if (n != null) this.tensorSize = n.longValue() }
 
     TensorBuilder applyArgs(Map<String, Object> args) {
-        if (args.containsKey('rank')) rank((args.rank as Number).longValue())
-        if (args.containsKey('dimensions')) dimensions((args.dimensions as Number).longValue())
+        if (args.containsKey('rank')) rank(args.rank as Number)
         if (args.containsKey('shape')) {
-            Object s = args.shape
-            if (s instanceof List) shape((List<?>) s)
-            else shape(s.toString())
+            if (args.shape instanceof List) shape(args.shape as List<Integer>)
+            else shape(args.shape as String)
         }
         if (args.containsKey('purpose')) purpose(args.purpose as DslEnumValue)
         if (args.containsKey('dataType')) dataType(args.dataType as DslEnumValue)
@@ -950,19 +1011,21 @@ class TensorBuilder {
         if (args.containsKey('name')) name(args.name as String)
         if (args.containsKey('symbol')) symbol(args.symbol as String)
         if (args.containsKey('description')) description(args.description as String)
+        if (args.containsKey('size')) size(args.size as Number)
         this
     }
 
     EntityRef<Tensor> build() {
-        Long tensorSize = null
-        if (contentLocation && (shape == null || shape.isEmpty())) {
+        if (contentLocation && (shape == null || rank == null)) {
             File f = new File(contentLocation)
             if (f.exists() && f.name.endsWith('.npy')) {
                 try {
                     org.moqui.math.memory.NpyReader.NpyHeader hdr = org.moqui.math.memory.NpyReader.parseHeader(f.toPath())
-                    shape = JsonOutput.toJson(hdr.shape)
-                    rank = (long) hdr.shape.size()
-                    tensorSize = hdr.totalElements
+                    if (!hdr.shape.isEmpty()) {
+                        if (rank == null) rank = (long) hdr.shape.size()
+                        if (shape == null) shape = JsonOutput.toJson(hdr.shape)
+                        if (tensorSize == null) tensorSize = hdr.totalElements
+                    }
                 } catch (Exception ignored) {}
             }
         }
@@ -984,6 +1047,7 @@ class TensorBuilder {
         if (contentType) values.put('contentTypeEnumId', contentType.id)
         else if (contentTypeEnumId) values.put('contentTypeEnumId', contentTypeEnumId)
         if (name) values.put('name', name)
+        else if (tensorId) values.put('name', tensorId)
         if (symbol) values.put('symbol', symbol)
         if (description) values.put('description', description)
         mathMeta.declare('moqui.math.Tensor', tensorId, values)
@@ -1018,14 +1082,25 @@ class TransformationBuilder {
     TransformationBuilder name(String n) { this.name = n; this }
     TransformationBuilder symbol(String s) { this.symbol = s; this }
     TransformationBuilder description(String d) { this.description = d; this }
-    TransformationBuilder type(TransformationType t) { this.type = t; this }
+    TransformationBuilder type(TransformationType t) { if (t != null) this.type = t; this }
     TransformationBuilder type(Object t) {
-        if (t instanceof TransformationType) this.type = (TransformationType) t
-        else if (t instanceof org.moqui.math.dsl.DslSymbol) {
+        if (t instanceof TransformationType) {
+            this.type = (TransformationType) t
+        } else if (t instanceof org.moqui.math.dsl.DslDeferredSymbol) {
+            String symName = ((org.moqui.math.dsl.DslDeferredSymbol) t).name
+            TransformationType match = TransformationType.values().find { it.name() == symName || it.id == symName }
+            if (match != null) this.type = match
+        } else if (t instanceof org.moqui.math.dsl.DslSymbol) {
             String symName = ((org.moqui.math.dsl.DslSymbol) t).name
-            this.type = TransformationType.values().find { it.name() == symName || it.id == ((org.moqui.math.dsl.DslSymbol) t).id }
+            TransformationType match = TransformationType.values().find { it.name() == symName || it.id == ((org.moqui.math.dsl.DslSymbol) t).id }
+            if (match != null) this.type = match
+        } else if (t instanceof DslEnumValue) {
+            String symId = ((DslEnumValue) t).id
+            TransformationType match = TransformationType.values().find { it.name() == ((Enum) t).name() || it.id == symId }
+            if (match != null) this.type = match
         } else if (t instanceof String) {
-            this.type = TransformationType.values().find { it.name() == t || it.id == t }
+            TransformationType match = TransformationType.values().find { it.name() == t || it.id == t }
+            if (match != null) this.type = match
         }
         this
     }
@@ -1248,11 +1323,7 @@ class TransformationBuilder {
         if (args.containsKey('name')) name(args.name as String)
         if (args.containsKey('symbol')) symbol(args.symbol as String)
         if (args.containsKey('description')) description(args.description as String)
-        if (args.containsKey('type')) {
-            Object t = args.type
-            if (t instanceof TransformationType) type((TransformationType) t)
-            else if (t instanceof String) type(TransformationType.valueOf((String) t))
-        }
+        if (args.containsKey('type')) type(args.type)
         if (args.containsKey('purpose')) {
             Object p = args.purpose
             if (p instanceof TransformationPurpose) purpose((TransformationPurpose) p)

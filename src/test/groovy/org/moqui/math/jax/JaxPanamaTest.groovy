@@ -120,6 +120,7 @@ class JaxPanamaTest {
     }
 
     @Test
+    @Tag('libtorch-native')
     void testJaxAndTorchParity() {
         MathMeta mathMeta = MathDsl.evaluate(
             new File(System.getProperty('user.dir'), 'examples/matrix-product.groovy'))

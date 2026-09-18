@@ -1,20 +1,25 @@
+/*
+ * This software is in the public domain under CC0 1.0 Universal plus a
+ * Grant of Patent License.
+ */
+
 MathModelDef('OpenCvVisionModel',
-    modelType: ComputerVision,
-    usageContext: Inference,
+    modelTypeEnum: MathModelType.ComputerVision,
+    usageContextEnum: MathModelUsageContext.Inference,
     modelName: 'OpenCV Computer Vision Filtering Pipeline',
     description: 'Gaussian Blur followed by Sobel Gradient and 2D Spatial Filtering') {
 
     pipeline('BlurStep', stepSeqId: '01', sequenceNum: 10,
         transformationId: 'GaussianBlur', stepName: 'Gaussian Smoothing',
-        solvingMethod: OpenCv) {
-        Transformation('GaussianBlur', transformationType: GaussianBlur,
+        solvingMethodEnum: MathModelSolvingMethod.OpenCv) {
+        Transformation('GaussianBlur', transformationTypeEnum: TransformationType.GaussianBlur,
             name: 'Gaussian Smoothing')
     }
 
     pipeline('SobelStep', stepSeqId: '02', sequenceNum: 20,
         transformationId: 'SobelGradient', stepName: 'Sobel Horizontal Gradient',
-        solvingMethod: OpenCv) {
-        Transformation('SobelGradient', transformationType: Sobel,
+        solvingMethodEnum: MathModelSolvingMethod.OpenCv) {
+        Transformation('SobelGradient', transformationTypeEnum: TransformationType.Sobel,
             name: 'Sobel Horizontal Gradient')
     }
 
@@ -23,8 +28,8 @@ MathModelDef('OpenCvVisionModel',
         statusId: 'MathModelDraft',
         description: 'Gaussian smoothing and Sobel edge detection') {
 
-        Matrix('InputImage', matrixType: MatrixType.Dense, purpose: MatrixPurpose.Original,
-            domainSpace: R2, codomainSpace: R2,
+        Matrix('InputImage', matrixTypeEnum: MatrixType.Dense, purposeEnum: MatrixPurpose.Original,
+            domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
             name: 'InputImage', rows: 8, cols: 8)
     }
 }

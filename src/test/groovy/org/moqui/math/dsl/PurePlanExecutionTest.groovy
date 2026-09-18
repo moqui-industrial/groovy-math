@@ -5,6 +5,7 @@
 
 package org.moqui.math.dsl
 
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.moqui.math.MathEngine
 import org.moqui.math.libtorch.LibTorchPlan
@@ -15,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 
+@Tag('libtorch-native')
 class PurePlanExecutionTest {
 
     @Test
