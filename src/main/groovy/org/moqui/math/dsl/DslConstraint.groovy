@@ -11,8 +11,8 @@ import groovy.transform.CompileStatic
 class DslConstraint {
     String name
     final DslExpression expression
-    final String operator // 'LE', 'GE', 'EQ'
-    final double rhs
+    String operator // 'LE', 'GE', 'EQ'
+    double rhs
 
     DslConstraint(final DslExpression expression, final String operator, final double rhs) {
         this.expression = expression
@@ -22,6 +22,24 @@ class DslConstraint {
 
     DslConstraint withName(final String name) {
         this.name = name
+        this
+    }
+
+    DslConstraint le(final Number rhs) {
+        this.operator = 'LE'
+        this.rhs = rhs.doubleValue() - (expression != null ? expression.constant : 0.0d)
+        this
+    }
+
+    DslConstraint ge(final Number rhs) {
+        this.operator = 'GE'
+        this.rhs = rhs.doubleValue() - (expression != null ? expression.constant : 0.0d)
+        this
+    }
+
+    DslConstraint eq(final Number rhs) {
+        this.operator = 'EQ'
+        this.rhs = rhs.doubleValue() - (expression != null ? expression.constant : 0.0d)
         this
     }
 }

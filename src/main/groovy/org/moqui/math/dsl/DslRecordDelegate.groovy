@@ -52,7 +52,9 @@ final class DslRecordDelegate {
         Map<String, Integer> varIndex = new LinkedHashMap<>()
         for (int i = 0; i < nVars; i++) varIndex.put(varNames.get(i), i)
 
-        // 1. Decision Variables Vector
+        long dataSeq = 0
+
+        // 1. Decision Variables Vector + VectorComponent
         String varVectorId = "${record.modelKey}_Variables"
         root.mathMeta.declare('moqui.math.Vector', varVectorId, [
             vectorId: varVectorId,
@@ -60,7 +62,16 @@ final class DslRecordDelegate {
             dimension: nVars,
             componentArray: groovy.json.JsonOutput.toJson(varNames)
         ])
-        long dataSeq = 0
+        for (int i = 0; i < nVars; i++) {
+            String vcId = "${varVectorId}_${i}"
+            root.mathMeta.declare('moqui.math.VectorComponent', vcId, [
+                vectorComponentId: vcId,
+                vectorId: varVectorId,
+                dimensionIndex: i,
+                symbolicValue: varNames.get(i),
+                componentTypeEnumId: 'VctSymbolic'
+            ])
+        }
         root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${varVectorId}", [
             mathModelDataId: "${record.modelKey}_Data_${varVectorId}",
             mathModelId: record.modelKey,
@@ -70,7 +81,91 @@ final class DslRecordDelegate {
             sequenceNum: dataSeq++
         ])
 
-        // 2. Objective / Cost Vector & Hessian (for QP)
+        // 2. Variable Bounds Matrix
+        List<Double> lowerBounds = declaredVariables.collect { it.lowerBound }
+        List<Double> upperBounds = declaredVariables.collect { it.upperBound }
+        List<List<Double>> boundsRows = [lowerBounds, upperBounds]
+        String boundsId = "${record.modelKey}_VariableBounds"
+        root.mathMeta.declare('moqui.math.Matrix', boundsId, [
+            matrixId: boundsId,
+            name: 'Variable Bounds',
+            matrixTypeEnumId: 'MtRectangular',
+            domainSpaceEnumId: 'VsEuclideanSpace',
+            codomainSpaceEnumId: 'VsEuclideanSpace',
+            rows: 2,
+            cols: nVars,
+            componentArray: groovy.json.JsonOutput.toJson(boundsRows)
+        ])
+        root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${boundsId}", [
+            mathModelDataId: "${record.modelKey}_Data_${boundsId}",
+            mathModelId: record.modelKey,
+            dataTypeEnumId: 'MmdtMatrix',
+            purposeEnumId: 'MmdpVarBounds',
+            matrixId: boundsId,
+            sequenceNum: dataSeq++
+        ])
+
+        // 3. Variable Domain (if declared or any non-continuous)
+        if (declaredVariables.any { it.domain != null && it.domain != 'VdContinuous' }) {
+            List<String> domainList = declaredVariables.collect { it.domain ?: 'VdContinuous' }
+            String domVectorId = "${record.modelKey}_VariableDomain"
+            root.mathMeta.declare('moqui.math.Vector', domVectorId, [
+                vectorId: domVectorId,
+                name: 'Variable Domain',
+                dimension: nVars,
+                componentArray: groovy.json.JsonOutput.toJson(domainList)
+            ])
+            for (int i = 0; i < nVars; i++) {
+                String vcId = "${domVectorId}_${i}"
+                root.mathMeta.declare('moqui.math.VectorComponent', vcId, [
+                    vectorComponentId: vcId,
+                    vectorId: domVectorId,
+                    dimensionIndex: i,
+                    symbolicValue: domainList.get(i),
+                    componentTypeEnumId: 'VctSymbolic'
+                ])
+            }
+            root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${domVectorId}", [
+                mathModelDataId: "${record.modelKey}_Data_${domVectorId}",
+                mathModelId: record.modelKey,
+                dataTypeEnumId: 'MmdtVector',
+                purposeEnumId: 'MmdpVariableDomain',
+                vectorId: domVectorId,
+                sequenceNum: dataSeq++
+            ])
+        }
+
+        // 4. Initial Condition (if any initialValue != null)
+        if (declaredVariables.any { it.initialValue != null }) {
+            List<Double> initialList = declaredVariables.collect { it.initialValue != null ? it.initialValue : 0.0d }
+            String initialId = "${record.modelKey}_InitialCondition"
+            root.mathMeta.declare('moqui.math.Vector', initialId, [
+                vectorId: initialId,
+                name: 'Initial Condition',
+                dimension: nVars,
+                componentArray: groovy.json.JsonOutput.toJson(initialList)
+            ])
+            for (int i = 0; i < nVars; i++) {
+                String vcId = "${initialId}_${i}"
+                root.mathMeta.declare('moqui.math.VectorComponent', vcId, [
+                    vectorComponentId: vcId,
+                    vectorId: initialId,
+                    dimensionIndex: i,
+                    realValue: initialList.get(i),
+                    componentTypeEnumId: 'VctCanonical'
+                ])
+            }
+            root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${initialId}", [
+                mathModelDataId: "${record.modelKey}_Data_${initialId}",
+                mathModelId: record.modelKey,
+                dataTypeEnumId: 'MmdtVector',
+                purposeEnumId: 'MmdpInitialCondition',
+                vectorId: initialId,
+                sequenceNum: dataSeq++
+            ])
+        }
+
+        // 5. Objective / Cost Vector & Hessian
         if (objectiveExpression != null) {
             double[] costs = new double[nVars]
             objectiveExpression.linearTerms.each { String vname, Double coeff ->
@@ -84,6 +179,16 @@ final class DslRecordDelegate {
                 dimension: nVars,
                 componentArray: groovy.json.JsonOutput.toJson(costs)
             ])
+            for (int i = 0; i < nVars; i++) {
+                String vcId = "${costVectorId}_${i}"
+                root.mathMeta.declare('moqui.math.VectorComponent', vcId, [
+                    vectorComponentId: vcId,
+                    vectorId: costVectorId,
+                    dimensionIndex: i,
+                    realValue: costs[i],
+                    componentTypeEnumId: 'VctCanonical'
+                ])
+            }
             root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${costVectorId}", [
                 mathModelDataId: "${record.modelKey}_Data_${costVectorId}",
                 mathModelId: record.modelKey,
@@ -120,6 +225,8 @@ final class DslRecordDelegate {
                     matrixId: hessianId,
                     name: 'Hessian Matrix',
                     matrixTypeEnumId: 'MtSymmetric',
+                    domainSpaceEnumId: 'VsEuclideanSpace',
+                    codomainSpaceEnumId: 'VsEuclideanSpace',
                     rows: nVars,
                     cols: nVars,
                     componentArray: groovy.json.JsonOutput.toJson(hList)
@@ -135,14 +242,15 @@ final class DslRecordDelegate {
             }
         }
 
-        // 3. Constraints (Matrix, RHS, Senses)
+        // 6. Constraints (Matrix, RHS, Senses, Transformations)
         if (!declaredConstraints.isEmpty()) {
             int nCons = declaredConstraints.size()
             List<List<Double>> aRows = new ArrayList<>()
             List<Double> rhsList = new ArrayList<>()
             List<String> sensesList = new ArrayList<>()
 
-            for (DslConstraint c : declaredConstraints) {
+            for (int i = 0; i < nCons; i++) {
+                DslConstraint c = declaredConstraints.get(i)
                 List<Double> row = new ArrayList<>()
                 for (int j = 0; j < nVars; j++) row.add(0.0d)
                 c.expression.linearTerms.each { String vname, Double coeff ->
@@ -151,7 +259,16 @@ final class DslRecordDelegate {
                 }
                 aRows.add(row)
                 rhsList.add(c.rhs)
-                sensesList.add(c.operator)
+                String relType = c.operator == 'GE' ? 'TtGreaterEqual' : (c.operator == 'EQ' ? 'TtEquality' : 'TtLessEqual')
+                sensesList.add(relType)
+
+                // Relational Transformation per constraint
+                String transId = "${record.modelKey}_Constraint_${c.name ?: (i + 1)}"
+                root.mathMeta.declare('moqui.math.Transformation', transId, [
+                    transformationId: transId,
+                    name: c.name ?: "Constraint_${i + 1}",
+                    transformationTypeEnumId: relType
+                ])
             }
 
             String aMatrixId = "${record.modelKey}_ConstraintMatrix"
@@ -159,6 +276,8 @@ final class DslRecordDelegate {
                 matrixId: aMatrixId,
                 name: 'Constraint Matrix',
                 matrixTypeEnumId: 'MtRectangular',
+                domainSpaceEnumId: 'VsEuclideanSpace',
+                codomainSpaceEnumId: 'VsEuclideanSpace',
                 rows: nCons,
                 cols: nVars,
                 componentArray: groovy.json.JsonOutput.toJson(aRows)
@@ -179,6 +298,16 @@ final class DslRecordDelegate {
                 dimension: nCons,
                 componentArray: groovy.json.JsonOutput.toJson(rhsList)
             ])
+            for (int i = 0; i < nCons; i++) {
+                String vcId = "${rhsId}_${i}"
+                root.mathMeta.declare('moqui.math.VectorComponent', vcId, [
+                    vectorComponentId: vcId,
+                    vectorId: rhsId,
+                    dimensionIndex: i,
+                    realValue: rhsList.get(i),
+                    componentTypeEnumId: 'VctCanonical'
+                ])
+            }
             root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${rhsId}", [
                 mathModelDataId: "${record.modelKey}_Data_${rhsId}",
                 mathModelId: record.modelKey,
@@ -195,6 +324,16 @@ final class DslRecordDelegate {
                 dimension: nCons,
                 componentArray: groovy.json.JsonOutput.toJson(sensesList)
             ])
+            for (int i = 0; i < nCons; i++) {
+                String vcId = "${senseId}_${i}"
+                root.mathMeta.declare('moqui.math.VectorComponent', vcId, [
+                    vectorComponentId: vcId,
+                    vectorId: senseId,
+                    dimensionIndex: i,
+                    symbolicValue: sensesList.get(i),
+                    componentTypeEnumId: 'VctSymbolic'
+                ])
+            }
             root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${senseId}", [
                 mathModelDataId: "${record.modelKey}_Data_${senseId}",
                 mathModelId: record.modelKey,
@@ -204,64 +343,99 @@ final class DslRecordDelegate {
                 sequenceNum: dataSeq++
             ])
         }
-
-        // 4. Variable Bounds Matrix
-        List<List<Double>> boundsRows = new ArrayList<>()
-        for (DslVariable v : declaredVariables) {
-            boundsRows.add([v.lowerBound, v.upperBound])
-        }
-        String boundsId = "${record.modelKey}_VariableBounds"
-        root.mathMeta.declare('moqui.math.Matrix', boundsId, [
-            matrixId: boundsId,
-            name: 'Variable Bounds',
-            matrixTypeEnumId: 'MtRectangular',
-            rows: nVars,
-            cols: 2,
-            componentArray: groovy.json.JsonOutput.toJson(boundsRows)
-        ])
-        root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${boundsId}", [
-            mathModelDataId: "${record.modelKey}_Data_${boundsId}",
-            mathModelId: record.modelKey,
-            dataTypeEnumId: 'MmdtMatrix',
-            purposeEnumId: 'MmdpVarBounds',
-            matrixId: boundsId,
-            sequenceNum: dataSeq++
-        ])
     }
 
     // Algebraic Optimization DSL helpers
-    DslVariable variable(final Number lowerBound, final Number upperBound, final Map<String, Object> options = Collections.emptyMap()) {
-        Double initial = options.containsKey('initial') ? ((Number) options.get('initial')).doubleValue() : null
-        String name = options.containsKey('name') ? options.get('name').toString() : "var_${declaredVariables.size() + 1}"
-        DslVariable v = new DslVariable(name, lowerBound.doubleValue(), upperBound.doubleValue(), initial)
+    DslVariable variable(final Object... args) {
+        Double lower = 0.0d
+        Double upper = Double.POSITIVE_INFINITY
+        Double initial = null
+        String domain = 'VdContinuous'
+        String name = null
+
+        Map<String, Object> options = [:]
+        List<Object> positional = []
+        for (Object arg : args) {
+            if (arg instanceof Map) options.putAll((Map<String, Object>) arg)
+            else positional.add(arg)
+        }
+
+        if (positional.size() >= 1 && positional[0] instanceof Number) {
+            lower = ((Number) positional[0]).doubleValue()
+        }
+        if (positional.size() >= 2 && positional[1] instanceof Number) {
+            upper = ((Number) positional[1]).doubleValue()
+        }
+        if (positional.size() >= 3 && positional[2] instanceof Number) {
+            initial = ((Number) positional[2]).doubleValue()
+        }
+        if (positional.size() >= 4) {
+            domain = positional[3].toString()
+        }
+
+        if (options.containsKey('min') || options.containsKey('lower') || options.containsKey('lowerBound')) {
+            lower = ((Number) (options.get('min') ?: options.get('lower') ?: options.get('lowerBound'))).doubleValue()
+        }
+        if (options.containsKey('max') || options.containsKey('upper') || options.containsKey('upperBound')) {
+            upper = ((Number) (options.get('max') ?: options.get('upper') ?: options.get('upperBound'))).doubleValue()
+        }
+        if (options.containsKey('initial') || options.containsKey('initialValue')) {
+            initial = ((Number) (options.get('initial') ?: options.get('initialValue'))).doubleValue()
+        }
+        if (options.containsKey('domain')) {
+            domain = options.get('domain').toString()
+        }
+        if (options.containsKey('name')) {
+            name = options.get('name').toString()
+        }
+
+        if (domain == 'Integer' || domain == 'integer') domain = 'VdInteger'
+        else if (domain == 'Binary' || domain == 'binary') domain = 'VdBinary'
+        else if (domain == 'Continuous' || domain == 'continuous') domain = 'VdContinuous'
+
+        if (name == null) {
+            name = "var_${declaredVariables.size() + 1}"
+        }
+        DslVariable v = new DslVariable(name, lower, upper, initial, domain)
         declaredVariables.add(v)
         localVariables.put(name, v)
         v
     }
 
-    void maximize(final DslExpression expr) {
+    void maximize(final Object expr) {
         this.objectiveSense = 'MAXIMIZE'
-        this.objectiveExpression = expr
-        registerObjectiveSenseParameter('OosMaximize')
+        if (expr instanceof DslExpression) this.objectiveExpression = (DslExpression) expr
+        else if (expr instanceof DslVariable) this.objectiveExpression = ((DslVariable) expr).multiply(1.0d)
+        registerObjectiveSenseParameter('MAXIMIZE')
     }
 
-    void minimize(final DslExpression expr) {
+    void minimize(final Object expr) {
         this.objectiveSense = 'MINIMIZE'
-        this.objectiveExpression = expr
-        registerObjectiveSenseParameter('OosMinimize')
+        if (expr instanceof DslExpression) this.objectiveExpression = (DslExpression) expr
+        else if (expr instanceof DslVariable) this.objectiveExpression = ((DslVariable) expr).multiply(1.0d)
+        registerObjectiveSenseParameter('MINIMIZE')
     }
 
-    private void registerObjectiveSenseParameter(final String senseEnumId) {
+    private void registerObjectiveSenseParameter(final String sense) {
         String paramId = "${record.modelKey}.ObjectiveSense"
         root.mathMeta.declare('moqui.math.Parameter', paramId, [
             parameterId: paramId,
+            mathModelId: record.modelKey,
             parameterAlias: 'objectiveSense',
             parameterDefId: 'OptimizationObjectiveSense',
-            symbolicValue: senseEnumId
+            symbolicValue: sense
         ])
     }
 
     DslConstraint subjectTo(final String name, final Object expr) {
+        if (expr instanceof DslConstraint) {
+            DslConstraint c = (DslConstraint) expr
+            c.withName(name)
+            if (!declaredConstraints.contains(c)) {
+                declaredConstraints.add(c)
+            }
+            return c
+        }
         DslExpression expression
         if (expr instanceof DslExpression) expression = (DslExpression) expr
         else if (expr instanceof DslVariable) expression = ((DslVariable) expr).multiply(1.0d)
@@ -270,6 +444,10 @@ final class DslRecordDelegate {
         DslConstraint constraint = new DslConstraint(expression, 'LE', 0.0d).withName(name)
         declaredConstraints.add(constraint)
         constraint
+    }
+
+    DslConstraint subjectTo(final Object expr) {
+        subjectTo(null, expr)
     }
 
     // Parameters block
@@ -600,6 +778,16 @@ final class DslRecordDelegate {
         op?.toString()
     }
 
+    private DslSymbol lookupPurposeSymbol(final String name, final String enumType) {
+        Map<String, DslSymbol> map = root.vocabulary.symbolsByEnumType.get(enumType)
+        if (map == null) return null
+        if (map.containsKey(name)) return map.get(name)
+        for (DslSymbol sym : map.values()) {
+            if (sym.id == name || sym.name.equalsIgnoreCase(name) || sym.id.equalsIgnoreCase(name)) return sym
+        }
+        null
+    }
+
     private ModelProvider declareDataEntity(final String entityName, final String key, final Map<String, Object> values) {
         // Purpose routing
         Object purpose = values.remove('purpose')
@@ -607,18 +795,31 @@ final class DslRecordDelegate {
         String entityPurposeEnumId = null
         if (purpose != null) {
             String pName = purpose.toString()
-            DslSymbol dataSym = root.vocabulary.symbolsByEnumType.get('MathModelDataPurpose')?.get(pName)
-            DslSymbol matrixSym = root.vocabulary.symbolsByEnumType.get('MatrixPurpose')?.get(pName)
-            if (dataSym != null && matrixSym != null) {
-                throw new IllegalArgumentException("Ambiguous purpose '${purpose}': present in both MathModelDataPurpose and MatrixPurpose; qualify explicitly")
+            String specificPurposeType = entityName == 'Matrix' ? 'MatrixPurpose' :
+                                         entityName == 'Vector' ? 'VectorPurpose' :
+                                         entityName == 'Tensor' ? 'TensorPurpose' : null
+
+            DslSymbol dataSym = lookupPurposeSymbol(pName, 'MathModelDataPurpose')
+            DslSymbol specificSym = specificPurposeType != null ? lookupPurposeSymbol(pName, specificPurposeType) : null
+
+            if (dataSym != null && specificSym != null) {
+                throw new IllegalArgumentException("Ambiguous purpose '${purpose}': present in both MathModelDataPurpose and ${specificPurposeType}; qualify explicitly")
             }
-            if (dataSym != null) dataPurposeEnumId = dataSym.id
-            else if (matrixSym != null) entityPurposeEnumId = matrixSym.id
-            else {
-                // Fallback lookup
-                DslSymbol sym = root.vocabulary.resolveSymbol(pName)
-                if (sym?.enumTypeId == 'MathModelDataPurpose') dataPurposeEnumId = sym.id
-                else if (sym?.enumTypeId == 'MatrixPurpose') entityPurposeEnumId = sym.id
+            if (dataSym != null) {
+                dataPurposeEnumId = dataSym.id
+            } else if (specificSym != null) {
+                entityPurposeEnumId = specificSym.id
+            } else {
+                List<String> allowedTypes = ['MathModelDataPurpose']
+                if (specificPurposeType != null) allowedTypes.add(specificPurposeType)
+                List<String> candidates = new ArrayList<>()
+                for (String t : allowedTypes) {
+                    Map<String, DslSymbol> syms = root.vocabulary.symbolsByEnumType.get(t)
+                    if (syms != null) candidates.addAll(syms.keySet())
+                }
+                candidates.sort()
+                String candStr = candidates.take(10).join(', ')
+                throw new IllegalArgumentException("Invalid symbol '${purpose}' for purpose field; candidates: ${candStr}")
             }
         }
         if (entityPurposeEnumId != null) values.put('purposeEnumId', entityPurposeEnumId)
@@ -758,6 +959,16 @@ final class DslRecordDelegate {
 
     @CompileStatic(TypeCheckingMode.SKIP)
     void propertyMissing(final String name, final Object value) {
+        if (value instanceof DslVariable) {
+            DslVariable v = (DslVariable) value
+            if (v.name.startsWith("var_")) {
+                declaredVariables.remove(v)
+                DslVariable renamed = new DslVariable(name, v.lowerBound, v.upperBound, v.initialValue, v.domain)
+                declaredVariables.add(renamed)
+                localVariables.put(name, renamed)
+                return
+            }
+        }
         localVariables.put(name, value)
     }
 }

@@ -31,9 +31,16 @@ final class MathDslBuilder {
 
     private final Map<String, Object> localVariables = new LinkedHashMap<>()
 
+    private static final ThreadLocal<MathDslBuilder> ACTIVE_BUILDER = new ThreadLocal<>()
+
+    static MathDslBuilder getActiveBuilder() {
+        ACTIVE_BUILDER.get()
+    }
+
     MathDslBuilder(final MathMeta mathMeta) {
         this.mathMeta = Objects.requireNonNull(mathMeta, 'Math metadata must not be null')
         this.vocabulary = DslVocabulary.of(mathMeta.definition)
+        ACTIVE_BUILDER.set(this)
     }
 
     ModelProvider entity(final String entityName, final String modelKey,
@@ -273,9 +280,331 @@ final class MathDslBuilder {
         res
     }
 
+    ModelProvider matrixProduct(final Object left, final Object right, final Map<String, Object> options = Collections.emptyMap()) {
+        createTransformation('TtMatrixProduct', [left, right], options)
+    }
+
+    ModelProvider tensorMul(final Object left, final Object right, final Map<String, Object> options = Collections.emptyMap()) {
+        createTransformation('TtTensorMul', [left, right], options)
+    }
+
+    ModelProvider tensorAdd(final Object left, final Object right, final Map<String, Object> options = Collections.emptyMap()) {
+        createTransformation('TtTensorAdd', [left, right], options)
+    }
+
+    ModelProvider tensorSub(final Object left, final Object right, final Map<String, Object> options = Collections.emptyMap()) {
+        createTransformation('TtTensorSub', [left, right], options)
+    }
+
+    ModelProvider tensorDiv(final Object left, final Object right, final Map<String, Object> options = Collections.emptyMap()) {
+        createTransformation('TtTensorDiv', [left, right], options)
+    }
+
+    ModelProvider tensorPow(final Object operand, final Object exponent, final Map<String, Object> options = Collections.emptyMap()) {
+        createTransformation('TtTensorPow', [operand, exponent], options)
+    }
+
+    ModelProvider applyMultiply(final ModelProvider left, final Object right) {
+        String leftType = left.definition.name
+        if (leftType == 'Matrix') {
+            if (right instanceof ModelProvider) {
+                ModelProvider rightProvider = (ModelProvider) right
+                String rightType = rightProvider.definition.name
+                if (rightType == 'Matrix') {
+                    return matrixProduct(left, rightProvider)
+                } else if (rightType == 'Vector') {
+                    throw new IllegalArgumentException(
+                        "TransformationType 'TtMatrixVectorProduct' does not exist in schema; cannot multiply Matrix by Vector"
+                    )
+                }
+            } else if (right instanceof Number) {
+                return matrixProduct(left, right)
+            }
+            throw new IllegalArgumentException(
+                "Unsupported operator '*' for operands [Matrix, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Matrix * Matrix (TtMatrixProduct), Tensor * Tensor (TtTensorMul)"
+            )
+        } else if (leftType == 'Tensor') {
+            if (right instanceof ModelProvider) {
+                ModelProvider rightProvider = (ModelProvider) right
+                String rightType = rightProvider.definition.name
+                if (rightType == 'Tensor' || rightType == 'Matrix') {
+                    return tensorMul(left, rightProvider)
+                }
+            } else if (right instanceof Number) {
+                return tensorMul(left, right)
+            }
+            throw new IllegalArgumentException(
+                "Unsupported operator '*' for operands [Tensor, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Tensor * Tensor (TtTensorMul), Matrix * Matrix (TtMatrixProduct)"
+            )
+        }
+        throw new IllegalArgumentException(
+            "Unsupported operator '*' for operands [${leftType}, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Matrix * Matrix (TtMatrixProduct), Tensor * Tensor (TtTensorMul)"
+        )
+    }
+
+    ModelProvider applyPlus(final ModelProvider left, final Object right) {
+        String leftType = left.definition.name
+        if (leftType == 'Tensor' || leftType == 'Matrix') {
+            if (right instanceof ModelProvider) {
+                ModelProvider rightProvider = (ModelProvider) right
+                String rightType = rightProvider.definition.name
+                if (rightType == 'Tensor' || rightType == 'Matrix') {
+                    return tensorAdd(left, rightProvider)
+                }
+            }
+        }
+        throw new IllegalArgumentException(
+            "Unsupported operator '+' for operands [${leftType}, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Tensor + Tensor (TtTensorAdd)"
+        )
+    }
+
+    ModelProvider applyMinus(final ModelProvider left, final Object right) {
+        String leftType = left.definition.name
+        if (leftType == 'Tensor' || leftType == 'Matrix') {
+            if (right instanceof ModelProvider) {
+                ModelProvider rightProvider = (ModelProvider) right
+                String rightType = rightProvider.definition.name
+                if (rightType == 'Tensor' || rightType == 'Matrix') {
+                    return tensorSub(left, rightProvider)
+                }
+            }
+        }
+        throw new IllegalArgumentException(
+            "Unsupported operator '-' for operands [${leftType}, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Tensor - Tensor (TtTensorSub)"
+        )
+    }
+
+    ModelProvider applyDiv(final ModelProvider left, final Object right) {
+        String leftType = left.definition.name
+        if (leftType == 'Tensor' || leftType == 'Matrix') {
+            if (right instanceof ModelProvider) {
+                ModelProvider rightProvider = (ModelProvider) right
+                String rightType = rightProvider.definition.name
+                if (rightType == 'Tensor' || rightType == 'Matrix') {
+                    return tensorDiv(left, rightProvider)
+                }
+            }
+        }
+        throw new IllegalArgumentException(
+            "Unsupported operator '/' for operands [${leftType}, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Tensor / Tensor (TtTensorDiv)"
+        )
+    }
+
+    ModelProvider applyPower(final ModelProvider left, final Object exponent) {
+        String leftType = left.definition.name
+        if (leftType == 'Tensor' || leftType == 'Matrix') {
+            if (exponent instanceof Number) {
+                return tensorPow(left, (Number) exponent)
+            }
+        }
+        throw new IllegalArgumentException(
+            "Unsupported operator '**' for operands [${leftType}, ${exponent?.class?.simpleName}]. Supported operations: Tensor ** Number (TtTensorPow)"
+        )
+    }
+
+    ModelProvider applyNegative(final ModelProvider operand) {
+        throw new IllegalArgumentException(
+            "TransformationType 'TtTensorNeg' does not exist in schema; cannot negate Tensor with unary '-'"
+        )
+    }
+
+    ModelProvider createTransformation(final String typeEnumId, final List<Object> operands, final Map<String, Object> options = Collections.emptyMap()) {
+        String baseName = options.get('name')?.toString() ?: "${typeEnumId.replaceFirst('^Tt', '')}_${System.identityHashCode(operands)}"
+        String tKey = options.get('transformationId')?.toString() ?: "T_${baseName}"
+
+        String resultType = 'Matrix'
+        if (typeEnumId.startsWith('TtTensor') || typeEnumId.contains('Tensor') || typeEnumId.contains('Conv') || typeEnumId.contains('Pool') || typeEnumId.contains('Norm') || typeEnumId.contains('Attention')) {
+            resultType = 'Tensor'
+        } else if (typeEnumId.contains('Vector') && !typeEnumId.contains('Matrix')) {
+            resultType = 'Vector'
+        }
+        if (options.containsKey('resultType')) {
+            resultType = options.get('resultType').toString()
+        }
+
+        String resKey = options.get('resultId')?.toString() ?: baseName
+        ModelProvider resultProvider
+        if (resultType == 'Tensor') {
+            Map<String, Object> tensOptions = new LinkedHashMap<>()
+            tensOptions.put('_key', resKey)
+            if (options.containsKey('name')) tensOptions.put('name', options.get('name'))
+            tensOptions.put('shape', options.get('shape') ?: '[1]')
+            tensOptions.put('rank', options.get('rank') ?: 1)
+            tensOptions.put('size', options.get('size') ?: 1)
+            resultProvider = tensor(tensOptions)
+        } else if (resultType == 'Vector') {
+            Map<String, Object> vecOptions = new LinkedHashMap<>()
+            vecOptions.put('_key', resKey)
+            if (options.containsKey('name')) vecOptions.put('name', options.get('name'))
+            vecOptions.put('dimension', options.get('dimension') ?: 1)
+            resultProvider = vector(vecOptions)
+        } else {
+            int inferredRows = 1
+            int inferredCols = 1
+            if (operands.size() >= 1 && operands.get(0) instanceof ModelProvider) {
+                ModelProvider p0 = (ModelProvider) operands.get(0)
+                if (p0.definition.name == 'Matrix') {
+                    Object r = p0.get()?.get('rows')
+                    if (r instanceof Number) inferredRows = ((Number) r).intValue()
+                }
+            }
+            if (operands.size() >= 2 && operands.get(1) instanceof ModelProvider) {
+                ModelProvider p1 = (ModelProvider) operands.get(1)
+                if (p1.definition.name == 'Matrix') {
+                    Object c = p1.get()?.get('cols')
+                    if (c instanceof Number) inferredCols = ((Number) c).intValue()
+                }
+            } else if (operands.size() >= 1 && operands.get(0) instanceof ModelProvider) {
+                ModelProvider p0 = (ModelProvider) operands.get(0)
+                if (p0.definition.name == 'Matrix') {
+                    Object c = p0.get()?.get('cols')
+                    if (c instanceof Number) inferredCols = ((Number) c).intValue()
+                }
+            }
+            Map<String, Object> matOptions = new LinkedHashMap<>()
+            matOptions.put('_key', resKey)
+            if (options.containsKey('name')) matOptions.put('name', options.get('name'))
+            matOptions.put('matrixType', 'Dense')
+            matOptions.put('rows', options.get('rows') ?: inferredRows)
+            matOptions.put('cols', options.get('cols') ?: inferredCols)
+            matOptions.put('domainSpace', options.get('domainSpace') ?: 'Real')
+            matOptions.put('codomainSpace', options.get('codomainSpace') ?: 'Real')
+            resultProvider = matrix(matOptions)
+        }
+
+        Map<String, Object> transValues = new LinkedHashMap<>()
+        transValues.put('transformationId', tKey)
+        transValues.put('transformationTypeEnumId', typeEnumId)
+        if (options.containsKey('name')) transValues.put('name', options.get('name'))
+        if (resultType == 'Matrix') transValues.put('resultMatrixId', resKey)
+        else if (resultType == 'Vector') transValues.put('resultVectorId', resKey)
+        else if (resultType == 'Tensor') transValues.put('resultTensorId', resKey)
+
+        mathMeta.declare('moqui.math.Transformation', tKey, transValues)
+
+        if (operands.size() == 1) {
+            Object op = operands.get(0)
+            String opKey = extractOperandKey(op)
+            String opType = extractOperandType(op, 'TotSingle')
+            Map<String, Object> opValues = new LinkedHashMap<>()
+            opValues.put('transformationId', tKey)
+            opValues.put('operandIndex', 0L)
+            opValues.put('operandTypeEnumId', opType)
+            attachOperandTarget(opValues, op, opKey, tKey, 0L)
+            mathMeta.declare('moqui.math.TransformationOperand', "${tKey}_Op_0", opValues)
+        } else if (operands.size() == 2) {
+            Object op0 = operands.get(0)
+            String op0Key = extractOperandKey(op0)
+            Map<String, Object> op0Values = new LinkedHashMap<>()
+            op0Values.put('transformationId', tKey)
+            op0Values.put('operandIndex', 0L)
+            op0Values.put('operandTypeEnumId', 'TotLeft')
+            attachOperandTarget(op0Values, op0, op0Key, tKey, 0L)
+            mathMeta.declare('moqui.math.TransformationOperand', "${tKey}_Op_0", op0Values)
+
+            Object op1 = operands.get(1)
+            String op1Key = extractOperandKey(op1)
+            Map<String, Object> op1Values = new LinkedHashMap<>()
+            op1Values.put('transformationId', tKey)
+            op1Values.put('operandIndex', 1L)
+            op1Values.put('operandTypeEnumId', 'TotRight')
+            attachOperandTarget(op1Values, op1, op1Key, tKey, 1L)
+            mathMeta.declare('moqui.math.TransformationOperand', "${tKey}_Op_1", op1Values)
+        } else {
+            for (int i = 0; i < operands.size(); i++) {
+                Object op = operands.get(i)
+                String opKey = extractOperandKey(op)
+                Map<String, Object> opValues = new LinkedHashMap<>()
+                opValues.put('transformationId', tKey)
+                opValues.put('operandIndex', (long) i)
+                opValues.put('operandTypeEnumId', 'TotNth')
+                attachOperandTarget(opValues, op, opKey, tKey, (long) i)
+                mathMeta.declare('moqui.math.TransformationOperand', "${tKey}_Op_${i}", opValues)
+            }
+        }
+
+        resultProvider
+    }
+
+    private static String extractOperandKey(final Object op) {
+        if (op instanceof ModelProvider) return ((ModelProvider) op).name
+        if (op instanceof ModelValue) return ((ModelValue) op).modelKey
+        if (op instanceof CharSequence) return op.toString()
+        if (op != null) return op.toString()
+        null
+    }
+
+    private static String extractOperandType(final Object op, final String defaultType) {
+        if (op instanceof ModelProvider) {
+            String eName = ((ModelProvider) op).definition.name
+            if (eName == 'Matrix') return 'TotMatrix'
+            if (eName == 'Vector') return 'TotVector'
+            if (eName == 'Tensor') return 'TotTensor'
+            if (eName == 'Transformation') return 'TotTransformation'
+            if (eName == 'Parameter') return 'TotParameter'
+        }
+        defaultType
+    }
+
+    private void attachOperandTarget(final Map<String, Object> opValues, final Object op, final String opKey, final String tKey, final long opIdx) {
+        if (op instanceof ModelProvider) {
+            String eName = ((ModelProvider) op).definition.name
+            if (eName == 'Matrix') opValues.put('operandMatrixId', opKey)
+            else if (eName == 'Vector') opValues.put('operandVectorId', opKey)
+            else if (eName == 'Tensor') opValues.put('operandTensorId', opKey)
+            else if (eName == 'Transformation') opValues.put('operandTransformationId', opKey)
+            else if (eName == 'Parameter') opValues.put('operandParameterId', opKey)
+            else opValues.put('operandMatrixId', opKey)
+        } else if (op instanceof Number) {
+            String pDefId = 'ScalarParameter'
+            if (!mathMeta.hasEntity('moqui.math.ParameterDef') || mathMeta.entity('moqui.math.ParameterDef').find { it.modelKey == pDefId } == null) {
+                mathMeta.declare('moqui.math.ParameterDef', pDefId, [
+                    parameterDefId: pDefId,
+                    parameterTypeEnumId: 'PtNumberDecimal',
+                    parameterCode: 'Scalar',
+                    parameterName: 'Scalar Parameter'
+                ])
+            }
+            String pKey = "Param_${tKey}_Op_${opIdx}"
+            mathMeta.declare('moqui.math.Parameter', pKey, [
+                parameterId: pKey,
+                parameterDefId: pDefId,
+                numericValue: ((Number) op).doubleValue()
+            ])
+            opValues.put('operandParameterId', pKey)
+            opValues.put('operandTypeEnumId', 'TotScalar')
+        } else if (op instanceof CharSequence) {
+            opValues.put('operandMatrixId', op.toString())
+        }
+    }
+
     @CompileStatic(TypeCheckingMode.SKIP)
     Object methodMissing(final String entityName, final Object rawArguments) {
         List<Object> arguments = normalizeArguments(rawArguments)
+        if (vocabulary.hasEntity(entityName)) {
+            EntityDefinition entityDefinition = vocabulary.findEntity(entityName)
+            ParsedDeclaration parsed = parseArguments(entityName, arguments)
+            return declare(entityDefinition, parsed.modelKey, parsed.values, parsed.action, null, null).provider
+        }
+
+        TransformationType tt = TransformationType.fromName(entityName)
+        if (tt == null) {
+            DslSymbol sym = vocabulary.resolveSymbol(entityName, 'TransformationType')
+            if (sym != null) tt = TransformationType.fromId(sym.id)
+        }
+        if (tt != null) {
+            List<Object> operands = new ArrayList<>()
+            Map<String, Object> options = new LinkedHashMap<>()
+            for (Object arg : arguments) {
+                if (arg instanceof Map) {
+                    options.putAll((Map<String, Object>) arg)
+                } else {
+                    operands.add(arg)
+                }
+            }
+            return createTransformation(tt.id, operands, options)
+        }
+
         EntityDefinition entityDefinition = vocabulary.findEntity(entityName)
         ParsedDeclaration parsed = parseArguments(entityName, arguments)
         declare(entityDefinition, parsed.modelKey, parsed.values, parsed.action, null, null).provider
@@ -824,12 +1153,14 @@ final class MathDslBuilder {
 
     private static void addSinglePrimaryKey(final EntityDefinition definition, final String modelKey,
                                              final Map<String, Object> values) {
-        if (modelKey != null && modelKey.length() > 250) {
-            throw new IllegalArgumentException("L'identificatore '${modelKey}' supera la lunghezza massima di 250 caratteri supportata da Moqui")
-        }
         List<FieldDefinition> primaryKeys = definition.primaryKeyFields
         if (primaryKeys.size() == 1) {
-            String fieldName = primaryKeys.first().name
+            FieldDefinition pkField = primaryKeys.first()
+            int maxLen = pkField.type == 'id' ? 40 : (pkField.type == 'id-long' ? 255 : 255)
+            if (modelKey != null && modelKey.length() > maxLen) {
+                throw new IllegalArgumentException("L'identificatore '${modelKey}' per il campo '${pkField.name}' (tipo ${pkField.type}) supera la lunghezza massima di ${maxLen} caratteri")
+            }
+            String fieldName = pkField.name
             Object explicit = values.get(fieldName)
             if (explicit != null && explicit.toString() != modelKey) {
                 throw new IllegalArgumentException(
@@ -837,6 +1168,8 @@ final class MathDslBuilder {
                 )
             }
             values.put(fieldName, modelKey)
+        } else if (modelKey != null && modelKey.length() > 255) {
+            throw new IllegalArgumentException("L'identificatore '${modelKey}' per l'entità '${definition.fullName}' supera la lunghezza massima di 255 caratteri")
         }
     }
 

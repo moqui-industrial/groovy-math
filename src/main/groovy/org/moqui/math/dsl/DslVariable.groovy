@@ -13,12 +13,14 @@ class DslVariable {
     final double lowerBound
     final double upperBound
     final Double initialValue
+    final String domain
 
-    DslVariable(final String name, final double lowerBound, final double upperBound, final Double initialValue = null) {
+    DslVariable(final String name, final double lowerBound, final double upperBound, final Double initialValue = null, final String domain = 'VdContinuous') {
         this.name = name
         this.lowerBound = lowerBound
         this.upperBound = upperBound
         this.initialValue = initialValue
+        this.domain = domain != null ? domain : 'VdContinuous'
     }
 
     DslExpression multiply(final Number scalar) {

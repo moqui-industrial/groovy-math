@@ -24,6 +24,9 @@ import org.moqui.math.entity.StatusDefinition
 import org.moqui.math.entity.StatusFlowItemDefinition
 import org.moqui.math.entity.StatusTransitionDefinition
 import org.moqui.math.entity.UomConversionDefinition
+import org.moqui.math.entity.UomDefinition
+import org.moqui.math.entity.UomDimensionTypeDefinition
+import org.moqui.math.entity.UomDimTypeGroupMemberDefinition
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
@@ -44,7 +47,7 @@ final class MoquiSchemaInspector {
      * this inspector does not model yet.
      */
     static final List<String> EMBEDDED_SOURCES =
-        Collections.unmodifiableList(['BasicEntities.xml', 'MathEntities.xml', 'MathData.xml'])
+        Collections.unmodifiableList(['BasicEntities.xml', 'MathEntities.xml', 'MathData.xml', 'UnitData.xml'])
 
     /**
      * The moqui.basic entities Groovy Math actually needs. moqui.math relates to exactly
@@ -187,6 +190,28 @@ final class MoquiSchemaInspector {
                 doubleOrNull(node, 'conversionFactor'),
                 decimalOrNull(node, 'conversionOffset'),
                 attributeOrNull(node, 'purposeEnumId')))
+        }
+        descendantElements(root, 'moqui.basic.Uom').each { Element node ->
+            model.addUom(new UomDefinition(
+                node.getAttribute('uomId'),
+                attributeOrNull(node, 'uomTypeEnumId'),
+                attributeOrNull(node, 'abbreviation'),
+                attributeOrNull(node, 'description'),
+                integerOrNull(node, 'fractionDigits'),
+                attributeOrNull(node, 'symbol')))
+        }
+        descendantElements(root, 'moqui.basic.UomDimensionType').each { Element node ->
+            model.addUomDimensionType(new UomDimensionTypeDefinition(
+                node.getAttribute('uomDimensionTypeId'),
+                attributeOrNull(node, 'uomTypeEnumId'),
+                attributeOrNull(node, 'defaultUomId'),
+                attributeOrNull(node, 'description')))
+        }
+        descendantElements(root, 'moqui.basic.UomDimTypeGroupMember').each { Element node ->
+            model.addUomDimTypeGroupMember(new UomDimTypeGroupMemberDefinition(
+                node.getAttribute('uomDimTypeGroupEnumId'),
+                node.getAttribute('uomDimensionTypeId'),
+                integerOrNull(node, 'sequenceNum')))
         }
         model
     }

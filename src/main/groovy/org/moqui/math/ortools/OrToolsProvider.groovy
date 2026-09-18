@@ -61,11 +61,21 @@ final class OrToolsProvider implements MathProvider<OrToolsPlan, OrToolsResult> 
         ModelValue bounds = optionalMatrix(mathMeta, modelData, 'MmdpVarBounds')
         ModelValue constraintSenses = optionalVector(mathMeta, modelData, 'MmdpConstraint')
 
-        List<String> variableNames = stringVector(decisions, 'decision variables')
-        double[] objectiveCoefficients = numericVector(costs, 'cost vector')
+        List<String> variableNames = stringVector(mathMeta, decisions, 'decision variables')
+        double[] objectiveCoefficients = numericVector(mathMeta, costs, 'cost vector')
         double[][] constraintCoefficients = numericMatrix(coefficients, 'constraint matrix')
-        double[] constraintRhs = numericVector(rightHandSide, 'right-hand side')
-        List<String> senses = constraintSenses != null ? stringVector(constraintSenses, 'constraint sense') : null
+        double[] constraintRhs = numericVector(mathMeta, rightHandSide, 'right-hand side')
+        List<String> senses = null
+        if (constraintSenses != null) {
+            senses = stringVector(mathMeta, constraintSenses, 'constraint sense')
+        } else if (mathMeta.hasEntity('Transformation')) {
+            List<ModelValue> transforms = mathMeta.entity('Transformation').findAll { ModelValue t ->
+                t.modelKey.startsWith("${mathModelId}_Constraint_")
+            } as List<ModelValue>
+            if (!transforms.isEmpty()) {
+                senses = transforms.collect { it.get('transformationTypeEnumId') as String }
+            }
+        }
 
         validateDimensions(variableNames, objectiveCoefficients, constraintCoefficients, constraintRhs)
         double[][] variableBounds = bounds == null ? defaultBounds(variableNames.size()) :
@@ -88,7 +98,7 @@ final class OrToolsProvider implements MathProvider<OrToolsPlan, OrToolsResult> 
         }
 
         ModelValue domainData = optionalVector(mathMeta, modelData, 'MmdpVariableDomain')
-        List<String> domains = domainData != null ? stringVector(domainData, 'variable domains') : null
+        List<String> domains = domainData != null ? stringVector(mathMeta, domainData, 'variable domains') : null
         boolean hasIntegers = domains != null && domains.any { it == 'VdInteger' || it == 'Integer' || it == 'VdBinary' || it == 'Binary' }
 
         String objectiveSense = objectiveSense(mathMeta)
@@ -257,6 +267,26 @@ final class OrToolsProvider implements MathProvider<OrToolsPlan, OrToolsResult> 
         modelData.findAll { ModelValue value -> value.get('purposeEnumId') == purpose } as List<ModelValue>
     }
 
+    private static List<String> stringVector(final MathMeta mathMeta, final ModelValue vector, final String label) {
+        if (mathMeta != null && mathMeta.hasEntity('VectorComponent')) {
+            List<ModelValue> comps = mathMeta.entity('VectorComponent').findAll { ModelValue vc ->
+                vc.get('vectorId') == vector.modelKey
+            } as List<ModelValue>
+            if (!comps.isEmpty()) {
+                comps.sort { ModelValue a, ModelValue b ->
+                    int idxA = a.get('dimensionIndex') != null ? ((Number) a.get('dimensionIndex')).intValue() : 0
+                    int idxB = b.get('dimensionIndex') != null ? ((Number) b.get('dimensionIndex')).intValue() : 0
+                    idxA <=> idxB
+                }
+                List<String> values = comps.collect { (it.get('symbolicValue') ?: it.get('realValue'))?.toString() }
+                if (!values.empty && !values.any { it == null || it.isEmpty() }) {
+                    return values
+                }
+            }
+        }
+        stringVector(vector, label)
+    }
+
     private static List<String> stringVector(final ModelValue vector, final String label) {
         Object parsed = parseArray(vector.get('componentArray'), label)
         if (!(parsed instanceof List) || ((List<?>) parsed).any { Object value -> !(value instanceof CharSequence) }) {
@@ -267,6 +297,28 @@ final class OrToolsProvider implements MathProvider<OrToolsPlan, OrToolsResult> 
             throw new IllegalStateException('Decision variable names must be non-empty and unique')
         }
         values
+    }
+
+    private static double[] numericVector(final MathMeta mathMeta, final ModelValue vector, final String label) {
+        if (mathMeta != null && mathMeta.hasEntity('VectorComponent')) {
+            List<ModelValue> comps = mathMeta.entity('VectorComponent').findAll { ModelValue vc ->
+                vc.get('vectorId') == vector.modelKey
+            } as List<ModelValue>
+            if (!comps.isEmpty()) {
+                comps.sort { ModelValue a, ModelValue b ->
+                    int idxA = a.get('dimensionIndex') != null ? ((Number) a.get('dimensionIndex')).intValue() : 0
+                    int idxB = b.get('dimensionIndex') != null ? ((Number) b.get('dimensionIndex')).intValue() : 0
+                    idxA <=> idxB
+                }
+                double[] result = new double[comps.size()]
+                for (int i = 0; i < comps.size(); i++) {
+                    Number n = (Number) (comps.get(i).get('realValue') ?: comps.get(i).get('projection'))
+                    result[i] = n != null ? n.doubleValue() : 0.0d
+                }
+                return result
+            }
+        }
+        numericVector(vector, label)
     }
 
     private static double[] numericVector(final ModelValue vector, final String label) {

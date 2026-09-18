@@ -30,6 +30,6 @@ MathModelDef('OpenCvVisionModel',
 
         Matrix('InputImage', matrixTypeEnum: MatrixType.Dense, purposeEnum: MatrixPurpose.Original,
             domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
-            name: 'InputImage', rows: 8, cols: 8)
+            rows: 8, cols: 8)
     }
 }

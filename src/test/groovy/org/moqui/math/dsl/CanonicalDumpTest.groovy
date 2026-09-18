@@ -73,4 +73,103 @@ class CanonicalDumpTest {
         assertTrue(CanonicalDump.structuralEquals(meta1, meta2))
         assertDoesNotThrow({ CanonicalDump.assertStructuralEquals(meta1, meta2) } as org.junit.jupiter.api.function.Executable)
     }
+
+    @Test
+    void structuralComparisonDetectsSwappedOperands() {
+        MathMeta meta1 = MathDsl.math {
+            matrix('A', rows: 2, cols: 2)
+            matrix('B', rows: 2, cols: 2)
+            Transformation('T1', transformationTypeEnumId: 'TtMatrixProduct') {
+                TransformationOperand(operandIndex: 1L, operandTypeEnumId: 'TotLeftMatrix', operandMatrixId: 'A')
+                TransformationOperand(operandIndex: 2L, operandTypeEnumId: 'TotRightMatrix', operandMatrixId: 'B')
+            }
+        }
+
+        MathMeta meta2 = MathDsl.math {
+            matrix('A', rows: 2, cols: 2)
+            matrix('B', rows: 2, cols: 2)
+            Transformation('T1', transformationTypeEnumId: 'TtMatrixProduct') {
+                TransformationOperand(operandIndex: 1L, operandTypeEnumId: 'TotLeftMatrix', operandMatrixId: 'B')
+                TransformationOperand(operandIndex: 2L, operandTypeEnumId: 'TotRightMatrix', operandMatrixId: 'A')
+            }
+        }
+
+        assertFalse(CanonicalDump.structuralEquals(meta1, meta2))
+        assertThrows(AssertionError) { CanonicalDump.assertStructuralEquals(meta1, meta2) }
+    }
+
+    @Test
+    void structuralComparisonDetectsRewiredEdge() {
+        MathMeta meta1 = MathDsl.math {
+            Graph('G1') {
+                GraphVertex('v1', label: 'v1')
+                GraphVertex('v2', label: 'v2')
+                GraphVertex('v3', label: 'v3')
+                GraphEdge('e1', label: 'e1', fromVertexId: 'v1', toVertexId: 'v2')
+            }
+        }
+
+        MathMeta meta2 = MathDsl.math {
+            Graph('G1') {
+                GraphVertex('v1', label: 'v1')
+                GraphVertex('v2', label: 'v2')
+                GraphVertex('v3', label: 'v3')
+                GraphEdge('e1', label: 'e1', fromVertexId: 'v1', toVertexId: 'v3')
+            }
+        }
+
+        assertFalse(CanonicalDump.structuralEquals(meta1, meta2))
+        assertThrows(AssertionError) { CanonicalDump.assertStructuralEquals(meta1, meta2) }
+    }
+
+    @Test
+    void structuralComparisonDetectsDifferentDataTarget() {
+        MathMeta meta1 = MathDsl.math {
+            MathModelDef('Def1', modelType: Lp) {
+                vector('c1', dimension: 2)
+                vector('c2', dimension: 2)
+                MathModel('Model1') {
+                    MathModelData('d1', purpose: CostVector, vectorId: 'c1')
+                }
+            }
+        }
+
+        MathMeta meta2 = MathDsl.math {
+            MathModelDef('Def1', modelType: Lp) {
+                vector('c1', dimension: 2)
+                vector('c2', dimension: 2)
+                MathModel('Model1') {
+                    MathModelData('d1', purpose: CostVector, vectorId: 'c2')
+                }
+            }
+        }
+
+        assertFalse(CanonicalDump.structuralEquals(meta1, meta2))
+        assertThrows(AssertionError) { CanonicalDump.assertStructuralEquals(meta1, meta2) }
+    }
+
+    @Test
+    void structuralComparisonIgnoresOnlyDerivedIdentifiers() {
+        // Model 1: auto-nested matrix inside MathModel (gets derived id 'Model1_Data_A')
+        MathMeta meta1 = MathDsl.math {
+            MathModelDef('Def1', modelType: Lp) {
+                MathModel('Model1') {
+                    matrix('A', rows: 2, cols: 2, purpose: ConstraintMatrix)
+                }
+            }
+        }
+
+        // Model 2: explicit custom id for MathModelData pointing to same matrix A
+        MathMeta meta2 = MathDsl.math {
+            MathModelDef('Def1', modelType: Lp) {
+                matrix('A', rows: 2, cols: 2)
+                MathModel('Model1') {
+                    MathModelData('customDataId1', purpose: ConstraintMatrix, matrixId: 'A', sequenceNum: 0L, dataTypeEnumId: 'MmdtMatrix')
+                }
+            }
+        }
+
+        assertTrue(CanonicalDump.structuralEquals(meta1, meta2))
+        assertDoesNotThrow({ CanonicalDump.assertStructuralEquals(meta1, meta2) } as org.junit.jupiter.api.function.Executable)
+    }
 }

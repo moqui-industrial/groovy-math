@@ -60,6 +60,46 @@ final class ModelProvider {
         }
     }
 
+    EntityDefinition getDefinition() {
+        definition
+    }
+
+    ModelProvider multiply(final Object other) {
+        org.moqui.math.dsl.MathDslBuilder builder = org.moqui.math.dsl.MathDslBuilder.activeBuilder
+        if (builder == null) throw new IllegalStateException("No active MathDslBuilder context for operator '*'")
+        builder.applyMultiply(this, other)
+    }
+
+    ModelProvider plus(final Object other) {
+        org.moqui.math.dsl.MathDslBuilder builder = org.moqui.math.dsl.MathDslBuilder.activeBuilder
+        if (builder == null) throw new IllegalStateException("No active MathDslBuilder context for operator '+'")
+        builder.applyPlus(this, other)
+    }
+
+    ModelProvider minus(final Object other) {
+        org.moqui.math.dsl.MathDslBuilder builder = org.moqui.math.dsl.MathDslBuilder.activeBuilder
+        if (builder == null) throw new IllegalStateException("No active MathDslBuilder context for operator '-'")
+        builder.applyMinus(this, other)
+    }
+
+    ModelProvider div(final Object other) {
+        org.moqui.math.dsl.MathDslBuilder builder = org.moqui.math.dsl.MathDslBuilder.activeBuilder
+        if (builder == null) throw new IllegalStateException("No active MathDslBuilder context for operator '/'")
+        builder.applyDiv(this, other)
+    }
+
+    ModelProvider power(final Object exponent) {
+        org.moqui.math.dsl.MathDslBuilder builder = org.moqui.math.dsl.MathDslBuilder.activeBuilder
+        if (builder == null) throw new IllegalStateException("No active MathDslBuilder context for operator '**'")
+        builder.applyPower(this, exponent)
+    }
+
+    ModelProvider negative() {
+        org.moqui.math.dsl.MathDslBuilder builder = org.moqui.math.dsl.MathDslBuilder.activeBuilder
+        if (builder == null) throw new IllegalStateException("No active MathDslBuilder context for operator unary '-'")
+        builder.applyNegative(this)
+    }
+
     boolean isRealized() {
         state == State.REALIZED
     }

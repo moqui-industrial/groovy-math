@@ -56,6 +56,70 @@ class OrToolsProviderTest {
         }
     }
 
+    @Test
+    void solvesWithGreaterEqualConstraint() {
+        String script = '''
+            MathModelDef('GeModelDef', type: LinearProgram, usage: Optimisation, modelName: 'GE Model') {
+                MathModel('GeModel', status: Draft) {
+                    x1 = variable(0, 100)
+                    x2 = variable(0, 100)
+                    minimize x1 + x2
+                    subjectTo('C1', x1 + x2 * 2).ge(10)
+                    subjectTo('C2', x1 * 2 + x2).ge(10)
+                }
+            }
+        '''
+        MathMeta meta = MathDsl.evaluate(script)
+        OrToolsResult res = OrTools.solve(meta, 'GeModel')
+        assert res.success
+        assert res.status == 'OPTIMAL'
+        assert Math.abs(res.objectiveValue - (20.0d / 3.0d)) < 1e-5
+        assert Math.abs(res.variableValues.x1 - (10.0d / 3.0d)) < 1e-5
+        assert Math.abs(res.variableValues.x2 - (10.0d / 3.0d)) < 1e-5
+    }
+
+    @Test
+    void solvesWithEqualityConstraint() {
+        String script = '''
+            MathModelDef('EqModelDef', type: LinearProgram, usage: Optimisation, modelName: 'EQ Model') {
+                MathModel('EqModel', status: Draft) {
+                    x1 = variable(0, 4)
+                    x2 = variable(0, 10)
+                    maximize x1 * 3 + x2 * 2
+                    subjectTo('C1', x1 + x2).eq(10)
+                }
+            }
+        '''
+        MathMeta meta = MathDsl.evaluate(script)
+        OrToolsResult res = OrTools.solve(meta, 'EqModel')
+        assert res.success
+        assert res.status == 'OPTIMAL'
+        assert Math.abs(res.objectiveValue - 24.0d) < 1e-5
+        assert Math.abs(res.variableValues.x1 - 4.0d) < 1e-5
+        assert Math.abs(res.variableValues.x2 - 6.0d) < 1e-5
+    }
+
+    @Test
+    void solvesWithIntegerVariables() {
+        String script = '''
+            MathModelDef('IntModelDef', type: LinearProgram, usage: Optimisation, modelName: 'Int Model') {
+                MathModel('IntModel', status: Draft) {
+                    x1 = variable(0, 10, domain: 'Integer')
+                    x2 = variable(0, 10, domain: 'Integer')
+                    maximize x1 + x2 * 2
+                    subjectTo('C1', x1 + x2).le(3.5)
+                }
+            }
+        '''
+        MathMeta meta = MathDsl.evaluate(script)
+        OrToolsResult res = OrTools.solve(meta, 'IntModel')
+        assert res.success
+        assert res.status == 'OPTIMAL'
+        assert Math.abs(res.objectiveValue - 6.0d) < 1e-5
+        assert Math.abs(res.variableValues.x1 - 0.0d) < 1e-5
+        assert Math.abs(res.variableValues.x2 - 3.0d) < 1e-5
+    }
+
     private static MathMeta productionPlan() {
         MathDsl.math(modelDefinition()) {
             MathModelDef('LinearProductionPlanning', modelTypeEnum: MathModelType.Lp)

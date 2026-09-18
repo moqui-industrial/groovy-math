@@ -35,9 +35,30 @@ final class ModelDefinition {
     final LinkedHashMap<String, StatusFlowItemDefinition> statusFlowItems = new LinkedHashMap<>()
     /** Every declared moqui.basic.UomConversion. */
     final List<UomConversionDefinition> uomConversions = []
+    /** Every declared moqui.basic.Uom. */
+    final LinkedHashMap<String, UomDefinition> uoms = new LinkedHashMap<>()
+    /** Every declared moqui.basic.UomDimensionType. */
+    final LinkedHashMap<String, UomDimensionTypeDefinition> uomDimensionTypes = new LinkedHashMap<>()
+    /** Every declared moqui.basic.UomDimTypeGroupMember. */
+    final List<UomDimTypeGroupMemberDefinition> uomDimTypeGroupMembers = []
     int extensionCount
     /** Number of Enumeration elements parsed, including any that redeclare an existing id. */
     int enumerationCount
+
+    void addUom(final UomDefinition uom) {
+        Objects.requireNonNull(uom, 'UOM definition must not be null')
+        uoms.put(uom.uomId, uom)
+    }
+
+    void addUomDimensionType(final UomDimensionTypeDefinition dimType) {
+        Objects.requireNonNull(dimType, 'UOM dimension type must not be null')
+        uomDimensionTypes.put(dimType.uomDimensionTypeId, dimType)
+    }
+
+    void addUomDimTypeGroupMember(final UomDimTypeGroupMemberDefinition member) {
+        Objects.requireNonNull(member, 'UOM dimension type group member must not be null')
+        uomDimTypeGroupMembers.add(member)
+    }
 
     void addEnumeration(final EnumerationDefinition enumeration) {
         Objects.requireNonNull(enumeration, 'Enumeration definition must not be null')
@@ -247,6 +268,47 @@ final class ModelDefinition {
         }
 
         throw new IllegalArgumentException("No UOM conversion found from ${uomId} to ${toUomId}")
+    }
+
+    /** The declared UOM for this id, or null. */
+    UomDefinition uom(final String uomId) {
+        uoms.get(uomId)
+    }
+
+    /** Declared UOMs of one type (e.g. UT_TEMP_MEASURE). */
+    List<UomDefinition> uomsOfType(final String uomTypeEnumId) {
+        new ArrayList<UomDefinition>(uoms.values().findAll { UomDefinition u -> u.uomTypeEnumId == uomTypeEnumId })
+    }
+
+    /** Declared UomDimensionType for this id, or null. */
+    UomDimensionTypeDefinition uomDimensionType(final String uomDimensionTypeId) {
+        uomDimensionTypes.get(uomDimensionTypeId)
+    }
+
+    /**
+     * Checks if a given uomId is compatible with the expected dimension (which can be a UomType enumId
+     * like 'UT_TEMP_MEASURE' or a UomDimensionType like 'Weight' / 'Height').
+     */
+    boolean isUomCompatible(final String uomId, final String expectedDimension) {
+        if (expectedDimension == null || uomId == null) return true
+        if (uomId == expectedDimension) return true
+        UomDefinition u = uoms.get(uomId)
+        if (u == null) return true
+        if (u.uomTypeEnumId == expectedDimension) return true
+
+        UomDimensionTypeDefinition dimType = uomDimensionTypes.get(expectedDimension)
+        if (dimType != null) {
+            if (dimType.uomTypeEnumId != null && u.uomTypeEnumId == dimType.uomTypeEnumId) return true
+            if (dimType.defaultUomId != null && dimType.defaultUomId == uomId) return true
+        }
+
+        List<UomDefinition> expectedUoms = uomsOfType(expectedDimension)
+        for (UomDefinition target : expectedUoms) {
+            if (uomConversions.any { (it.uomId == uomId && it.toUomId == target.uomId) || (it.uomId == target.uomId && it.toUomId == uomId) }) {
+                return true
+            }
+        }
+        return false
     }
 
     /**

@@ -55,4 +55,41 @@ class DslSymbolResolutionTest {
         assertTrue(ex.message.contains("MatrixType"))
         assertTrue(ex.message.toLowerCase().contains("dense"))
     }
+
+    @Test
+    void purposeOnVectorResolvesInVectorDomain() {
+        ModelDefinition model = MoquiSchemaInspector.embedded()
+        MathMeta meta = MathDsl.math(model) {
+            MathModelDef('TestDef', type: Lp) {
+                MathModel('TestModel') {
+                    vector('v1', dimension: 3, purpose: Velocity)
+                    vector('v2', dimension: 3, purpose: CostVector)
+                }
+            }
+        }
+
+        ModelValue v1 = meta.entity('Vector').findByName('v1')
+        assertNotNull(v1)
+        assertEquals('VpVelocity', v1.get('purposeEnumId'))
+
+        ModelValue d2 = meta.entity('MathModelData').findByName('TestModel_Data_v2')
+        assertNotNull(d2)
+        assertEquals('MmdpCostVector', d2.get('purposeEnumId'))
+    }
+
+    @Test
+    void unknownPurposeIsRejected() {
+        ModelDefinition model = MoquiSchemaInspector.embedded()
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+            MathDsl.math(model) {
+                MathModelDef('TestDef', type: Lp) {
+                    MathModel('TestModel') {
+                        vector('v1', dimension: 3, purpose: 'NonExistentPurposeXYZ')
+                    }
+                }
+            }
+        }
+        assertTrue(ex.message.contains("Invalid symbol 'NonExistentPurposeXYZ' for purpose field"), "Actual message: " + ex.message)
+        assertTrue(ex.message.contains("candidates:"), "Actual message: " + ex.message)
+    }
 }

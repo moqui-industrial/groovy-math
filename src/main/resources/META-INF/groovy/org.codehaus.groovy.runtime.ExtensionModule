@@ -1,0 +1,3 @@
+moduleName=moqui-math-extension
+moduleVersion=1.0
+extensionClasses=org.moqui.math.dsl.MathDslExtension

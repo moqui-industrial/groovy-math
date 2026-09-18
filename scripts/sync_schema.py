@@ -39,6 +39,8 @@ SOURCES = {
                      'moqui/moqui-math @ data/MathData.xml'),
     'BasicEntities.xml': ('MOQUI_FRAMEWORK_HOME', 'framework/entity/BasicEntities.xml',
                           'moqui/moqui-framework @ framework/entity/BasicEntities.xml'),
+    'UnitData.xml': ('MOQUI_FRAMEWORK_HOME', 'framework/data/UnitData.xml',
+                     'moqui/moqui-framework @ framework/data/UnitData.xml'),
 }
 
 FALLBACK_ROOTS = {

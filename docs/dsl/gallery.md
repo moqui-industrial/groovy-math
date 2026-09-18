@@ -1,31 +1,48 @@
 # Groovy-Math DSL Gallery: Canonical vs. Compact Form
 
-This gallery presents the 9 representative mathematical models and plans across all supported mathematical domains in `groovy-math`. It details the structural equivalence, syntactic compression, and execution equivalence between the canonical (full-schema) representation and the compact ergonomic DSL.
+This gallery presents the 9 representative mathematical models and plans across all supported mathematical domains in `groovy-math`. It details the structural equivalence, syntactic compression, derivation rules, and execution equivalence between the canonical (full-schema) representation in `examples/canonical/` and the compact ergonomic DSL in `examples/`.
 
-All compact models in `examples/compact/` are verified for **100% structural and semantic identity** against their canonical counterparts in `examples/` by [`GalleryEquivalenceTest`](../../src/test/groovy/org/moqui/math/dsl/GalleryEquivalenceTest.groovy).
+All compact models in `examples/` are verified for **100% structural and semantic identity** against their canonical counterparts in `examples/canonical/` by [`GalleryEquivalenceTest`](../../src/test/groovy/org/moqui/math/dsl/GalleryEquivalenceTest.groovy).
 
 ---
 
 ## 1. Metrics & Compression Summary
 
-The table below reports the exact line and character counts computed directly from the files on disk:
+The table below reports the exact line and character counts computed directly from the files on disk at commit time:
 
 | Example | Canonical (Lines / Chars) | Compact (Lines / Chars) | Line Reduction | Char Reduction | Equivalence Test |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | [`matrix-product.groovy`](../../examples/matrix-product.groovy) | 40 lines / 1375 chars | 27 lines / 964 chars | -32.5% | -29.9% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
 | [`matrix-product-plan.groovy`](../../examples/matrix-product-plan.groovy) | 29 lines / 927 chars | 16 lines / 482 chars | -44.8% | -48.0% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
 | [`matrix-decomposition-plan.groovy`](../../examples/matrix-decomposition-plan.groovy) | 70 lines / 2427 chars | 51 lines / 1460 chars | -27.1% | -39.8% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
-| [`production-plan.groovy`](../../examples/production-plan.groovy) | 76 lines / 3315 chars | 28 lines / 1427 chars | -63.2% | -57.0% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
-| [`energy-dispatch.groovy`](../../examples/energy-dispatch.groovy) | 76 lines / 3324 chars | 28 lines / 1435 chars | -63.2% | -56.8% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
-| [`opencv-vision-pipeline.groovy`](../../examples/opencv-vision-pipeline.groovy) | 35 lines / 1486 chars | 24 lines / 1045 chars | -31.4% | -29.7% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
+| [`production-plan.groovy`](../../examples/production-plan.groovy) | 76 lines / 3290 chars | 28 lines / 1427 chars | -63.2% | -56.6% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
+| [`energy-dispatch.groovy`](../../examples/energy-dispatch.groovy) | 76 lines / 3300 chars | 28 lines / 1435 chars | -63.2% | -56.5% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
+| [`opencv-vision-pipeline.groovy`](../../examples/opencv-vision-pipeline.groovy) | 35 lines / 1466 chars | 24 lines / 1045 chars | -31.4% | -28.7% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
 | [`openfoam-cavity.groovy`](../../examples/openfoam-cavity.groovy) | 184 lines / 11818 chars | 126 lines / 7927 chars | -31.5% | -32.9% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
-| [`jena-knowledge-graph.groovy`](../../examples/jena-knowledge-graph.groovy) | 42 lines / 2242 chars | 42 lines / 1949 chars | -0.0% | -13.1% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
-| [`product-catalog-graph.groovy`](../../examples/product-catalog-graph.groovy) | 60 lines / 3628 chars | 60 lines / 3187 chars | -0.0% | -12.2% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
-| **Total** | **612 lines / 30542 chars** | **402 lines / 19876 chars** | **-34.3%** | **-34.9%** | **9/9 Passed (100%)** |
+| [`jena-knowledge-graph.groovy`](../../examples/jena-knowledge-graph.groovy) | 42 lines / 2242 chars | 42 lines / 1949 chars | +0.0% | -13.1% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
+| [`product-catalog-graph.groovy`](../../examples/product-catalog-graph.groovy) | 60 lines / 3628 chars | 60 lines / 3187 chars | +0.0% | -12.2% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
+| **Total** | **612 lines / 30473 chars** | **402 lines / 19876 chars** | **-34.3%** | **-34.8%** | **9/9 Passed (100%)** |
 
 ---
 
-## 2. Exemplary Side-by-Side Comparisons
+## 2. Derivation Rules & Architectural Decision Records (ADRs)
+
+Each ergonomic abbreviation in the compact DSL maps directly to a systematic derivation rule or formal ADR:
+
+| Abbreviation / Feature | Derivation Rule / ADR | Description & Metamodel Mapping |
+| :--- | :--- | :--- |
+| **Mathematical Operators** (`*`, `+`, `-`, `**`, `@`) | [ADR 0003: Mathematical Operators](../adr/0003-operators.md) | Overloaded Groovy operators on `ModelProvider`, `DslVariable`, `DslExpression` mapped to `moqui.math.Transformation` (`TtMatrixProduct`, `TtAddition`, `TtPower`, etc.). |
+| **Optimization Keywords** (`variable`, `maximize`, `minimize`, `subjectTo`, `.le()`, `.ge()`, `.eq()`) | [ADR 0004: Optimization Keywords](../adr/0004-optimization-keywords.md) | Algebraic optimization surface compiling variables, bounds matrix ($2 \times N$), cost vector, constraint matrix, and relational transformations for LP (OR-Tools) and QP (PETSc/TAO). |
+| **Naked Descriptive Symbols** (`LinearProgram`, `Simplex`, `DecisionVariables`, `CostVector`, `RightHandSide`, `VariableBounds`) | Piano 4 §B, Consegna 1 & 2 | Generated `DESCRIPTION_ALIASES` in generated enum classes mapping human-readable enum descriptions from `MathEntities.xml` to canonical `enumId`s. |
+| **Pure Mathematical Plans** (`MathDsl.fluent { ... }`) | Piano 4 §C2, §F | Pure declarative plans omitting `MathModelDef` / `MathModel` metadata wrappers when lifecycle, versioning, or parameters are not required. |
+| **Satellite Entity Functions** (`matrixDecomposition`, `diagonalExtraction`, `triangularExtraction`, `bandExtraction`, `blockMatrixExtraction`, `normResult`, `tensorDecomposition`, `coordinateSystemTransformation`) | Piano 4 §C5 | LowerCamel invocation for satellite entities mapped directly to respective entities and transformations in the Moqui schema. |
+| **Shape & Layout Inference** | [Data Representation](../dsl/data-representation.md), Piano 4 §C3 | Automatic inference of matrix dimensions (`rows`, `cols`), vector `dimension`, and tensor `rank`/`shape` from nested literal data arrays. |
+| **Purpose Routing** | Piano 4 §C3, Consegna 3 §0.3 | Contextual resolution of `purpose` into `MathModelDataPurpose` vs. entity-specific purposes (`MatrixPurpose`, `VectorPurpose`, `TensorPurpose`). |
+| **Parameter Blocks & UOM Checking** | Piano 4 §C7 | `parameters { ... }` block validating unit compatibility against `UomDimensionType` and `UomDimTypeGroupMember` from embedded `UnitData.xml`. |
+
+---
+
+## 3. Exemplary Side-by-Side Comparisons
 
 ### 2.1 Optimization: Production Planning (Linear Program, Simplex / OR-Tools)
 

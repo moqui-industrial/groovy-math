@@ -103,14 +103,45 @@ class DslInferenceTest {
     }
 
     @Test
-    void rejectsIdentifiersLongerThan250Characters() {
+    void rejectsIdentifierLongerThanFieldType() {
         ModelDefinition model = MoquiSchemaInspector.embedded()
-        String veryLongId = 'A' * 251
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+
+        // 1. Field of type 'id' (limit 40)
+        String id41 = 'A' * 41
+        IllegalArgumentException exId = assertThrows(IllegalArgumentException) {
             MathDsl.math(model) {
-                matrix(veryLongId, rows: 2, cols: 2)
+                matrix(id41, rows: 2, cols: 2)
             }
         }
-        assertTrue(ex.message.contains("supera la lunghezza massima di 250 caratteri"))
+        assertTrue(exId.message.contains("matrixId") && exId.message.contains("id") && exId.message.contains("40"))
+
+        // 40 characters succeeds
+        String id40 = 'A' * 40
+        assertDoesNotThrow({
+            MathDsl.math(model) {
+                matrix(id40, rows: 2, cols: 2)
+            }
+        } as org.junit.jupiter.api.function.Executable)
+
+        // 2. Field of type 'id-long' (limit 255)
+        ModelDefinition customModel = new ModelDefinition()
+        org.moqui.math.entity.EntityDefinition longPkEntity = new org.moqui.math.entity.EntityDefinition('test', 'LongPkEntity')
+        longPkEntity.addField(new org.moqui.math.entity.FieldDefinition('longPkId', 'id-long', true, true, null))
+        customModel.addEntity(longPkEntity)
+
+        String id256 = 'B' * 256
+        IllegalArgumentException exLong = assertThrows(IllegalArgumentException) {
+            MathDsl.math(customModel) {
+                LongPkEntity(id256)
+            }
+        }
+        assertTrue(exLong.message.contains("longPkId") && exLong.message.contains("id-long") && exLong.message.contains("255"))
+
+        String id255 = 'B' * 255
+        assertDoesNotThrow({
+            MathDsl.math(customModel) {
+                LongPkEntity(id255)
+            }
+        } as org.junit.jupiter.api.function.Executable)
     }
 }

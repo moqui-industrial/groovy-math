@@ -7,14 +7,17 @@ package org.moqui.math.dsl
 
 import groovy.json.JsonSlurper
 import groovy.transform.CompileStatic
+import org.moqui.math.entity.EntityDefinition
+import org.moqui.math.entity.FieldDefinition
 import org.moqui.math.entity.ModelValue
 import org.moqui.math.entity.NamedModelContainer
+import org.moqui.math.entity.RelationshipDefinition
 
 import java.util.regex.Pattern
 
 @CompileStatic
 final class CanonicalDump {
-    private static final Pattern SYNTHETIC_KEY_PATTERN = Pattern.compile('.*(_Op_|_Data_|anon_|#|\\$[0-9]+).*')
+    private static final Pattern SYNTHETIC_KEY_PATTERN = Pattern.compile('.*(_Op_|_Data_|anon_|#|\\$[0-9]+|_[0-9]+).*')
 
     private CanonicalDump() { }
 
@@ -78,12 +81,13 @@ final class CanonicalDump {
 
         for (String entityName : entityNames) {
             NamedModelContainer container = meta.entity(entityName)
+            EntityDefinition ed = container.definition
             List<ModelValue> records = new ArrayList<ModelValue>()
             container.each { ModelValue v -> records.add(v) }
 
             records.sort { ModelValue a, ModelValue b ->
-                String keyA = stableSortKey(a, structural)
-                String keyB = stableSortKey(b, structural)
+                String keyA = stableSortKey(a, meta, structural)
+                String keyB = stableSortKey(b, meta, structural)
                 keyA <=> keyB
             }
 
@@ -103,15 +107,26 @@ final class CanonicalDump {
                 fieldNames.sort()
 
                 for (String field : fieldNames) {
-                    // In structural mode, ignore synthetic primary key fields or foreign keys with synthetic IDs
-                    if (structural && isPureIdField(field, entityName)) continue
-                    if (structural && field == 'name' && (entityName.endsWith('Matrix') || entityName.endsWith('Vector') || entityName.endsWith('Tensor')) &&
-                        (record.get('name') == record.modelKey || record.get('name') == record.get('symbol'))) {
-                        continue
-                    }
-
                     Object val = record.get(field)
                     if (val == null) continue
+
+                    if (structural) {
+                        RelationshipDefinition fkRel = findFkRelationship(ed, field)
+                        if (fkRel != null) {
+                            String targetEntityName = fkRel.relatedEntityName
+                            NamedModelContainer targetContainer = meta.hasEntity(targetEntityName) ? meta.entity(targetEntityName) : null
+                            ModelValue targetRecord = targetContainer != null ? targetContainer.findByName(val.toString()) : null
+                            String formattedVal = targetRecord != null ? structuralPathFor(targetRecord) : "\"${val}\" ⟨dangling⟩"
+                            sb.append("    ").append(field).append(": ").append(formattedVal).append("\n")
+                            continue
+                        }
+
+                        if (isPrimaryKeyField(ed, field)) {
+                            sb.append("    ").append(field).append(": ").append(structuralPathFor(record)).append("\n")
+                            continue
+                        }
+                    }
+
                     String formattedVal = formatValue(val, syntheticIdMap, structural)
                     sb.append("    ").append(field).append(": ").append(formattedVal).append("\n")
                 }
@@ -121,14 +136,23 @@ final class CanonicalDump {
         sb.toString()
     }
 
-    private static boolean isPureIdField(final String field, final String entityName) {
-        if (field == 'mathModelDataId' || field == 'parameterId' || field == 'transformationId') return true
-        if (field.endsWith('Id') && !field.endsWith('EnumId') && !field.endsWith('TypeEnumId') && !field.endsWith('UomId')) {
-            if (field == 'leftMatrixId' || field == 'rightMatrixId' || field == 'resultMatrixId' ||
-                field == 'resultVectorId' || field == 'operandMatrixId' || field == 'operandVectorId') {
-                return false
+    private static RelationshipDefinition findFkRelationship(final EntityDefinition ed, final String field) {
+        for (RelationshipDefinition rel : ed.relationships.values()) {
+            if (rel.type == 'one' || rel.type == 'one-nofk') {
+                if (rel.relatedEntityName.startsWith('moqui.basic.') || rel.relatedEntityName.startsWith('moqui.security.')) {
+                    continue
+                }
+                if (rel.keyMap != null && rel.keyMap.containsKey(field)) {
+                    return rel
+                }
             }
-            return true
+        }
+        null
+    }
+
+    private static boolean isPrimaryKeyField(final EntityDefinition ed, final String field) {
+        for (FieldDefinition fd : ed.primaryKeyFields) {
+            if (fd.name == field) return true
         }
         false
     }
@@ -145,19 +169,19 @@ final class CanonicalDump {
             return "MathModelData[purpose=${record.get('purposeEnumId') ?: record.get('dataTypeEnumId') ?: record.get('sequenceNum')}]"
         }
         if (entity == 'Matrix') {
-            return "Matrix[${record.get('name') ?: record.get('symbol') ?: record.get('matrixId')}]"
+            return "Matrix[${record.get('symbol') ?: (record.get('name') && !isSyntheticKey(record.get('name').toString()) ? record.get('name') : (isSyntheticKey(record.modelKey) ? '⟨anonymous⟩' : record.modelKey))}]"
         }
         if (entity == 'Vector') {
-            return "Vector[${record.get('name') ?: record.get('symbol') ?: record.get('vectorId')}]"
+            return "Vector[${record.get('symbol') ?: (record.get('name') && !isSyntheticKey(record.get('name').toString()) ? record.get('name') : (isSyntheticKey(record.modelKey) ? '⟨anonymous⟩' : record.modelKey))}]"
         }
         if (entity == 'Tensor') {
-            return "Tensor[${record.get('name') ?: record.get('symbol') ?: record.get('tensorId')}]"
+            return "Tensor[${record.get('symbol') ?: (record.get('name') && !isSyntheticKey(record.get('name').toString()) ? record.get('name') : (isSyntheticKey(record.modelKey) ? '⟨anonymous⟩' : record.modelKey))}]"
         }
         if (entity == 'Parameter') {
-            return "Parameter[${record.get('parameterCode') ?: record.get('parameterAlias') ?: record.get('parameterId')}]"
+            return "Parameter[${record.get('parameterCode') ?: record.get('parameterAlias') ?: (isSyntheticKey(record.modelKey) ? '⟨anonymous⟩' : record.modelKey)}]"
         }
         if (entity == 'Transformation') {
-            return "Transformation[${record.get('transformationTypeEnumId') ?: record.get('transformationId')}]"
+            return "Transformation[${record.get('transformationTypeEnumId') ?: (isSyntheticKey(record.modelKey) ? '⟨anonymous⟩' : record.modelKey)}]"
         }
         if (entity == 'TransformationOperand') {
             return "TransformationOperand[${record.get('operandIndex')}_${record.get('operandTypeEnumId')}]"
@@ -188,9 +212,28 @@ final class CanonicalDump {
         SYNTHETIC_KEY_PATTERN.matcher(key).matches()
     }
 
-    private static String stableSortKey(final ModelValue record, final boolean structural) {
+    private static String stableSortKey(final ModelValue record, final MathMeta meta, final boolean structural) {
         if (structural) {
-            return structuralPathFor(record)
+            EntityDefinition ed = record.definition
+            StringBuilder sb = new StringBuilder(structuralPathFor(record)).append(":")
+            List<String> fields = new ArrayList<String>(record.keySet())
+            fields.sort()
+            for (String f : fields) {
+                if (isPrimaryKeyField(ed, f)) continue
+                Object val = record.get(f)
+                if (val == null) continue
+                RelationshipDefinition fkRel = findFkRelationship(ed, f)
+                if (fkRel != null) {
+                    String targetEntityName = fkRel.relatedEntityName
+                    NamedModelContainer targetContainer = meta.hasEntity(targetEntityName) ? meta.entity(targetEntityName) : null
+                    ModelValue targetRecord = targetContainer != null ? targetContainer.findByName(val.toString()) : null
+                    String formattedVal = targetRecord != null ? structuralPathFor(targetRecord) : "\"${val}\" ⟨dangling⟩"
+                    sb.append(f).append('=').append(formattedVal).append(';')
+                } else {
+                    sb.append(f).append('=').append(val.toString()).append(';')
+                }
+            }
+            return sb.toString()
         }
         Object name = record.get('name')
         if (name != null) return "0:" + name.toString()

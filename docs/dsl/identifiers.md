@@ -9,7 +9,7 @@ This document describes the identifier derivation rules and syntax conventions f
 ## 2. Nested and Child Identifiers
 - Children declared nested within a parent entity (such as `MathModelData`, nested parameters, or pipeline steps) receive derived identifiers in hierarchical dot-notation or prefixed format:
   `<parentId>.<childName>` or `<parentId>_Data_<childKey>`.
-- Derived identifiers are validated against Moqui entity id length limits (maximum 250 characters).
+- Derived identifiers are validated against Moqui entity primary key field type limits (40 characters for `id`, 255 characters for `id-long`).
 
 ## 3. Reference and Symbol Resolution
 - Bare identifiers assigned to typed enumeration fields are contextually resolved against the field's target `enumTypeId`.
