@@ -1,6 +1,6 @@
 # ADR 0004 — Algebraic Optimization Keywords and Parameter Bindings
 
-- **Status**: Accepted
+- **Status**: Proposed
 - **Date**: 2026-09-18
 - **Context**: Mathematical programming formulations (LP, QP, MILP) in standard mathematical modelling practice use algebraic expressions (`maximize c^T x`, `subject to a_i^T x <= b_i`, `x in [l, u]`) rather than manually encoding matrices and vectors. The keywords `variable`, `maximize`, `minimize`, `subjectTo`, `.le()`, `.ge()`, `.eq()`, `initial`, and `domain` do not derive directly from the Moqui-Math relational schema, but compile cleanly into metamodel entities (`Vector`, `VectorComponent`, `Transformation`, `MathModelData`, `Parameter`).
 

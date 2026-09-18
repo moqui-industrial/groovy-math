@@ -1,6 +1,6 @@
 # ADR 0003 — Overloaded Operators in Groovy Math DSL
 
-- **Status**: Accepted
+- **Status**: Proposed
 - **Date**: 2026-09-18
 - **Context**: Groovy-Math DSL enables mathematical declarations that mirror algebraic expressions while building the underlying Moqui-Math metamodel (`Transformation`, `TransformationOperand`, etc.). Mathematical operator overloading (`*`, `+`, `-`, `/`, `**`, unary `-`) allows concise syntax in models and pipelines.
 

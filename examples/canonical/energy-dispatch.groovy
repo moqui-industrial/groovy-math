@@ -3,12 +3,6 @@
  * Grant of Patent License.
  */
 
-ParameterDef('QuadraticObjectiveSense',
-    parameterTypeEnum: ParameterType.TextShort,
-    purposeEnum: ParameterPurpose.MathModel,
-    parameterCode: 'objectiveSense',
-    parameterName: 'Quadratic optimization objective sense')
-
 MathModelDef('QuadraticEnergyDispatch',
     modelTypeEnum: MathModelType.Qp,
     usageContextEnum: MathModelUsageContext.Optimisation,
@@ -25,52 +19,68 @@ MathModelDef('QuadraticEnergyDispatch',
         statusId: 'MathModelDraft') {
 
         parameters('EnergyDispatch.ObjectiveSense',
-            parameterDefId: 'QuadraticObjectiveSense',
+            parameterDefId: 'OptimizationObjectiveSense',
             parameterAlias: 'objectiveSense',
-            symbolicValue: OptimizationObjectiveSense.Minimize)
+            symbolicValue: 'MINIMIZE')
 
-        data('EnergySourceVariablesData',
+        data('EnergyDispatch_D_Vars',
             dataTypeEnum: MathModelDataType.Vector,
             purposeEnum: MathModelDataPurpose.DecisionVars,
-            vectorId: 'EnergySourceVariables', sequenceNum: 0) {
-            Vector('EnergySourceVariables', name: 'Energy source outputs', dimension: 2,
-                componentArray: '["GridPower","StoredEnergy"]')
+            vectorId: 'EnergyDispatch_Variables', sequenceNum: 0) {
+            Vector('EnergyDispatch_Variables', name: 'Decision Variables', dimension: 2,
+                componentArray: '["GridPower","StoredEnergy"]') {
+                VectorComponent('EnergyDispatch_Variables_0', dimensionIndex: 0,
+                    symbolicValue: 'GridPower', componentTypeEnum: VectorComponentType.Symbolic)
+                VectorComponent('EnergyDispatch_Variables_1', dimensionIndex: 1,
+                    symbolicValue: 'StoredEnergy', componentTypeEnum: VectorComponentType.Symbolic)
+            }
         }
 
-        data('DispatchHessianData',
-            dataTypeEnum: MathModelDataType.Matrix,
-            purposeEnum: MathModelDataPurpose.Hessian,
-            matrixId: 'DispatchHessian', sequenceNum: 1) {
-            Matrix('DispatchHessian', matrixTypeEnum: MatrixType.Symmetric,
-                domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
-                name: 'Quadratic operating cost', rows: 2, cols: 2,
-                componentArray: '[[2,0],[0,4]]')
-        }
-
-        data('DispatchLinearCostData',
-            dataTypeEnum: MathModelDataType.Vector,
-            purposeEnum: MathModelDataPurpose.CostVector,
-            vectorId: 'DispatchLinearCost', sequenceNum: 2) {
-            Vector('DispatchLinearCost', name: 'Linear operating cost', dimension: 2,
-                componentArray: '[-8,-8]')
-        }
-
-        data('DispatchBoundsData',
+        data('EnergyDispatch_D_Bounds',
             dataTypeEnum: MathModelDataType.Matrix,
             purposeEnum: MathModelDataPurpose.VarBounds,
-            matrixId: 'DispatchBounds', sequenceNum: 3) {
-            Matrix('DispatchBounds', matrixTypeEnum: MatrixType.Rectangular,
-                domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
-                name: 'Lower and upper dispatch bounds', rows: 2, cols: 2,
-                componentArray: '[[0,0],[5,3]]')
+            matrixId: 'EnergyDispatch_VariableBounds', sequenceNum: 1) {
+            Matrix('EnergyDispatch_VariableBounds', matrixTypeEnum: MatrixType.Rectangular,
+                domainSpaceEnum: AlgebraicStructureType.EuclideanSpace, codomainSpaceEnum: AlgebraicStructureType.EuclideanSpace,
+                name: 'Variable Bounds', rows: 2, cols: 2,
+                componentArray: '[[0.0,0.0],[5.0,3.0]]')
         }
 
-        data('DispatchInitialConditionData',
+        data('EnergyDispatch_D_Init',
             dataTypeEnum: MathModelDataType.Vector,
             purposeEnum: MathModelDataPurpose.InitialCondition,
-            vectorId: 'DispatchInitialCondition', sequenceNum: 4) {
-            Vector('DispatchInitialCondition', name: 'Initial dispatch', dimension: 2,
-                componentArray: '[1,1]')
+            vectorId: 'EnergyDispatch_InitialCondition', sequenceNum: 2) {
+            Vector('EnergyDispatch_InitialCondition', name: 'Initial Condition', dimension: 2,
+                componentArray: '[1.0,1.0]') {
+                VectorComponent('EnergyDispatch_InitialCondition_0', dimensionIndex: 0,
+                    realValue: 1.0, componentTypeEnum: VectorComponentType.Canonical)
+                VectorComponent('EnergyDispatch_InitialCondition_1', dimensionIndex: 1,
+                    realValue: 1.0, componentTypeEnum: VectorComponentType.Canonical)
+            }
+        }
+
+        data('EnergyDispatch_D_Cost',
+            dataTypeEnum: MathModelDataType.Vector,
+            purposeEnum: MathModelDataPurpose.CostVector,
+            vectorId: 'EnergyDispatch_CostVector', sequenceNum: 3) {
+            Vector('EnergyDispatch_CostVector', name: 'Cost Vector', dimension: 2,
+                componentArray: '[-8.0,-8.0]') {
+                VectorComponent('EnergyDispatch_CostVector_0', dimensionIndex: 0,
+                    realValue: -8.0, componentTypeEnum: VectorComponentType.Canonical)
+                VectorComponent('EnergyDispatch_CostVector_1', dimensionIndex: 1,
+                    realValue: -8.0, componentTypeEnum: VectorComponentType.Canonical)
+            }
+        }
+
+        data('EnergyDispatch_D_Hessian',
+            dataTypeEnum: MathModelDataType.Matrix,
+            purposeEnum: MathModelDataPurpose.Hessian,
+            matrixId: 'EnergyDispatch_Hessian', sequenceNum: 4) {
+            Matrix('EnergyDispatch_Hessian', matrixTypeEnum: MatrixType.Symmetric,
+                domainSpaceEnum: AlgebraicStructureType.EuclideanSpace, codomainSpaceEnum: AlgebraicStructureType.EuclideanSpace,
+                name: 'Hessian Matrix', rows: 2, cols: 2,
+                componentArray: '[[2.0,0.0],[0.0,4.0]]')
         }
     }
 }
+

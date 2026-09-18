@@ -3,27 +3,21 @@
  * Grant of Patent License.
  */
 
-// Pure declarative mathematical plan without MathModelDef or MathModel overhead
+Matrix('A', symbol: 'A', rows: 2, cols: 3, purposeEnum: MatrixPurpose.Original,
+    domainSpaceEnum: MathSpace.R3, codomainSpaceEnum: MathSpace.R2)
 
-MathDsl.fluent {
-    matrix('A', rows: 2, cols: 3, purpose: MatrixPurpose.Original,
-           domainSpace: MathSpace.R3, codomainSpace: MathSpace.R2,
-           name: 'A', symbol: 'A')
+Matrix('B', symbol: 'B', rows: 3, cols: 2, purposeEnum: MatrixPurpose.Original,
+    domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R3,
+    componentArray: '[[7,8],[9,10],[11,12]]')
 
-    matrix('B', rows: 3, cols: 2, purpose: MatrixPurpose.Original,
-           domainSpace: MathSpace.R2, codomainSpace: MathSpace.R3,
-           name: 'B', symbol: 'B',
-           data: [[7, 8], [9, 10], [11, 12]])
+Matrix('C', symbol: 'C', rows: 2, cols: 2,
+    matrixTypeEnum: MatrixType.Dense,
+    domainSpaceEnum: MathSpace.R2,
+    codomainSpaceEnum: MathSpace.R2)
 
-    matrix('C', rows: 2, cols: 2,
-           domainSpace: MathSpace.R2, codomainSpace: MathSpace.R2,
-           name: 'C', symbol: 'C')
-
-    transformation('MultiplyAB') {
-        type TransformationType.MatrixProduct
-        name 'Matrix product A x B'
-        leftMatrix 'A'
-        rightMatrix 'B'
-        resultMatrix 'C'
-    }
+Transformation('MultiplyAB', transformationTypeEnum: TransformationType.MatrixProduct,
+    resultMatrixId: 'C') {
+    TransformationOperand('Op_0', operandIndex: 0, operandTypeEnum: TransformationOperandType.Left, operandMatrixId: 'A')
+    TransformationOperand('Op_1', operandIndex: 1, operandTypeEnum: TransformationOperandType.Right, operandMatrixId: 'B')
 }
+

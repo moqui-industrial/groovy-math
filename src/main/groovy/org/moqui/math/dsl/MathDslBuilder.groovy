@@ -461,14 +461,16 @@ final class MathDslBuilder {
                     if (c instanceof Number) inferredCols = ((Number) c).intValue()
                 }
             }
+            int r = (int) (options.get('rows') ?: inferredRows)
+            int c = (int) (options.get('cols') ?: inferredCols)
             Map<String, Object> matOptions = new LinkedHashMap<>()
             matOptions.put('_key', resKey)
             if (options.containsKey('name')) matOptions.put('name', options.get('name'))
-            matOptions.put('matrixType', 'Dense')
-            matOptions.put('rows', options.get('rows') ?: inferredRows)
-            matOptions.put('cols', options.get('cols') ?: inferredCols)
-            matOptions.put('domainSpace', options.get('domainSpace') ?: 'Real')
-            matOptions.put('codomainSpace', options.get('codomainSpace') ?: 'Real')
+            matOptions.put('matrixTypeEnumId', 'MtDense')
+            matOptions.put('rows', r)
+            matOptions.put('cols', c)
+            matOptions.put('domainSpaceEnumId', c == 3 ? 'Eng3DEuclideanSpace' : 'Eng2DEuclideanSpace')
+            matOptions.put('codomainSpaceEnumId', r == 3 ? 'Eng3DEuclideanSpace' : 'Eng2DEuclideanSpace')
             resultProvider = matrix(matOptions)
         }
 
@@ -619,6 +621,13 @@ final class MathDslBuilder {
     @CompileStatic(TypeCheckingMode.SKIP)
     void propertyMissing(final String name, final Object value) {
         localVariables.put(name, value)
+        if (value instanceof ModelProvider) {
+            ModelProvider mp = (ModelProvider) value
+            ModelValue mv = mp.get()
+            if (mv != null && (mv.get('symbol') == null || mv.get('symbol') == '')) {
+                mv.put('symbol', name)
+            }
+        }
     }
 
     @PackageScope

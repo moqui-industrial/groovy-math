@@ -3,12 +3,6 @@
  * Grant of Patent License.
  */
 
-ParameterDef('OptimizationObjectiveSense',
-    parameterTypeEnum: ParameterType.TextShort,
-    purposeEnum: ParameterPurpose.MathModel,
-    parameterCode: 'objectiveSense',
-    parameterName: 'Optimization objective sense')
-
 MathModelDef('LinearProductionPlanning',
     modelTypeEnum: MathModelType.Lp,
     usageContextEnum: MathModelUsageContext.Optimisation,
@@ -27,50 +21,88 @@ MathModelDef('LinearProductionPlanning',
         parameters('ProductionPlan.ObjectiveSense',
             parameterDefId: 'OptimizationObjectiveSense',
             parameterAlias: 'objectiveSense',
-            symbolicValue: OptimizationObjectiveSense.Maximize)
+            symbolicValue: 'MAXIMIZE')
 
-        data('ProductionVariablesData',
+        data('ProductionPlan_D_Vars',
             dataTypeEnum: MathModelDataType.Vector,
             purposeEnum: MathModelDataPurpose.DecisionVars,
-            vectorId: 'ProductionVariables', sequenceNum: 0) {
-            Vector('ProductionVariables', name: 'Production quantities', dimension: 2,
-                componentArray: '["Standard","Premium"]')
+            vectorId: 'ProductionPlan_Variables', sequenceNum: 0) {
+            Vector('ProductionPlan_Variables', name: 'Decision Variables', dimension: 2,
+                componentArray: '["Standard","Premium"]') {
+                VectorComponent('ProductionPlan_Variables_0', dimensionIndex: 0,
+                    symbolicValue: 'Standard', componentTypeEnum: VectorComponentType.Symbolic)
+                VectorComponent('ProductionPlan_Variables_1', dimensionIndex: 1,
+                    symbolicValue: 'Premium', componentTypeEnum: VectorComponentType.Symbolic)
+            }
         }
 
-        data('UnitMarginData',
-            dataTypeEnum: MathModelDataType.Vector,
-            purposeEnum: MathModelDataPurpose.CostVector,
-            vectorId: 'UnitMargin', sequenceNum: 1) {
-            Vector('UnitMargin', name: 'Unit contribution margin', dimension: 2,
-                componentArray: '[40,30]')
-        }
-
-        data('MachineCapacityCoefficientsData',
-            dataTypeEnum: MathModelDataType.Matrix,
-            purposeEnum: MathModelDataPurpose.ConstraintMatrix,
-            matrixId: 'MachineCapacityCoefficients', sequenceNum: 2) {
-            Matrix('MachineCapacityCoefficients', matrixTypeEnum: MatrixType.Rectangular,
-                domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
-                name: 'Machine capacity coefficients', rows: 2, cols: 2,
-                componentArray: '[[2,1],[1,2]]')
-        }
-
-        data('MachineCapacityData',
-            dataTypeEnum: MathModelDataType.Vector,
-            purposeEnum: MathModelDataPurpose.RhsVector,
-            vectorId: 'MachineCapacity', sequenceNum: 3) {
-            Vector('MachineCapacity', name: 'Available machine capacity', dimension: 2,
-                componentArray: '[100,80]')
-        }
-
-        data('ProductionBoundsData',
+        data('ProductionPlan_D_Bounds',
             dataTypeEnum: MathModelDataType.Matrix,
             purposeEnum: MathModelDataPurpose.VarBounds,
-            matrixId: 'ProductionBounds', sequenceNum: 4) {
-            Matrix('ProductionBounds', matrixTypeEnum: MatrixType.Rectangular,
-                domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
-                name: 'Lower and upper production bounds', rows: 2, cols: 2,
-                componentArray: '[[0,0],[40,50]]')
+            matrixId: 'ProductionPlan_VariableBounds', sequenceNum: 1) {
+            Matrix('ProductionPlan_VariableBounds', matrixTypeEnum: MatrixType.Rectangular,
+                domainSpaceEnum: AlgebraicStructureType.EuclideanSpace, codomainSpaceEnum: AlgebraicStructureType.EuclideanSpace,
+                name: 'Variable Bounds', rows: 2, cols: 2,
+                componentArray: '[[0.0,0.0],[40.0,50.0]]')
+        }
+
+        data('ProductionPlan_D_Cost',
+            dataTypeEnum: MathModelDataType.Vector,
+            purposeEnum: MathModelDataPurpose.CostVector,
+            vectorId: 'ProductionPlan_CostVector', sequenceNum: 2) {
+            Vector('ProductionPlan_CostVector', name: 'Cost Vector', dimension: 2,
+                componentArray: '[40.0,30.0]') {
+                VectorComponent('ProductionPlan_CostVector_0', dimensionIndex: 0,
+                    realValue: 40.0, componentTypeEnum: VectorComponentType.Canonical)
+                VectorComponent('ProductionPlan_CostVector_1', dimensionIndex: 1,
+                    realValue: 30.0, componentTypeEnum: VectorComponentType.Canonical)
+            }
+        }
+
+        data('ProductionPlan_D_ConsMat',
+            dataTypeEnum: MathModelDataType.Matrix,
+            purposeEnum: MathModelDataPurpose.ConstraintMatrix,
+            matrixId: 'ProductionPlan_ConstraintMatrix', sequenceNum: 3) {
+            Matrix('ProductionPlan_ConstraintMatrix', matrixTypeEnum: MatrixType.Rectangular,
+                domainSpaceEnum: AlgebraicStructureType.EuclideanSpace, codomainSpaceEnum: AlgebraicStructureType.EuclideanSpace,
+                name: 'Constraint Matrix', rows: 2, cols: 2,
+                componentArray: '[[2.0,1.0],[1.0,2.0]]')
+        }
+
+        data('ProductionPlan_D_Rhs',
+            dataTypeEnum: MathModelDataType.Vector,
+            purposeEnum: MathModelDataPurpose.RhsVector,
+            vectorId: 'ProductionPlan_RightHandSide', sequenceNum: 4) {
+            Vector('ProductionPlan_RightHandSide', name: 'Right Hand Side', dimension: 2,
+                componentArray: '[100.0,80.0]') {
+                VectorComponent('ProductionPlan_RightHandSide_0', dimensionIndex: 0,
+                    realValue: 100.0, componentTypeEnum: VectorComponentType.Canonical)
+                VectorComponent('ProductionPlan_RightHandSide_1', dimensionIndex: 1,
+                    realValue: 80.0, componentTypeEnum: VectorComponentType.Canonical)
+            }
+        }
+
+        data('ProductionPlan_D_Sense',
+            dataTypeEnum: MathModelDataType.Vector,
+            purposeEnum: MathModelDataPurpose.Constraint,
+            vectorId: 'ProductionPlan_ConstraintSense', sequenceNum: 5) {
+            Vector('ProductionPlan_ConstraintSense', name: 'Constraint Sense', dimension: 2,
+                componentArray: '["TtLessEqual","TtLessEqual"]') {
+                VectorComponent('ProductionPlan_ConstraintSense_0', dimensionIndex: 0,
+                    symbolicValue: 'TtLessEqual', componentTypeEnum: VectorComponentType.Symbolic)
+                VectorComponent('ProductionPlan_ConstraintSense_1', dimensionIndex: 1,
+                    symbolicValue: 'TtLessEqual', componentTypeEnum: VectorComponentType.Symbolic)
+            }
         }
     }
 }
+
+Transformation('ProductionPlan_Constraint_MachineA',
+    transformationTypeEnum: TransformationType.LessEqual,
+    name: 'MachineA')
+
+Transformation('ProductionPlan_Constraint_MachineB',
+    transformationTypeEnum: TransformationType.LessEqual,
+    name: 'MachineB')
+
+

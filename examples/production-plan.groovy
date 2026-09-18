@@ -3,9 +3,6 @@
  * Grant of Patent License.
  */
 
-ParameterDef('OptimizationObjectiveSense', type: TextShort, purpose: MathModel,
-    code: 'objectiveSense', name: 'Optimization objective sense')
-
 MathModelDef('LinearProductionPlanning', type: LinearProgram, usage: Optimisation,
     modelName: 'Linear production planning',
     description: 'Maximize production margin under machine-capacity constraints') {
@@ -15,14 +12,10 @@ MathModelDef('LinearProductionPlanning', type: LinearProgram, usage: Optimisatio
     MathModel('ProductionPlan', alias: 'production_plan', source: Manual,
         description: 'Choose Standard and Premium production quantities', status: Draft) {
 
-        parameters {
-            objectiveSense = Maximize
-        }
-
-        vector('ProductionVariables', ['Standard', 'Premium'], purpose: DecisionVariables, name: 'Production quantities')
-        vector('UnitMargin', [40, 30], purpose: CostVector, name: 'Unit contribution margin')
-        matrix('MachineCapacityCoefficients', [[2, 1], [1, 2]], purpose: ConstraintMatrix, type: Rectangular, name: 'Machine capacity coefficients')
-        vector('MachineCapacity', [100, 80], purpose: RightHandSide, name: 'Available machine capacity')
-        matrix('ProductionBounds', [[0, 0], [40, 50]], purpose: VariableBounds, type: Rectangular, name: 'Lower and upper production bounds')
+        Standard = variable(0, 40)
+        Premium  = variable(0, 50)
+        maximize Standard * 40 + Premium * 30
+        subjectTo('MachineA', Standard * 2 + Premium).le(100)
+        subjectTo('MachineB', Standard + Premium * 2).le(80)
     }
 }

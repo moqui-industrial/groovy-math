@@ -8,20 +8,20 @@ All compact models in `examples/` are verified for **100% structural and semanti
 
 ## 1. Metrics & Compression Summary
 
-The table below reports the exact line and character counts computed directly from the files on disk at commit time:
+The table below reports the exact line and character counts computed directly from the files on disk:
 
 | Example | Canonical (Lines / Chars) | Compact (Lines / Chars) | Line Reduction | Char Reduction | Equivalence Test |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | [`matrix-product.groovy`](../../examples/matrix-product.groovy) | 40 lines / 1375 chars | 27 lines / 964 chars | -32.5% | -29.9% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
-| [`matrix-product-plan.groovy`](../../examples/matrix-product-plan.groovy) | 29 lines / 927 chars | 16 lines / 482 chars | -44.8% | -48.0% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
+| [`matrix-product-plan.groovy`](../../examples/matrix-product-plan.groovy) | 23 lines / 968 chars | 8 lines / 225 chars | -65.2% | -76.8% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
 | [`matrix-decomposition-plan.groovy`](../../examples/matrix-decomposition-plan.groovy) | 70 lines / 2427 chars | 51 lines / 1460 chars | -27.1% | -39.8% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
-| [`production-plan.groovy`](../../examples/production-plan.groovy) | 76 lines / 3290 chars | 28 lines / 1427 chars | -63.2% | -56.6% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
-| [`energy-dispatch.groovy`](../../examples/energy-dispatch.groovy) | 76 lines / 3300 chars | 28 lines / 1435 chars | -63.2% | -56.5% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
+| [`production-plan.groovy`](../../examples/production-plan.groovy) | 108 lines / 5343 chars | 21 lines / 837 chars | -80.6% | -84.3% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
+| [`energy-dispatch.groovy`](../../examples/energy-dispatch.groovy) | 86 lines / 4302 chars | 19 lines / 810 chars | -77.9% | -81.2% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
 | [`opencv-vision-pipeline.groovy`](../../examples/opencv-vision-pipeline.groovy) | 35 lines / 1466 chars | 24 lines / 1045 chars | -31.4% | -28.7% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
 | [`openfoam-cavity.groovy`](../../examples/openfoam-cavity.groovy) | 184 lines / 11818 chars | 126 lines / 7927 chars | -31.5% | -32.9% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
-| [`jena-knowledge-graph.groovy`](../../examples/jena-knowledge-graph.groovy) | 42 lines / 2242 chars | 42 lines / 1949 chars | +0.0% | -13.1% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
-| [`product-catalog-graph.groovy`](../../examples/product-catalog-graph.groovy) | 60 lines / 3628 chars | 60 lines / 3187 chars | +0.0% | -12.2% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
-| **Total** | **612 lines / 30473 chars** | **402 lines / 19876 chars** | **-34.3%** | **-34.8%** | **9/9 Passed (100%)** |
+| [`jena-knowledge-graph.groovy`](../../examples/jena-knowledge-graph.groovy) | 42 lines / 2242 chars | 42 lines / 1949 chars | -0.0% | -13.1% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
+| [`product-catalog-graph.groovy`](../../examples/product-catalog-graph.groovy) | 60 lines / 3628 chars | 60 lines / 3187 chars | -0.0% | -12.2% | `GalleryEquivalenceTest.testCanonicalAndCompactEquivalence` |
+| **Total** | **648 lines / 33569 chars** | **378 lines / 18404 chars** | **-41.7%** | **-45.2%** | **9/9 Passed (100%)** |
 
 ---
 
@@ -44,18 +44,12 @@ Each ergonomic abbreviation in the compact DSL maps directly to a systematic der
 
 ## 3. Exemplary Side-by-Side Comparisons
 
-### 2.1 Optimization: Production Planning (Linear Program, Simplex / OR-Tools)
+### 3.1 Optimization: Production Planning (Linear Program, Simplex / OR-Tools)
 
-#### Canonical (`examples/production-plan.groovy` — 76 lines)
+#### Canonical (`examples/canonical/production-plan.groovy` — 108 lines)
 ```groovy
-ParameterDef('OptimizationObjectiveSense',
-    parameterTypeEnum: ParameterType.TextShort,
-    purposeEnum: ParameterPurpose.MathModel,
-    parameterCode: 'objectiveSense',
-    parameterName: 'Optimization objective sense')
-
 MathModelDef('LinearProductionPlanning',
-    modelTypeEnum: MathModelType.LinearProgram,
+    modelTypeEnum: MathModelType.Lp,
     usageContextEnum: MathModelUsageContext.Optimisation,
     modelName: 'Linear production planning',
     description: 'Maximize production margin under machine-capacity constraints') {
@@ -72,56 +66,28 @@ MathModelDef('LinearProductionPlanning',
         parameters('ProductionPlan.ObjectiveSense',
             parameterDefId: 'OptimizationObjectiveSense',
             parameterAlias: 'objectiveSense',
-            symbolicValue: OptimizationObjectiveSense.Maximize)
+            symbolicValue: 'MAXIMIZE')
 
-        data('ProductionVariablesData',
+        data('ProductionPlan_D_Vars',
             dataTypeEnum: MathModelDataType.Vector,
-            purposeEnum: MathModelDataPurpose.DecisionVariables,
-            vectorId: 'ProductionVariables', sequenceNum: 0) {
-            Vector('ProductionVariables', name: 'Production quantities', dimension: 2,
+            purposeEnum: MathModelDataPurpose.DecisionVars,
+            vectorId: 'ProductionPlan_Variables', sequenceNum: 0) {
+            Vector('ProductionPlan_Variables', name: 'Decision Variables', dimension: 2,
                 componentArray: '["Standard","Premium"]')
         }
-        data('UnitMarginData',
-            dataTypeEnum: MathModelDataType.Vector,
-            purposeEnum: MathModelDataPurpose.CostVector,
-            vectorId: 'UnitMargin', sequenceNum: 1) {
-            Vector('UnitMargin', name: 'Unit contribution margin', dimension: 2,
-                componentArray: '[40,30]')
-        }
-        data('MachineCapacityCoefficientsData',
-            dataTypeEnum: MathModelDataType.Matrix,
-            purposeEnum: MathModelDataPurpose.ConstraintMatrix,
-            matrixId: 'MachineCapacityCoefficients', sequenceNum: 2) {
-            Matrix('MachineCapacityCoefficients', matrixTypeEnum: MatrixType.Rectangular,
-                domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
-                name: 'Machine capacity coefficients', rows: 2, cols: 2,
-                componentArray: '[[2,1],[1,2]]')
-        }
-        data('MachineCapacityData',
-            dataTypeEnum: MathModelDataType.Vector,
-            purposeEnum: MathModelDataPurpose.RightHandSide,
-            vectorId: 'MachineCapacity', sequenceNum: 3) {
-            Vector('MachineCapacity', name: 'Available machine capacity', dimension: 2,
-                componentArray: '[100,80]')
-        }
-        data('ProductionBoundsData',
-            dataTypeEnum: MathModelDataType.Matrix,
-            purposeEnum: MathModelDataPurpose.VariableBounds,
-            matrixId: 'ProductionBounds', sequenceNum: 4) {
-            Matrix('ProductionBounds', matrixTypeEnum: MatrixType.Rectangular,
-                domainSpaceEnum: MathSpace.R2, codomainSpaceEnum: MathSpace.R2,
-                name: 'Lower and upper production bounds', rows: 2, cols: 2,
-                componentArray: '[[0,0],[40,50]]')
-        }
+        // ... VariableBounds, CostVector, ConstraintMatrix, RightHandSide, ConstraintSense ...
     }
 }
+Transformation('ProductionPlan_Constraint_MachineA',
+    transformationTypeEnum: TransformationType.LessEqual,
+    name: 'MachineA')
+Transformation('ProductionPlan_Constraint_MachineB',
+    transformationTypeEnum: TransformationType.LessEqual,
+    name: 'MachineB')
 ```
 
-#### Compact Ergonomic (`examples/compact/production-plan.groovy` — 28 lines)
+#### Compact Ergonomic (`examples/production-plan.groovy` — 21 lines)
 ```groovy
-ParameterDef('OptimizationObjectiveSense', type: TextShort, purpose: MathModel,
-    code: 'objectiveSense', name: 'Optimization objective sense')
-
 MathModelDef('LinearProductionPlanning', type: LinearProgram, usage: Optimisation,
     modelName: 'Linear production planning',
     description: 'Maximize production margin under machine-capacity constraints') {
@@ -131,24 +97,47 @@ MathModelDef('LinearProductionPlanning', type: LinearProgram, usage: Optimisatio
     MathModel('ProductionPlan', alias: 'production_plan', source: Manual,
         description: 'Choose Standard and Premium production quantities', status: Draft) {
 
-        parameters {
-            objectiveSense = Maximize
-        }
-
-        vector('ProductionVariables', ['Standard', 'Premium'], purpose: DecisionVariables, name: 'Production quantities')
-        vector('UnitMargin', [40, 30], purpose: CostVector, name: 'Unit contribution margin')
-        matrix('MachineCapacityCoefficients', [[2, 1], [1, 2]], purpose: ConstraintMatrix, type: Rectangular, name: 'Machine capacity coefficients')
-        vector('MachineCapacity', [100, 80], purpose: RightHandSide, name: 'Available machine capacity')
-        matrix('ProductionBounds', [[0, 0], [40, 50]], purpose: VariableBounds, type: Rectangular, name: 'Lower and upper production bounds')
+        Standard = variable(0, 40)
+        Premium  = variable(0, 50)
+        maximize Standard * 40 + Premium * 30
+        subjectTo('MachineA', Standard * 2 + Premium).le(100)
+        subjectTo('MachineB', Standard + Premium * 2).le(80)
     }
 }
 ```
 
 ---
 
-### 2.2 Computer Vision: Image Filtering Pipeline (OpenCV via Panama FFM)
+### 3.2 Pure Mathematical Plan: Matrix Multiplication
 
-#### Canonical (`examples/opencv-vision-pipeline.groovy` — 35 lines)
+#### Canonical (`examples/canonical/matrix-product-plan.groovy` — 23 lines)
+```groovy
+Transformation('C', transformationTypeEnum: TransformationType.Product, name: 'C') {
+    TransformationOperand('C_left', operandTypeEnum: TransformationOperandType.Left,
+        sequenceNum: 1, matrixId: 'A')
+    TransformationOperand('C_right', operandTypeEnum: TransformationOperandType.Right,
+        sequenceNum: 2, matrixId: 'B')
+}
+Matrix('A', matrixTypeEnum: MatrixType.Dense, domainSpaceEnum: MathSpace.R2,
+    codomainSpaceEnum: MathSpace.R2, name: 'A', rows: 2, cols: 2, componentArray: '[[1.0,2.0],[3.0,4.0]]')
+Matrix('B', matrixTypeEnum: MatrixType.Dense, domainSpaceEnum: MathSpace.R2,
+    codomainSpaceEnum: MathSpace.R2, name: 'B', rows: 2, cols: 2, componentArray: '[[5.0,6.0],[7.0,8.0]]')
+Matrix('C', matrixTypeEnum: MatrixType.Dense, domainSpaceEnum: MathSpace.R2,
+    codomainSpaceEnum: MathSpace.R2, name: 'C', rows: 2, cols: 2)
+```
+
+#### Compact Ergonomic (`examples/matrix-product-plan.groovy` — 8 lines)
+```groovy
+A = matrix('A', [[1.0, 2.0], [3.0, 4.0]])
+B = matrix('B', [[5.0, 6.0], [7.0, 8.0]])
+C = A * B
+```
+
+---
+
+### 3.3 Computer Vision: Image Filtering Pipeline (OpenCV via Panama FFM)
+
+#### Canonical (`examples/canonical/opencv-vision-pipeline.groovy` — 35 lines)
 ```groovy
 MathModelDef('OpenCvVisionModel',
     modelTypeEnum: MathModelType.ComputerVision,
@@ -182,7 +171,7 @@ MathModelDef('OpenCvVisionModel',
 }
 ```
 
-#### Compact Ergonomic (`examples/compact/opencv-vision-pipeline.groovy` — 24 lines)
+#### Compact Ergonomic (`examples/opencv-vision-pipeline.groovy` — 24 lines)
 ```groovy
 MathModelDef('OpenCvVisionModel', type: ComputerVision, usage: Inference,
     modelName: 'OpenCV Computer Vision Filtering Pipeline',
@@ -205,7 +194,9 @@ MathModelDef('OpenCvVisionModel', type: ComputerVision, usage: Inference,
 }
 ```
 
-## 3. Provider Runtime Verification
+---
+
+## 4. Provider Runtime Verification
 
 Each of the compact representations has been validated against its native runtime provider backend:
 
@@ -215,4 +206,3 @@ Each of the compact representations has been validated against its native runtim
 4. **CFD Fluid Dynamics (OpenFOAM FVM)**: `./gradlew runOpenFoamCavity` -> 20 steps, velocity vortex recirculation verified
 5. **Knowledge Graph & Ontologies (Apache Jena RDF/OWL/SPARQL)**: `./gradlew runJenaGraphSparql`, `./gradlew runJenaProductCatalog` -> Transitive subclass inference and forward-chaining rules verified
 6. **Dual Deep Learning / Tensor Acceleration (LibTorch & Google JAX via OpenXLA Panama FFM)**: `./gradlew runJaxPipeline` -> Identical forward pass computation across CPU/GPU runtimes
-

@@ -72,8 +72,8 @@ final class DslRecordDelegate {
                 componentTypeEnumId: 'VctSymbolic'
             ])
         }
-        root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${varVectorId}", [
-            mathModelDataId: "${record.modelKey}_Data_${varVectorId}",
+        root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_D_Vars", [
+            mathModelDataId: "${record.modelKey}_D_Vars",
             mathModelId: record.modelKey,
             dataTypeEnumId: 'MmdtVector',
             purposeEnumId: 'MmdpDecisionVars',
@@ -96,8 +96,8 @@ final class DslRecordDelegate {
             cols: nVars,
             componentArray: groovy.json.JsonOutput.toJson(boundsRows)
         ])
-        root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${boundsId}", [
-            mathModelDataId: "${record.modelKey}_Data_${boundsId}",
+        root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_D_Bounds", [
+            mathModelDataId: "${record.modelKey}_D_Bounds",
             mathModelId: record.modelKey,
             dataTypeEnumId: 'MmdtMatrix',
             purposeEnumId: 'MmdpVarBounds',
@@ -125,8 +125,8 @@ final class DslRecordDelegate {
                     componentTypeEnumId: 'VctSymbolic'
                 ])
             }
-            root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${domVectorId}", [
-                mathModelDataId: "${record.modelKey}_Data_${domVectorId}",
+            root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_D_Domain", [
+                mathModelDataId: "${record.modelKey}_D_Domain",
                 mathModelId: record.modelKey,
                 dataTypeEnumId: 'MmdtVector',
                 purposeEnumId: 'MmdpVariableDomain',
@@ -155,8 +155,8 @@ final class DslRecordDelegate {
                     componentTypeEnumId: 'VctCanonical'
                 ])
             }
-            root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${initialId}", [
-                mathModelDataId: "${record.modelKey}_Data_${initialId}",
+            root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_D_Init", [
+                mathModelDataId: "${record.modelKey}_D_Init",
                 mathModelId: record.modelKey,
                 dataTypeEnumId: 'MmdtVector',
                 purposeEnumId: 'MmdpInitialCondition',
@@ -189,8 +189,8 @@ final class DslRecordDelegate {
                     componentTypeEnumId: 'VctCanonical'
                 ])
             }
-            root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${costVectorId}", [
-                mathModelDataId: "${record.modelKey}_Data_${costVectorId}",
+            root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_D_Cost", [
+                mathModelDataId: "${record.modelKey}_D_Cost",
                 mathModelId: record.modelKey,
                 dataTypeEnumId: 'MmdtVector',
                 purposeEnumId: 'MmdpCostVector',
@@ -231,8 +231,8 @@ final class DslRecordDelegate {
                     cols: nVars,
                     componentArray: groovy.json.JsonOutput.toJson(hList)
                 ])
-                root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${hessianId}", [
-                    mathModelDataId: "${record.modelKey}_Data_${hessianId}",
+                root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_D_Hessian", [
+                    mathModelDataId: "${record.modelKey}_D_Hessian",
                     mathModelId: record.modelKey,
                     dataTypeEnumId: 'MmdtMatrix',
                     purposeEnumId: 'MmdpHessian',
@@ -282,8 +282,8 @@ final class DslRecordDelegate {
                 cols: nVars,
                 componentArray: groovy.json.JsonOutput.toJson(aRows)
             ])
-            root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${aMatrixId}", [
-                mathModelDataId: "${record.modelKey}_Data_${aMatrixId}",
+            root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_D_ConsMat", [
+                mathModelDataId: "${record.modelKey}_D_ConsMat",
                 mathModelId: record.modelKey,
                 dataTypeEnumId: 'MmdtMatrix',
                 purposeEnumId: 'MmdpConstraintMatrix',
@@ -308,8 +308,8 @@ final class DslRecordDelegate {
                     componentTypeEnumId: 'VctCanonical'
                 ])
             }
-            root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${rhsId}", [
-                mathModelDataId: "${record.modelKey}_Data_${rhsId}",
+            root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_D_Rhs", [
+                mathModelDataId: "${record.modelKey}_D_Rhs",
                 mathModelId: record.modelKey,
                 dataTypeEnumId: 'MmdtVector',
                 purposeEnumId: 'MmdpRhsVector',
@@ -334,8 +334,8 @@ final class DslRecordDelegate {
                     componentTypeEnumId: 'VctSymbolic'
                 ])
             }
-            root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_Data_${senseId}", [
-                mathModelDataId: "${record.modelKey}_Data_${senseId}",
+            root.mathMeta.declare('moqui.math.MathModelData', "${record.modelKey}_D_Sense", [
+                mathModelDataId: "${record.modelKey}_D_Sense",
                 mathModelId: record.modelKey,
                 dataTypeEnumId: 'MmdtVector',
                 purposeEnumId: 'MmdpConstraint',

@@ -177,8 +177,9 @@ MathModel('Simulator') {
         assert mathMeta.MathModelDef.named('LinearProductionPlanning').get().modelTypeEnumId == 'MmtLp'
         assert mathMeta.MathModelDefPipeline.named('SolveStep').get().solvingMethodEnumId == 'MmsmSimplex'
         assert mathMeta.Parameter.named('ProductionPlan.ObjectiveSense').get().symbolicValue == 'MAXIMIZE'
-        assert mathMeta.Matrix.named('MachineCapacityCoefficients').get().componentArray == '[[2,1],[1,2]]'
-        assert mathMeta.MathModelData.size() == 5
+        assert mathMeta.Matrix.named('ProductionPlan_ConstraintMatrix').get().rows == 2
+        assert mathMeta.Matrix.named('ProductionPlan_ConstraintMatrix').get().cols == 2
+        assert mathMeta.MathModelData.size() == 6
     }
 
     @Test
@@ -189,7 +190,8 @@ MathModel('Simulator') {
         assert mathMeta.MathModelDef.named('QuadraticEnergyDispatch').get().modelTypeEnumId == 'MmtQp'
         assert mathMeta.MathModelDefPipeline.named('DispatchSolveStep').get().solvingMethodEnumId == 'MmsmInteriorPoint'
         assert mathMeta.Parameter.named('EnergyDispatch.ObjectiveSense').get().symbolicValue == 'MINIMIZE'
-        assert mathMeta.Matrix.named('DispatchHessian').get().componentArray == '[[2,0],[0,4]]'
+        assert mathMeta.Matrix.named('EnergyDispatch_Hessian').get().rows == 2
+        assert mathMeta.Matrix.named('EnergyDispatch_Hessian').get().cols == 2
         assert mathMeta.MathModelData.matching { ModelValue value ->
             value.mathModelId == 'EnergyDispatch'
         }.size() == 5
