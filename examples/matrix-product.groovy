@@ -22,6 +22,6 @@ MathModelDef('MatrixAlgebra', type: LinearAlgebra, usage: Inference,
 
         A = matrix(rows: 2, cols: 3, purpose: Original)
         B = matrix([[7, 8], [9, 10], [11, 12]], purpose: Original)
-        C = matrix(rows: 2, cols: 2)
+        C = matrix()
     }
 }

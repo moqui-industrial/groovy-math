@@ -74,9 +74,53 @@ final class MathDslBuilder {
         if (key == null) {
             key = options.remove('_key')?.toString() ?: options.get('name')?.toString() ?: "Matrix_${System.identityHashCode(options)}"
         }
+        inferMatrixPipelineDimensions(key, options)
         ModelProvider p = declare(vocabulary.findEntity('Matrix'), key, options, null, null, null).provider
         localVariables.put(key, p)
         p
+    }
+
+    private void inferMatrixPipelineDimensions(final String key, final Map<String, Object> options) {
+        if ((!options.containsKey('rows') || !options.containsKey('cols')) && key != null && mathMeta.hasEntity('Transformation')) {
+            ModelValue tf = (ModelValue) mathMeta.entity('Transformation').find { Object v ->
+                v instanceof ModelValue && ((ModelValue) v).get('resultMatrixId') == key
+            }
+            if (tf != null) {
+                String type = tf.get('transformationTypeEnumId')?.toString()
+                if (type == 'TtMatrixProduct' || type == 'MatrixProduct') {
+                    String leftId = null
+                    String rightId = null
+                    if (mathMeta.hasEntity('TransformationOperand')) {
+                        mathMeta.entity('TransformationOperand').each { Object op ->
+                            if (op instanceof ModelValue && op.get('transformationId') == tf.modelKey) {
+                                String opType = op.get('operandTypeEnumId')?.toString()
+                                if (opType == 'TotLeft' || opType == 'TotLeftMatrix' || op.get('operandIndex') == 0L) {
+                                    leftId = op.get('operandMatrixId')?.toString()
+                                } else if (opType == 'TotRight' || opType == 'TotRightMatrix' || op.get('operandIndex') == 1L) {
+                                    rightId = op.get('operandMatrixId')?.toString()
+                                }
+                            }
+                        }
+                    }
+                    ModelValue leftMat = leftId ? mathMeta.entity('Matrix')?.findByName(leftId) : null
+                    ModelValue rightMat = rightId ? mathMeta.entity('Matrix')?.findByName(rightId) : null
+                    Object r = leftMat?.get('rows')
+                    Object c = rightMat?.get('cols')
+                    if (r != null) options.putIfAbsent('rows', r)
+                    if (c != null) options.putIfAbsent('cols', c)
+                    if (rightMat?.get('domainSpaceEnumId') != null) {
+                        options.putIfAbsent('domainSpaceEnumId', rightMat.get('domainSpaceEnumId'))
+                    } else if (c != null) {
+                        options.putIfAbsent('domainSpaceEnumId', c == 3 ? 'Eng3DEuclideanSpace' : 'Eng2DEuclideanSpace')
+                    }
+                    if (leftMat?.get('codomainSpaceEnumId') != null) {
+                        options.putIfAbsent('codomainSpaceEnumId', leftMat.get('codomainSpaceEnumId'))
+                    } else if (r != null) {
+                        options.putIfAbsent('codomainSpaceEnumId', r == 3 ? 'Eng3DEuclideanSpace' : 'Eng2DEuclideanSpace')
+                    }
+                }
+            }
+        }
     }
 
     ModelProvider vector(final Object... args) {
@@ -304,105 +348,120 @@ final class MathDslBuilder {
         createTransformation('TtTensorPow', [operand, exponent], options)
     }
 
-    ModelProvider applyMultiply(final ModelProvider left, final Object right) {
-        String leftType = left.definition.name
+    ModelProvider multiplyOp(final String resultName, final Object left, final Object right) {
+        applyMultiply(left, right, [resultId: resultName, transformationId: "T_${resultName}"])
+    }
+
+    ModelProvider plusOp(final String resultName, final Object left, final Object right) {
+        applyPlus(left, right, [resultId: resultName, transformationId: "T_${resultName}"])
+    }
+
+    ModelProvider minusOp(final String resultName, final Object left, final Object right) {
+        applyMinus(left, right, [resultId: resultName, transformationId: "T_${resultName}"])
+    }
+
+    ModelProvider divOp(final String resultName, final Object left, final Object right) {
+        applyDiv(left, right, [resultId: resultName, transformationId: "T_${resultName}"])
+    }
+
+    ModelProvider powerOp(final String resultName, final Object left, final Object right) {
+        applyPower(left, right, [resultId: resultName, transformationId: "T_${resultName}"])
+    }
+
+    ModelProvider applyMultiply(final Object left, final Object right, final Map<String, Object> options = Collections.emptyMap()) {
+        String leftType = left instanceof ModelProvider ? ((ModelProvider) left).definition.name : (left instanceof ModelValue ? ((ModelValue) left).definition.name : null)
         if (leftType == 'Matrix') {
-            if (right instanceof ModelProvider) {
-                ModelProvider rightProvider = (ModelProvider) right
-                String rightType = rightProvider.definition.name
+            if (right instanceof ModelProvider || right instanceof ModelValue) {
+                String rightType = right instanceof ModelProvider ? ((ModelProvider) right).definition.name : ((ModelValue) right).definition.name
                 if (rightType == 'Matrix') {
-                    return matrixProduct(left, rightProvider)
+                    return matrixProduct(left, right, options)
                 } else if (rightType == 'Vector') {
                     throw new IllegalArgumentException(
                         "TransformationType 'TtMatrixVectorProduct' does not exist in schema; cannot multiply Matrix by Vector"
                     )
                 }
             } else if (right instanceof Number) {
-                return matrixProduct(left, right)
+                return matrixProduct(left, right, options)
             }
             throw new IllegalArgumentException(
                 "Unsupported operator '*' for operands [Matrix, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Matrix * Matrix (TtMatrixProduct), Tensor * Tensor (TtTensorMul)"
             )
         } else if (leftType == 'Tensor') {
-            if (right instanceof ModelProvider) {
-                ModelProvider rightProvider = (ModelProvider) right
-                String rightType = rightProvider.definition.name
+            if (right instanceof ModelProvider || right instanceof ModelValue) {
+                String rightType = right instanceof ModelProvider ? ((ModelProvider) right).definition.name : ((ModelValue) right).definition.name
                 if (rightType == 'Tensor' || rightType == 'Matrix') {
-                    return tensorMul(left, rightProvider)
+                    return tensorMul(left, right, options)
                 }
             } else if (right instanceof Number) {
-                return tensorMul(left, right)
+                return tensorMul(left, right, options)
             }
             throw new IllegalArgumentException(
                 "Unsupported operator '*' for operands [Tensor, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Tensor * Tensor (TtTensorMul), Matrix * Matrix (TtMatrixProduct)"
             )
         }
         throw new IllegalArgumentException(
-            "Unsupported operator '*' for operands [${leftType}, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Matrix * Matrix (TtMatrixProduct), Tensor * Tensor (TtTensorMul)"
+            "Unsupported operator '*' for operands [${leftType ?: left?.class?.simpleName}, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Matrix * Matrix (TtMatrixProduct), Tensor * Tensor (TtTensorMul)"
         )
     }
 
-    ModelProvider applyPlus(final ModelProvider left, final Object right) {
-        String leftType = left.definition.name
+    ModelProvider applyPlus(final Object left, final Object right, final Map<String, Object> options = Collections.emptyMap()) {
+        String leftType = left instanceof ModelProvider ? ((ModelProvider) left).definition.name : (left instanceof ModelValue ? ((ModelValue) left).definition.name : null)
         if (leftType == 'Tensor' || leftType == 'Matrix') {
-            if (right instanceof ModelProvider) {
-                ModelProvider rightProvider = (ModelProvider) right
-                String rightType = rightProvider.definition.name
+            if (right instanceof ModelProvider || right instanceof ModelValue) {
+                String rightType = right instanceof ModelProvider ? ((ModelProvider) right).definition.name : ((ModelValue) right).definition.name
                 if (rightType == 'Tensor' || rightType == 'Matrix') {
-                    return tensorAdd(left, rightProvider)
+                    return tensorAdd(left, right, options)
                 }
             }
         }
         throw new IllegalArgumentException(
-            "Unsupported operator '+' for operands [${leftType}, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Tensor + Tensor (TtTensorAdd)"
+            "Unsupported operator '+' for operands [${leftType ?: left?.class?.simpleName}, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Tensor + Tensor (TtTensorAdd)"
         )
     }
 
-    ModelProvider applyMinus(final ModelProvider left, final Object right) {
-        String leftType = left.definition.name
+    ModelProvider applyMinus(final Object left, final Object right, final Map<String, Object> options = Collections.emptyMap()) {
+        String leftType = left instanceof ModelProvider ? ((ModelProvider) left).definition.name : (left instanceof ModelValue ? ((ModelValue) left).definition.name : null)
         if (leftType == 'Tensor' || leftType == 'Matrix') {
-            if (right instanceof ModelProvider) {
-                ModelProvider rightProvider = (ModelProvider) right
-                String rightType = rightProvider.definition.name
+            if (right instanceof ModelProvider || right instanceof ModelValue) {
+                String rightType = right instanceof ModelProvider ? ((ModelProvider) right).definition.name : ((ModelValue) right).definition.name
                 if (rightType == 'Tensor' || rightType == 'Matrix') {
-                    return tensorSub(left, rightProvider)
+                    return tensorSub(left, right, options)
                 }
             }
         }
         throw new IllegalArgumentException(
-            "Unsupported operator '-' for operands [${leftType}, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Tensor - Tensor (TtTensorSub)"
+            "Unsupported operator '-' for operands [${leftType ?: left?.class?.simpleName}, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Tensor - Tensor (TtTensorSub)"
         )
     }
 
-    ModelProvider applyDiv(final ModelProvider left, final Object right) {
-        String leftType = left.definition.name
+    ModelProvider applyDiv(final Object left, final Object right, final Map<String, Object> options = Collections.emptyMap()) {
+        String leftType = left instanceof ModelProvider ? ((ModelProvider) left).definition.name : (left instanceof ModelValue ? ((ModelValue) left).definition.name : null)
         if (leftType == 'Tensor' || leftType == 'Matrix') {
-            if (right instanceof ModelProvider) {
-                ModelProvider rightProvider = (ModelProvider) right
-                String rightType = rightProvider.definition.name
+            if (right instanceof ModelProvider || right instanceof ModelValue) {
+                String rightType = right instanceof ModelProvider ? ((ModelProvider) right).definition.name : ((ModelValue) right).definition.name
                 if (rightType == 'Tensor' || rightType == 'Matrix') {
-                    return tensorDiv(left, rightProvider)
+                    return tensorDiv(left, right, options)
                 }
             }
         }
         throw new IllegalArgumentException(
-            "Unsupported operator '/' for operands [${leftType}, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Tensor / Tensor (TtTensorDiv)"
+            "Unsupported operator '/' for operands [${leftType ?: left?.class?.simpleName}, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Tensor / Tensor (TtTensorDiv)"
         )
     }
 
-    ModelProvider applyPower(final ModelProvider left, final Object exponent) {
-        String leftType = left.definition.name
+    ModelProvider applyPower(final Object left, final Object exponent, final Map<String, Object> options = Collections.emptyMap()) {
+        String leftType = left instanceof ModelProvider ? ((ModelProvider) left).definition.name : (left instanceof ModelValue ? ((ModelValue) left).definition.name : null)
         if (leftType == 'Tensor' || leftType == 'Matrix') {
             if (exponent instanceof Number) {
-                return tensorPow(left, (Number) exponent)
+                return tensorPow(left, (Number) exponent, options)
             }
         }
         throw new IllegalArgumentException(
-            "Unsupported operator '**' for operands [${leftType}, ${exponent?.class?.simpleName}]. Supported operations: Tensor ** Number (TtTensorPow)"
+            "Unsupported operator '**' for operands [${leftType ?: left?.class?.simpleName}, ${exponent?.class?.simpleName}]. Supported operations: Tensor ** Number (TtTensorPow)"
         )
     }
 
-    ModelProvider applyNegative(final ModelProvider operand) {
+    ModelProvider applyNegative(final Object operand) {
         throw new IllegalArgumentException(
             "TransformationType 'TtTensorNeg' does not exist in schema; cannot negate Tensor with unary '-'"
         )
@@ -412,12 +471,11 @@ final class MathDslBuilder {
         String baseName = options.get('name')?.toString() ?: "${typeEnumId.replaceFirst('^Tt', '')}_${System.identityHashCode(operands)}"
         String tKey = options.get('transformationId')?.toString() ?: "T_${baseName}"
 
-        String resultType = 'Matrix'
-        if (typeEnumId.startsWith('TtTensor') || typeEnumId.contains('Tensor') || typeEnumId.contains('Conv') || typeEnumId.contains('Pool') || typeEnumId.contains('Norm') || typeEnumId.contains('Attention')) {
-            resultType = 'Tensor'
-        } else if (typeEnumId.contains('Vector') && !typeEnumId.contains('Matrix')) {
-            resultType = 'Vector'
-        }
+        DslShapeInference.InferredShape inferred = DslShapeInference.inferShape(
+            typeEnumId, operands, options, getCallerFile(), getCallerLine()
+        )
+
+        String resultType = inferred.resultType ?: 'Matrix'
         if (options.containsKey('resultType')) {
             resultType = options.get('resultType').toString()
         }
@@ -428,49 +486,37 @@ final class MathDslBuilder {
             Map<String, Object> tensOptions = new LinkedHashMap<>()
             tensOptions.put('_key', resKey)
             if (options.containsKey('name')) tensOptions.put('name', options.get('name'))
-            tensOptions.put('shape', options.get('shape') ?: '[1]')
-            tensOptions.put('rank', options.get('rank') ?: 1)
-            tensOptions.put('size', options.get('size') ?: 1)
+            Object explicitShape = options.get('shape')
+            if (explicitShape != null) {
+                tensOptions.put('shape', explicitShape)
+            } else if (inferred.shape != null) {
+                tensOptions.put('shape', groovy.json.JsonOutput.toJson(inferred.shape))
+            }
+            if (options.containsKey('rank')) {
+                tensOptions.put('rank', options.get('rank'))
+            } else if (inferred.rank != null) {
+                tensOptions.put('rank', inferred.rank)
+            }
+            if (options.containsKey('size')) tensOptions.put('size', options.get('size'))
             resultProvider = tensor(tensOptions)
         } else if (resultType == 'Vector') {
             Map<String, Object> vecOptions = new LinkedHashMap<>()
             vecOptions.put('_key', resKey)
             if (options.containsKey('name')) vecOptions.put('name', options.get('name'))
-            vecOptions.put('dimension', options.get('dimension') ?: 1)
+            Object dim = options.get('dimension') ?: inferred.dimension
+            if (dim != null) vecOptions.put('dimension', dim)
             resultProvider = vector(vecOptions)
         } else {
-            int inferredRows = 1
-            int inferredCols = 1
-            if (operands.size() >= 1 && operands.get(0) instanceof ModelProvider) {
-                ModelProvider p0 = (ModelProvider) operands.get(0)
-                if (p0.definition.name == 'Matrix') {
-                    Object r = p0.get()?.get('rows')
-                    if (r instanceof Number) inferredRows = ((Number) r).intValue()
-                }
-            }
-            if (operands.size() >= 2 && operands.get(1) instanceof ModelProvider) {
-                ModelProvider p1 = (ModelProvider) operands.get(1)
-                if (p1.definition.name == 'Matrix') {
-                    Object c = p1.get()?.get('cols')
-                    if (c instanceof Number) inferredCols = ((Number) c).intValue()
-                }
-            } else if (operands.size() >= 1 && operands.get(0) instanceof ModelProvider) {
-                ModelProvider p0 = (ModelProvider) operands.get(0)
-                if (p0.definition.name == 'Matrix') {
-                    Object c = p0.get()?.get('cols')
-                    if (c instanceof Number) inferredCols = ((Number) c).intValue()
-                }
-            }
-            int r = (int) (options.get('rows') ?: inferredRows)
-            int c = (int) (options.get('cols') ?: inferredCols)
             Map<String, Object> matOptions = new LinkedHashMap<>()
             matOptions.put('_key', resKey)
             if (options.containsKey('name')) matOptions.put('name', options.get('name'))
             matOptions.put('matrixTypeEnumId', 'MtDense')
-            matOptions.put('rows', r)
-            matOptions.put('cols', c)
-            matOptions.put('domainSpaceEnumId', c == 3 ? 'Eng3DEuclideanSpace' : 'Eng2DEuclideanSpace')
-            matOptions.put('codomainSpaceEnumId', r == 3 ? 'Eng3DEuclideanSpace' : 'Eng2DEuclideanSpace')
+            Object r = options.get('rows') ?: inferred.rows
+            Object c = options.get('cols') ?: inferred.cols
+            if (r != null) matOptions.put('rows', r)
+            if (c != null) matOptions.put('cols', c)
+            if (c != null) matOptions.put('domainSpaceEnumId', c == 3 ? 'Eng3DEuclideanSpace' : 'Eng2DEuclideanSpace')
+            if (r != null) matOptions.put('codomainSpaceEnumId', r == 3 ? 'Eng3DEuclideanSpace' : 'Eng2DEuclideanSpace')
             resultProvider = matrix(matOptions)
         }
 
@@ -590,21 +636,45 @@ final class MathDslBuilder {
         }
 
         TransformationType tt = TransformationType.fromName(entityName)
-        if (tt == null) {
-            DslSymbol sym = vocabulary.resolveSymbol(entityName, 'TransformationType')
-            if (sym != null) tt = TransformationType.fromId(sym.id)
-        }
+        String ttId = null
         if (tt != null) {
+            ttId = tt.id
+        } else {
+            DslSymbol sym = vocabulary.resolveSymbol(entityName, 'TransformationType')
+            if (sym != null) ttId = sym.id
+            else if (entityName.equalsIgnoreCase('dropout')) ttId = 'TtDropout'
+            else if (entityName.equalsIgnoreCase('multiHeadAttention')) ttId = 'TtMultiHeadAttention'
+            else if (entityName.equalsIgnoreCase('positionalEncoding')) ttId = 'TtPositionalEncoding'
+            else if (entityName.equalsIgnoreCase('rotaryEmbedding')) ttId = 'TtRotaryEmbedding'
+        }
+        if (ttId != null) {
             List<Object> operands = new ArrayList<>()
             Map<String, Object> options = new LinkedHashMap<>()
+            String explicitName = null
+            List<Object> nonMapArgs = new ArrayList<>()
             for (Object arg : arguments) {
                 if (arg instanceof Map) {
                     options.putAll((Map<String, Object>) arg)
                 } else {
-                    operands.add(arg)
+                    nonMapArgs.add(arg)
                 }
             }
-            return createTransformation(tt.id, operands, options)
+            if (!nonMapArgs.empty) {
+                Object firstNonMap = nonMapArgs.get(0)
+                if ((firstNonMap instanceof CharSequence || firstNonMap instanceof DslDeferredSymbol) && nonMapArgs.size() > 1) {
+                    explicitName = firstNonMap.toString()
+                    for (int i = 1; i < nonMapArgs.size(); i++) {
+                        operands.add(nonMapArgs.get(i))
+                    }
+                } else {
+                    operands.addAll(nonMapArgs)
+                }
+            }
+            if (explicitName != null) {
+                options.putIfAbsent('resultId', explicitName)
+                options.putIfAbsent('transformationId', "T_${explicitName}")
+            }
+            return createTransformation(ttId, operands, options)
         }
 
         EntityDefinition entityDefinition = vocabulary.findEntity(entityName)
@@ -649,6 +719,9 @@ final class MathDslBuilder {
             inheritAncestorKeys(parent, entityDefinition, normalizedValues)
         }
         String modelKey = requestedKey ?: keyFromValues(entityDefinition, normalizedValues)
+        if (entityDefinition.name == 'Matrix') {
+            inferMatrixPipelineDimensions(modelKey, normalizedValues)
+        }
         addSinglePrimaryKey(entityDefinition, modelKey, normalizedValues)
 
         ModelProvider provider = mathMeta.declare(entityDefinition.fullName, modelKey, normalizedValues)
@@ -1147,15 +1220,18 @@ final class MathDslBuilder {
                 }
             } else if (normalized.containsKey('shape') && !normalized.containsKey('rank') && definition.fields.containsKey('rank')) {
                 Object decShape = normalized.get('shape')
-                List<Integer> decList = null
-                if (decShape instanceof List) decList = (List<Integer>) decShape
+                List<Object> decList = null
+                if (decShape instanceof List) decList = (List<Object>) decShape
                 else if (decShape instanceof CharSequence) {
                     try {
                         Object parsed = new groovy.json.JsonSlurper().parseText(decShape.toString())
-                        if (parsed instanceof List) decList = (List<Integer>) parsed
+                        if (parsed instanceof List) decList = (List<Object>) parsed
                     } catch (Exception ignored) {}
                 }
                 if (decList != null) normalized.put('rank', decList.size())
+                else normalized.put('rank', 1)
+            } else if (!normalized.containsKey('rank') && definition.fields.containsKey('rank')) {
+                normalized.put('rank', 1)
             }
         }
     }

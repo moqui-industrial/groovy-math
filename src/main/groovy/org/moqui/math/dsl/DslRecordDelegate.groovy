@@ -952,12 +952,17 @@ final class DslRecordDelegate {
             }
             return root.declareNested(relationship.relatedEntityName, arguments, record, relationship).provider
         }
-        root.declareNested(name, arguments, record).provider
+        if (root.vocabulary.hasEntity(name)) {
+            return root.declareNested(name, arguments, record).provider
+        }
+        return root.invokeMethod(name, arguments)
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
     Object propertyMissing(final String name) {
         if (localVariables.containsKey(name)) return localVariables.get(name)
+        Object rootProp = root.propertyMissing(name)
+        if (rootProp != null && !(rootProp instanceof DslDeferredSymbol)) return rootProp
         new DslDeferredSymbol(name, MathDslBuilder.getCallerFile(), MathDslBuilder.getCallerLine())
     }
 
@@ -970,9 +975,11 @@ final class DslRecordDelegate {
                 DslVariable renamed = new DslVariable(name, v.lowerBound, v.upperBound, v.initialValue, v.domain)
                 declaredVariables.add(renamed)
                 localVariables.put(name, renamed)
+                root.propertyMissing(name, renamed)
                 return
             }
         }
         localVariables.put(name, value)
+        root.propertyMissing(name, value)
     }
 }
