@@ -28,7 +28,8 @@ enum TensorPurpose implements DslEnumValue {
     FeedbackGain('TpFeedbackGain', '', 'State Feedback Gain Matrix (K)', ''),
     ObserverGain('TpObserverGain', '', 'Observer / Kalman Gain Matrix (L)', ''),
     CovarianceProcess('TpCovarianceProcess', '', 'Process Noise Covariance Matrix (Q)', ''),
-    CovarianceMeasurement('TpCovarianceMeasurement', '', 'Measurement Noise Covariance Matrix (R)', '');
+    CovarianceMeasurement('TpCovarianceMeasurement', '', 'Measurement Noise Covariance Matrix (R)', ''),
+    OptimizerState('TpOptimizerState', '', 'Optimizer State (momentum, variance)', '');
 
     final String id
     final String enumCode

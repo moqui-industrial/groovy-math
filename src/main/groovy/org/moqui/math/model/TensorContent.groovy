@@ -28,6 +28,9 @@ class TensorContent implements Serializable {
     /** contentLocation */
     String contentLocation
 
+    /** contentKey */
+    String contentKey
+
     /** contentTypeEnumId */
     String contentTypeEnumId
 
@@ -55,6 +58,7 @@ class TensorContent implements Serializable {
             if (args.containsKey('tensorContentId')) this.tensorContentId = args.get('tensorContentId')?.toString()
             if (args.containsKey('tensorId')) this.tensorId = args.get('tensorId')?.toString()
             if (args.containsKey('contentLocation')) this.contentLocation = args.get('contentLocation')?.toString()
+            if (args.containsKey('contentKey')) this.contentKey = args.get('contentKey')?.toString()
             if (args.containsKey('contentTypeEnumId')) this.contentTypeEnumId = args.get('contentTypeEnumId')?.toString()
             if (args.containsKey('arrayChecksum')) this.arrayChecksum = args.get('arrayChecksum')?.toString()
             if (args.containsKey('arrayEncodingEnumId')) this.arrayEncodingEnumId = args.get('arrayEncodingEnumId')?.toString()
@@ -76,6 +80,11 @@ class TensorContent implements Serializable {
 
     TensorContent contentLocation(String value) {
         this.contentLocation = value
+        return this;
+    }
+
+    TensorContent contentKey(String value) {
+        this.contentKey = value
         return this;
     }
 
@@ -119,6 +128,7 @@ class TensorContent implements Serializable {
         if (this.tensorContentId != null) map.put('tensorContentId', this.tensorContentId);
         if (this.tensorId != null) map.put('tensorId', this.tensorId);
         if (this.contentLocation != null) map.put('contentLocation', this.contentLocation);
+        if (this.contentKey != null) map.put('contentKey', this.contentKey);
         if (this.contentTypeEnumId != null) map.put('contentTypeEnumId', this.contentTypeEnumId);
         if (this.arrayChecksum != null) map.put('arrayChecksum', this.arrayChecksum);
         if (this.arrayEncodingEnumId != null) map.put('arrayEncodingEnumId', this.arrayEncodingEnumId);

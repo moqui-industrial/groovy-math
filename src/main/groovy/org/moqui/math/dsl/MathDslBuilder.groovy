@@ -376,15 +376,13 @@ final class MathDslBuilder {
                 if (rightType == 'Matrix') {
                     return matrixProduct(left, right, options)
                 } else if (rightType == 'Vector') {
-                    throw new IllegalArgumentException(
-                        "TransformationType 'TtMatrixVectorProduct' does not exist in schema; cannot multiply Matrix by Vector"
-                    )
+                    return createTransformation('TtAffine', [left, right], options)
                 }
             } else if (right instanceof Number) {
                 return matrixProduct(left, right, options)
             }
             throw new IllegalArgumentException(
-                "Unsupported operator '*' for operands [Matrix, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Matrix * Matrix (TtMatrixProduct), Tensor * Tensor (TtTensorMul)"
+                "Unsupported operator '*' for operands [Matrix, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Matrix * Matrix (TtMatrixProduct), Matrix * Vector (TtAffine), Tensor * Tensor (TtTensorMul)"
             )
         } else if (leftType == 'Tensor') {
             if (right instanceof ModelProvider || right instanceof ModelValue) {
@@ -400,7 +398,7 @@ final class MathDslBuilder {
             )
         }
         throw new IllegalArgumentException(
-            "Unsupported operator '*' for operands [${leftType ?: left?.class?.simpleName}, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Matrix * Matrix (TtMatrixProduct), Tensor * Tensor (TtTensorMul)"
+            "Unsupported operator '*' for operands [${leftType ?: left?.class?.simpleName}, ${right instanceof ModelProvider ? ((ModelProvider) right).definition.name : right?.class?.simpleName}]. Supported operations: Matrix * Matrix (TtMatrixProduct), Matrix * Vector (TtAffine), Tensor * Tensor (TtTensorMul)"
         )
     }
 
@@ -462,9 +460,7 @@ final class MathDslBuilder {
     }
 
     ModelProvider applyNegative(final Object operand) {
-        throw new IllegalArgumentException(
-            "TransformationType 'TtTensorNeg' does not exist in schema; cannot negate Tensor with unary '-'"
-        )
+        createTransformation('TtTensorNeg', [operand])
     }
 
     ModelProvider createTransformation(final String typeEnumId, final List<Object> operands, final Map<String, Object> options = Collections.emptyMap()) {
@@ -642,10 +638,6 @@ final class MathDslBuilder {
         } else {
             DslSymbol sym = vocabulary.resolveSymbol(entityName, 'TransformationType')
             if (sym != null) ttId = sym.id
-            else if (entityName.equalsIgnoreCase('dropout')) ttId = 'TtDropout'
-            else if (entityName.equalsIgnoreCase('multiHeadAttention')) ttId = 'TtMultiHeadAttention'
-            else if (entityName.equalsIgnoreCase('positionalEncoding')) ttId = 'TtPositionalEncoding'
-            else if (entityName.equalsIgnoreCase('rotaryEmbedding')) ttId = 'TtRotaryEmbedding'
         }
         if (ttId != null) {
             List<Object> operands = new ArrayList<>()
@@ -677,9 +669,78 @@ final class MathDslBuilder {
             return createTransformation(ttId, operands, options)
         }
 
-        EntityDefinition entityDefinition = vocabulary.findEntity(entityName)
-        ParsedDeclaration parsed = parseArguments(entityName, arguments)
-        declare(entityDefinition, parsed.modelKey, parsed.values, parsed.action, null, null).provider
+        String file = getCallerFile() ?: 'unknown'
+        int line = getCallerLine()
+        String loc = line > 0 ? "${file}:${line}" : file
+        Set<String> allCandidates = new LinkedHashSet<>()
+        allCandidates.addAll(vocabulary.entityKeywords.keySet())
+        allCandidates.addAll(vocabulary.allEntityNames())
+        for (TransformationType t : TransformationType.values()) {
+            allCandidates.add(t.name())
+            allCandidates.add(t.id)
+            allCandidates.add(t.id.replaceFirst('^Tt', ''))
+            String nameStr = t.name()
+            if (nameStr.length() > 0) {
+                String uncap = Character.toLowerCase(nameStr.charAt(0)).toString() + (nameStr.length() > 1 ? nameStr.substring(1) : "")
+                allCandidates.add(uncap)
+            }
+        }
+        allCandidates.addAll(['matrix', 'vector', 'tensor', 'variable', 'maximize', 'minimize', 'subjectTo', 'parameter', 'parameters'])
+        List<String> suggestions = findNearestSuggestions(entityName, allCandidates)
+        String suggestionText = suggestions ? ". Did you mean: ${suggestions.join(', ')}?" : ""
+        throw new IllegalArgumentException("Unknown function or entity '${entityName}' at ${loc}${suggestionText}")
+    }
+
+    static class SuggestionMatch {
+        final String candidate
+        final int distance
+        SuggestionMatch(String candidate, int distance) {
+            this.candidate = candidate
+            this.distance = distance
+        }
+    }
+
+    static List<String> findNearestSuggestions(final String query, final Collection<String> candidates, final int maxSuggestions = 3) {
+        if (!query || !candidates) return Collections.emptyList()
+        String lowerQuery = query.toLowerCase()
+        int maxAllowedDistance = Math.max(3, (int) (query.length() / 2) + 1)
+
+        List<SuggestionMatch> matches = new ArrayList<>()
+        Set<String> seen = new HashSet<>()
+        for (String cand : candidates) {
+            if (cand != null && !cand.isEmpty() && seen.add(cand)) {
+                int dist = levenshteinDistance(lowerQuery, cand.toLowerCase())
+                if (dist <= maxAllowedDistance) {
+                    matches.add(new SuggestionMatch(cand, dist))
+                }
+            }
+        }
+
+        matches.sort { SuggestionMatch a, SuggestionMatch b ->
+            int cmp = Integer.compare(a.distance, b.distance)
+            cmp != 0 ? cmp : a.candidate.compareToIgnoreCase(b.candidate)
+        }
+
+        List<String> result = new ArrayList<>()
+        for (int i = 0; i < Math.min(maxSuggestions, matches.size()); i++) {
+            result.add(matches.get(i).candidate)
+        }
+        result
+    }
+
+    private static int levenshteinDistance(final String s1, final String s2) {
+        int[] prev = new int[s2.length() + 1]
+        int[] curr = new int[s2.length() + 1]
+        for (int j = 0; j <= s2.length(); j++) prev[j] = j
+        for (int i = 1; i <= s1.length(); i++) {
+            curr[0] = i
+            for (int j = 1; j <= s2.length(); j++) {
+                int cost = s1.charAt(i - 1) == s2.charAt(j - 1) ? 0 : 1
+                curr[j] = Math.min(Math.min(curr[j - 1] + 1, prev[j] + 1), prev[j - 1] + cost)
+            }
+            System.arraycopy(curr, 0, prev, 0, curr.length)
+        }
+        prev[s2.length()]
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)

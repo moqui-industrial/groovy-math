@@ -15,6 +15,7 @@ class VectorContent_ {
     public static final Attribute<VectorContent, String> vectorContentId = new Attribute<>('vectorContentId', VectorContent.class, String.class, true, true)
     public static final Attribute<VectorContent, String> vectorId = new Attribute<>('vectorId', VectorContent.class, String.class, false, true)
     public static final Attribute<VectorContent, String> contentLocation = new Attribute<>('contentLocation', VectorContent.class, String.class, false, false)
+    public static final Attribute<VectorContent, String> contentKey = new Attribute<>('contentKey', VectorContent.class, String.class, false, false)
     public static final Attribute<VectorContent, String> contentTypeEnumId = new Attribute<>('contentTypeEnumId', VectorContent.class, String.class, false, false)
     public static final Attribute<VectorContent, String> arrayChecksum = new Attribute<>('arrayChecksum', VectorContent.class, String.class, false, false)
     public static final Attribute<VectorContent, String> arrayEncodingEnumId = new Attribute<>('arrayEncodingEnumId', VectorContent.class, String.class, false, false)

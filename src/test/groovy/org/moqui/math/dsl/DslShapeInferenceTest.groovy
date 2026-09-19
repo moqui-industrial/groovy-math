@@ -219,4 +219,15 @@ mha = multiHeadAttention('mha', x, numHeads: 7, embedDim: 768)
         MathMeta meta = MathDsl.evaluate(new File('examples/matrix-product.groovy'))
         assertNotNull(meta.entity('Matrix').findByName('C'))
     }
+
+    @Test
+    void requiredFieldExemptionFollowsSignature() {
+        assertTrue(DslShapeInference.isDerivableField('moqui.math.Matrix', 'rows'))
+        assertTrue(DslShapeInference.isDerivableField('moqui.math.Matrix', 'cols'))
+        assertTrue(DslShapeInference.isDerivableField('moqui.math.Vector', 'dimension'))
+        assertTrue(DslShapeInference.isDerivableField('moqui.math.Tensor', 'shape'))
+        assertTrue(DslShapeInference.isDerivableField('moqui.math.Tensor', 'rank'))
+        assertFalse(DslShapeInference.isDerivableField('moqui.math.Matrix', 'matrixTypeEnumId'))
+        assertFalse(DslShapeInference.isDerivableField('moqui.math.MathModel', 'statusId'))
+    }
 }

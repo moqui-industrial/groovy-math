@@ -1,21 +1,21 @@
 # ADR 0003 — Overloaded Operators in Groovy Math DSL
 
-- **Status**: Proposed
-- **Date**: 2026-09-18
+- **Status**: Accepted
+- **Date**: 2026-09-19
 - **Context**: Groovy-Math DSL enables mathematical declarations that mirror algebraic expressions while building the underlying Moqui-Math metamodel (`Transformation`, `TransformationOperand`, etc.). Mathematical operator overloading (`*`, `+`, `-`, `/`, `**`, unary `-`) allows concise syntax in models and pipelines.
 
 ## Operator Mapping Table
 
-| Espressione | Operandi | Tipo di trasformazione | Note sullo schema e raccomandazioni |
+| Espressione | Operandi | Tipo di trasformazione | Note sullo schema e implementazione |
 |---|---|---|---|
 | `A * B` | Matrix × Matrix | `TtMatrixProduct` | Presente in `TransformationType` (`MatrixProduct`) |
-| `A * v` | Matrix × Vector | `TtAffine` (o `TtMatrixVectorProduct` upstream) | **Raccomandazione**: mappare `A * v` su `TtAffine` ($y = A \cdot x + b$ con $b = 0$), già presente nello schema `moqui-math` e gestito da `LibTorchProvider`. Alternativa: aggiungere `TtMatrixVectorProduct` upstream in `moqui-math`. |
-| `X * Y` | Tensor × Tensor | `TtTensorMul` (elemento per elemento) | Presente in `TransformationType` (`TensorMul`) |
-| `X + Y` | Tensor × Tensor | `TtTensorAdd` | Presente in `TransformationType` (`TensorAdd`) |
-| `X - Y` | Tensor × Tensor | `TtTensorSub` | Presente in `TransformationType` (`TensorSub`) |
-| `X / Y` | Tensor × Tensor | `TtTensorDiv` | Presente in `TransformationType` (`TensorDiv`) |
+| `A * v` | Matrix × Vector | `TtAffine` | Mappato su `TtAffine` ($y = A \cdot x + b$ con termine noto $b$ assente / nullo). Produce un `Vector` risultato di dimensione pari alle righe di $A$. |
+| `X * Y` | Tensor × Tensor | `TtTensorMul` (elemento per elemento) | Presente in `TransformationType` (`TensorMul`), con NumPy broadcasting |
+| `X + Y` | Tensor × Tensor | `TtTensorAdd` | Presente in `TransformationType` (`TensorAdd`), con NumPy broadcasting |
+| `X - Y` | Tensor × Tensor | `TtTensorSub` | Presente in `TransformationType` (`TensorSub`), con NumPy broadcasting |
+| `X / Y` | Tensor × Tensor | `TtTensorDiv` | Presente in `TransformationType` (`TensorDiv`), con NumPy broadcasting |
 | `X ** k` | Tensor × scalare | `TtTensorPow` | Presente in `TransformationType` (`TensorPow`) |
-| `-X` | Tensor | `TtTensorNeg` (proposta upstream) | **Raccomandazione**: aggiungere `TtTensorNeg` upstream in `moqui-math`. La scorciatoia `TtTensorMul` con scalare $-1$ richiederebbe la creazione di un tensore costante. |
+| `-X` | Tensor | `TtTensorNeg` | Presente in `TransformationType` (`TensorNeg`, negazione unaria elemento per elemento) |
 
 ## Semantics and Constraints
 

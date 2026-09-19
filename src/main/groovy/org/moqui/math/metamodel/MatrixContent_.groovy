@@ -15,6 +15,7 @@ class MatrixContent_ {
     public static final Attribute<MatrixContent, String> matrixContentId = new Attribute<>('matrixContentId', MatrixContent.class, String.class, true, true)
     public static final Attribute<MatrixContent, String> matrixId = new Attribute<>('matrixId', MatrixContent.class, String.class, false, true)
     public static final Attribute<MatrixContent, String> contentLocation = new Attribute<>('contentLocation', MatrixContent.class, String.class, false, false)
+    public static final Attribute<MatrixContent, String> contentKey = new Attribute<>('contentKey', MatrixContent.class, String.class, false, false)
     public static final Attribute<MatrixContent, String> contentTypeEnumId = new Attribute<>('contentTypeEnumId', MatrixContent.class, String.class, false, false)
     public static final Attribute<MatrixContent, String> arrayChecksum = new Attribute<>('arrayChecksum', MatrixContent.class, String.class, false, false)
     public static final Attribute<MatrixContent, String> arrayEncodingEnumId = new Attribute<>('arrayEncodingEnumId', MatrixContent.class, String.class, false, false)

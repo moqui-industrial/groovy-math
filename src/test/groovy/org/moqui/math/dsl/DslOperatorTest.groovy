@@ -30,18 +30,20 @@ class DslOperatorTest {
     }
 
     @Test
-    void matrixVectorMultiplicationFailsBecauseTypeNotInSchema() {
+    void matrixVectorProductMapsToAffine() {
         String dsl = '''
             A = matrix('A', [[1, 2], [3, 4]])
             v = vector('v', [1, 2])
             res = A * v
         '''
+        MathMeta meta = MathDsl.evaluate(dsl)
+        org.moqui.math.entity.ModelValue res = meta.entity('Vector').findByName('res')
+        assertNotNull(res)
+        assertEquals(2, res.get('dimension'))
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
-            MathDsl.evaluate(dsl)
-        }
-        assertTrue(ex.message.contains('TtMatrixVectorProduct'), "Error message should mention TtMatrixVectorProduct: ${ex.message}")
-        assertTrue(ex.message.contains('schema'), "Error message should mention schema: ${ex.message}")
+        org.moqui.math.entity.ModelValue trans = meta.entity('Transformation').findByName('T_res')
+        assertNotNull(trans)
+        assertEquals('TtAffine', trans.get('transformationTypeEnumId'))
     }
 
     @Test
@@ -104,17 +106,20 @@ class DslOperatorTest {
     }
 
     @Test
-    void tensorUnaryMinusFailsBecauseTypeNotInSchema() {
-        String dsl = '''
+    void tensorNegationMapsToTensorNeg() {
+        String operatorDsl = '''
             X = tensor('X', [1, 2, 3, 4])
             Z = -X
         '''
+        String functionalDsl = '''
+            X = tensor('X', [1, 2, 3, 4])
+            Z = tensorNeg(X)
+        '''
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
-            MathDsl.evaluate(dsl)
-        }
-        assertTrue(ex.message.contains('TtTensorNeg'), "Error message should mention TtTensorNeg: ${ex.message}")
-        assertTrue(ex.message.contains('schema'), "Error message should mention schema: ${ex.message}")
+        MathMeta actual = MathDsl.evaluate(operatorDsl)
+        MathMeta expected = MathDsl.evaluate(functionalDsl)
+
+        CanonicalDump.assertStructuralEquals(actual, expected)
     }
 
     @Test

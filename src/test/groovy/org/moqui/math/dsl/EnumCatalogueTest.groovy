@@ -162,6 +162,30 @@ class EnumCatalogueTest {
         assert matrixProd != null
         assert matrixProd.id == 'TtMatrixProduct'
 
+        TransformationType mha = TransformationType.fromId('TtMultiHeadAttention')
+        assert mha == TransformationType.MultiHeadAttention
+        assert mha.id == 'TtMultiHeadAttention'
+
+        TransformationType dropout = TransformationType.fromId('TtDropout')
+        assert dropout == TransformationType.Dropout
+        assert dropout.id == 'TtDropout'
+
+        TransformationType posEnc = TransformationType.fromId('TtPositionalEncoding')
+        assert posEnc == TransformationType.PositionalEncoding
+        assert posEnc.id == 'TtPositionalEncoding'
+
+        TransformationType rope = TransformationType.fromId('TtRotaryEmbedding')
+        assert rope == TransformationType.RotaryEmbedding
+        assert rope.id == 'TtRotaryEmbedding'
+
+        TransformationType tensorNeg = TransformationType.fromId('TtTensorNeg')
+        assert tensorNeg == TransformationType.TensorNeg
+        assert tensorNeg.id == 'TtTensorNeg'
+
+        TensorPurpose optState = TensorPurpose.fromId('TpOptimizerState')
+        assert optState == TensorPurpose.OptimizerState
+        assert optState.id == 'TpOptimizerState'
+
         VariableDomain vdContinuous = VariableDomain.fromId('VdContinuous')
         assert vdContinuous == VariableDomain.Continuous
         assert vdContinuous.id == 'VdContinuous'

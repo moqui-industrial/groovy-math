@@ -15,6 +15,7 @@ class TensorContent_ {
     public static final Attribute<TensorContent, String> tensorContentId = new Attribute<>('tensorContentId', TensorContent.class, String.class, true, true)
     public static final Attribute<TensorContent, String> tensorId = new Attribute<>('tensorId', TensorContent.class, String.class, false, true)
     public static final Attribute<TensorContent, String> contentLocation = new Attribute<>('contentLocation', TensorContent.class, String.class, false, false)
+    public static final Attribute<TensorContent, String> contentKey = new Attribute<>('contentKey', TensorContent.class, String.class, false, false)
     public static final Attribute<TensorContent, String> contentTypeEnumId = new Attribute<>('contentTypeEnumId', TensorContent.class, String.class, false, false)
     public static final Attribute<TensorContent, String> arrayChecksum = new Attribute<>('arrayChecksum', TensorContent.class, String.class, false, false)
     public static final Attribute<TensorContent, String> arrayEncodingEnumId = new Attribute<>('arrayEncodingEnumId', TensorContent.class, String.class, false, false)

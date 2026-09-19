@@ -14,6 +14,24 @@ import org.moqui.math.entity.ModelValue
 @CompileStatic
 class DslShapeInference {
 
+    private static final Map<String, Set<String>> DERIVABLE_FIELDS = [
+        'Tensor': ['shape', 'rank', 'size'] as Set,
+        'moqui.math.Tensor': ['shape', 'rank', 'size'] as Set,
+        'Matrix': ['rows', 'cols', 'domainSpaceEnumId', 'codomainSpaceEnumId'] as Set,
+        'moqui.math.Matrix': ['rows', 'cols', 'domainSpaceEnumId', 'codomainSpaceEnumId'] as Set,
+        'Vector': ['dimension', 'spaceEnumId'] as Set,
+        'moqui.math.Vector': ['dimension', 'spaceEnumId'] as Set
+    ]
+
+    static boolean isDerivableField(final String entityName, final String fieldName) {
+        Set<String> fields = DERIVABLE_FIELDS.get(entityName)
+        fields != null && fields.contains(fieldName)
+    }
+
+    static Set<String> getDerivableFields(final String entityName) {
+        DERIVABLE_FIELDS.get(entityName) ?: Collections.emptySet()
+    }
+
     static class InferredShape {
         List<Object> shape
         Integer rank
@@ -40,91 +58,109 @@ class DslShapeInference {
             case 'TensorGelu':
             case 'TensorSilu':
             case 'TensorReLu':
+            case 'TensorLeakyReLu':
             case 'TensorSigmoid':
             case 'TensorTanh':
-            case 'TensorLeakyReLu':
             case 'TensorElu':
             case 'TensorSoftmax':
             case 'TensorLogSoftmax':
-            case 'Dropout':
-            case 'TensorDropout':
             case 'TensorExp':
             case 'TensorLog':
             case 'TensorSqrt':
-            case 'TensorReciprocal':
+            case 'TensorInv':
+            case 'TensorNeg':
+            case 'Dropout':
+            case 'PositionalEncoding':
+            case 'RotaryEmbedding':
+                res.resultType = 'Tensor'
                 if (operands.size() >= 1) {
-                    List<Object> s = extractShape(operands.get(0))
-                    if (s != null) {
-                        res.shape = s
-                        res.rank = s.size()
-                        if (s.size() == 2 && isMatrixOperand(operands.get(0))) {
-                            res.rows = toInt(s.get(0))
-                            res.cols = toInt(s.get(1))
-                            res.resultType = 'Matrix'
-                        } else {
-                            res.resultType = 'Tensor'
-                        }
+                    List<Object> sx = extractShape(operands.get(0))
+                    if (sx != null) {
+                        res.shape = sx
+                        res.rank = sx.size()
                     }
                 }
                 break
 
-            // 2. Matrix Product Contraction: (m, n) x (n, p) -> (m, p)
+            // 2. Matrix Product: (m, k) x (k, n) -> (m, n)
             case 'MatrixProduct':
                 res.resultType = 'Matrix'
                 if (operands.size() >= 2) {
                     List<Object> sA = extractShape(operands.get(0))
                     List<Object> sB = extractShape(operands.get(1))
                     if (sA != null && sB != null && sA.size() >= 2 && sB.size() >= 2) {
-                        Object m = sA.get(0)
-                        Object nA = sA.get(1)
-                        Object nB = sB.get(0)
-                        Object p = sB.get(1)
+                        Object rA = sA.get(0)
+                        Object cA = sA.get(1)
+                        Object rB = sB.get(0)
+                        Object cB = sB.get(1)
 
-                        if (isNumber(nA) && isNumber(nB)) {
-                            int numNA = toInt(nA)
-                            int numNB = toInt(nB)
-                            if (numNA != numNB) {
-                                throwShapeError(callerFile, callerLine,
-                                    "Incompatible shapes for matrix product: ${sA} and ${sB} (inner dimensions ${numNA} != ${numNB})")
-                            }
+                        if (isNumber(cA) && isNumber(rB) && toInt(cA) != toInt(rB)) {
+                            throwShapeError(callerFile, callerLine,
+                                "Incompatible shapes for matrix product: ${sA} and ${sB} (inner dimensions ${cA} != ${rB})")
                         }
-                        res.rows = toInt(m)
-                        res.cols = toInt(p)
-                        res.shape = [m, p]
+                        if (isNumber(rA)) res.rows = toInt(rA)
+                        if (isNumber(cB)) res.cols = toInt(cB)
+                        res.shape = [res.rows, res.cols]
                         res.rank = 2
                     }
                 }
                 break
 
-            // 3. Affine / Linear Map: (..., n) x (p, n) -> (..., p) or (..., n) x (n, p) -> (..., p)
+            // 3. Affine / Linear Map: (..., n) x (p, n) -> (..., p) or Matrix x Vector -> Vector
             case 'Affine':
             case 'LinearMap':
             case 'WarpAffine':
-                res.resultType = 'Tensor'
                 if (operands.size() >= 2) {
-                    List<Object> sx = extractShape(operands.get(0))
-                    List<Object> sW = extractShape(operands.get(1))
-                    if (sx != null && sW != null && !sx.empty && sW.size() >= 2) {
-                        Object inDim = sx.get(sx.size() - 1)
-                        Object w0 = sW.get(0)
-                        Object w1 = sW.get(1)
-                        Object outDim = null
+                    boolean op0IsVector = isVectorOperand(operands.get(0))
+                    boolean op1IsVector = isVectorOperand(operands.get(1))
+                    boolean op0IsMatrix = isMatrixOperand(operands.get(0))
+                    boolean op1IsMatrix = isMatrixOperand(operands.get(1))
 
-                        if (w1 == inDim || (isNumber(w1) && isNumber(inDim) && toInt(w1) == toInt(inDim))) {
-                            outDim = w0
-                        } else if (w0 == inDim || (isNumber(w0) && isNumber(inDim) && toInt(w0) == toInt(inDim))) {
-                            outDim = w1
-                        } else if (isNumber(w0) && isNumber(w1) && isNumber(inDim)) {
-                            throwShapeError(callerFile, callerLine,
-                                "Incompatible shapes for Affine linear map: input ${sx} (in_dim ${inDim}) and weight ${sW}")
-                        } else {
-                            outDim = w0
+                    if ((op0IsMatrix && op1IsVector) || (op0IsVector && op1IsMatrix)) {
+                        res.resultType = 'Vector'
+                        List<Object> sMat = op0IsMatrix ? extractShape(operands.get(0)) : extractShape(operands.get(1))
+                        List<Object> sVec = op0IsVector ? extractShape(operands.get(0)) : extractShape(operands.get(1))
+                        if (sMat != null && sVec != null && sMat.size() >= 2 && !sVec.empty) {
+                            Object vDim = sVec.get(0)
+                            Object mRows = sMat.get(0)
+                            Object mCols = sMat.get(1)
+                            if (isNumber(vDim) && isNumber(mCols) && toInt(vDim) == toInt(mCols)) {
+                                res.dimension = toInt(mRows)
+                            } else if (isNumber(vDim) && isNumber(mRows) && toInt(vDim) == toInt(mRows)) {
+                                res.dimension = toInt(mCols)
+                            } else if (isNumber(vDim) && isNumber(mCols) && isNumber(mRows)) {
+                                throwShapeError(callerFile, callerLine,
+                                    "Incompatible shapes for Affine matrix-vector product: Matrix ${sMat} and Vector ${sVec}")
+                            } else {
+                                res.dimension = toInt(mRows)
+                            }
                         }
+                    } else {
+                        res.resultType = 'Tensor'
+                        List<Object> sx = extractShape(operands.get(0))
+                        List<Object> sW = extractShape(operands.get(1))
+                        if (sx != null && sW != null && !sx.empty && sW.size() >= 2) {
+                            Object inDim = sx.get(sx.size() - 1)
+                            Object w0 = sW.get(0)
+                            Object w1 = sW.get(1)
+                            Object outDim = null
 
-                        List<Object> outShape = new ArrayList<>(sx.subList(0, sx.size() - 1))
-                        outShape.add(outDim)
-                        res.shape = outShape
-                        res.rank = outShape.size()
+                            if (w1 == inDim || (isNumber(w1) && isNumber(inDim) && toInt(w1) == toInt(inDim))) {
+                                outDim = w0
+                            } else if (w0 == inDim || (isNumber(w0) && isNumber(inDim) && toInt(w0) == toInt(inDim))) {
+                                outDim = w1
+                            } else if (isNumber(w0) && isNumber(w1) && isNumber(inDim)) {
+                                throwShapeError(callerFile, callerLine,
+                                    "Incompatible shapes for Affine linear map: input ${sx} (in_dim ${inDim}) and weight ${sW}")
+                            } else {
+                                outDim = w0
+                            }
+
+                            List<Object> outShape = new ArrayList<>(sx.subList(0, sx.size() - 1))
+                            outShape.add(outDim)
+                            res.shape = outShape
+                            res.rank = outShape.size()
+                        }
                     }
                 }
                 break
@@ -329,6 +365,20 @@ class DslShapeInference {
                 Object s = mv.get('shape')
                 return parseShapeList(s)
             }
+        } else if (op instanceof ModelValue) {
+            ModelValue mv = (ModelValue) op
+            String entityName = mv.definition.name
+            if (entityName == 'Matrix') {
+                Object r = mv.get('rows')
+                Object c = mv.get('cols')
+                if (r != null && c != null) return [toDim(r), toDim(c)]
+            } else if (entityName == 'Vector') {
+                Object d = mv.get('dimension')
+                if (d != null) return [toDim(d)]
+            } else if (entityName == 'Tensor') {
+                Object s = mv.get('shape')
+                return parseShapeList(s)
+            }
         } else if (op instanceof List) {
             return inferListShape((List<?>) op)
         }
@@ -406,9 +456,22 @@ class DslShapeInference {
         shape
     }
 
+    private static boolean isVectorOperand(final Object op) {
+        if (op instanceof ModelProvider) {
+            return ((ModelProvider) op).definition.name == 'Vector'
+        }
+        if (op instanceof ModelValue) {
+            return ((ModelValue) op).definition.name == 'Vector'
+        }
+        false
+    }
+
     private static boolean isMatrixOperand(final Object op) {
         if (op instanceof ModelProvider) {
             return ((ModelProvider) op).definition.name == 'Matrix'
+        }
+        if (op instanceof ModelValue) {
+            return ((ModelValue) op).definition.name == 'Matrix'
         }
         false
     }

@@ -1719,6 +1719,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `InputMatrix` | `TpInputMatrix` | `inputMatrix`, `TpInputMatrix`, `tpInputMatrix`, `ControlInputMatrix`, `controlInputMatrix` |
 | `ModelParams` | `TpModelParams` | `modelParams`, `TpModelParams`, `tpModelParams`, `TrainableModelParameters`, `trainableModelParameters` |
 | `ObserverGain` | `TpObserverGain` | `observerGain`, `TpObserverGain`, `tpObserverGain`, `ObserverKalmanGainMatrix`, `observerKalmanGainMatrix` |
+| `OptimizerState` | `TpOptimizerState` | `optimizerState`, `TpOptimizerState`, `tpOptimizerState` |
 | `Original` | `TpOriginal` | `original`, `TpOriginal`, `tpOriginal`, `OriginalTensor`, `originalTensor` |
 | `OutputMatrix` | `TpOutputMatrix` | `outputMatrix`, `TpOutputMatrix`, `tpOutputMatrix`, `MeasurementOutputMatrix`, `measurementOutputMatrix` |
 | `PhysicalState` | `TpPhysicalState` | `physicalState`, `TpPhysicalState`, `tpPhysicalState`, `PhysicalSimulationState`, `physicalSimulationState` |
@@ -1928,6 +1929,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `DiagExtract` | `TtDiagExtract` | `diagExtract`, `TtDiagExtract`, `ttDiagExtract`, `DiagonalBandExtraction`, `diagonalBandExtraction` |
 | `Diagonalise` | `TtDiagonalise` | `diagonalise`, `TtDiagonalise`, `ttDiagonalise`, `Diagonalisation`, `diagonalisation` |
 | `DomainBlockMatrixExtr` | `TtDomainBlockMatrixExtr` | `domainBlockMatrixExtr`, `TtDomainBlockMatrixExtr`, `ttDomainBlockMatrixExtr`, `DomainSpecificBlockingExtractionTheBlockingPatternIsChosenBasedOnTheApplicationDomainSuchAsSignalProcessingImageProcessingOrFiniteElementMethods`, `domainSpecificBlockingExtractionTheBlockingPatternIsChosenBasedOnTheApplicationDomainSuchAsSignalProcessingImageProcessingOrFiniteElementMethods` |
+| `Dropout` | `TtDropout` | `dropout`, `TtDropout`, `ttDropout`, `DropoutRegularization`, `dropoutRegularization` |
 | `EigenvalueDecomp` | `TtEigenvalueDecomp` | `eigenvalueDecomp`, `TtEigenvalueDecomp`, `ttEigenvalueDecomp`, `EigenvalueDecomposition`, `eigenvalueDecomposition` |
 | `Eigh` | `TtEigh` | `eigh`, `TtEigh`, `ttEigh`, `EighDecomposition`, `eighDecomposition` |
 | `Embedding` | `TtEmbedding` | `embedding`, `TtEmbedding`, `ttEmbedding`, `EmbeddingLookupTable`, `embeddingLookupTable` |
@@ -1988,6 +1990,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `Membership` | `TtMembership` | `membership`, `TtMembership`, `ttMembership`, `SetOrTypeMembershipRelation`, `setOrTypeMembershipRelation` |
 | `Meta` | `TtMeta` | `meta`, `TtMeta`, `ttMeta`, `MetaTransformation`, `metaTransformation` |
 | `MultiDot` | `TtMultiDot` | `multiDot`, `TtMultiDot`, `ttMultiDot`, `MultiMatrixDot`, `multiMatrixDot` |
+| `MultiHeadAttention` | `TtMultiHeadAttention` | `multiHeadAttention`, `TtMultiHeadAttention`, `ttMultiHeadAttention` |
 | `NaryLin` | `TtNaryLin` | `naryLin`, `TtNaryLin`, `ttNaryLin`, `NAryTransformation`, `nAryTransformation` |
 | `NaryNonLin` | `TtNaryNonLin` | `naryNonLin`, `TtNaryNonLin`, `ttNaryNonLin`, `NAryNonLinearTransformation`, `nAryNonLinearTransformation` |
 | `NonLinear` | `TtNonLinear` | `nonLinear`, `TtNonLinear`, `ttNonLinear`, `NonLinearTransformation`, `nonLinearTransformation` |
@@ -1999,10 +2002,12 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `OptimizerSgd` | `TtOptimizerSgd` | `optimizerSgd`, `TtOptimizerSgd`, `ttOptimizerSgd`, `StochasticGradientDescentOptimizer`, `stochasticGradientDescentOptimizer` |
 | `Or` | `TtOr` | `or`, `TtOr`, `ttOr`, `LogicalDisjunction`, `logicalDisjunction` |
 | `PolarDecomp` | `TtPolarDecomp` | `polarDecomp`, `TtPolarDecomp`, `ttPolarDecomp`, `PolarDecomposition`, `polarDecomposition` |
+| `PositionalEncoding` | `TtPositionalEncoding` | `positionalEncoding`, `TtPositionalEncoding`, `ttPositionalEncoding` |
 | `QrDecomp` | `TtQrDecomp` | `qrDecomp`, `TtQrDecomp`, `ttQrDecomp`, `QRDecomposition`, `qRDecomposition` |
 | `RMSNorm` | `TtRMSNorm` | `rMSNorm`, `TtRMSNorm`, `ttRMSNorm`, `RootMeanSquareLayerNormalization`, `rootMeanSquareLayerNormalization` |
 | `RegularBlockMatrixExtr` | `TtRegularBlockMatrixExtr` | `regularBlockMatrixExtr`, `TtRegularBlockMatrixExtr`, `ttRegularBlockMatrixExtr`, `GridOrRegularBlockingExtractionTheMatrixIsPartitionedIntoBlocksByBothRowsAndColumns`, `gridOrRegularBlockingExtractionTheMatrixIsPartitionedIntoBlocksByBothRowsAndColumns` |
 | `Relation` | `TtRelation` | `relation`, `TtRelation`, `ttRelation`, `RelationalTransformationOrPredicate`, `relationalTransformationOrPredicate` |
+| `RotaryEmbedding` | `TtRotaryEmbedding` | `rotaryEmbedding`, `TtRotaryEmbedding`, `ttRotaryEmbedding`, `RotaryPositionEmbedding`, `rotaryPositionEmbedding` |
 | `ScaledDotProductAttention` | `TtScaledDotProductAttention` | `scaledDotProductAttention`, `TtScaledDotProductAttention`, `ttScaledDotProductAttention` |
 | `SchurDecomp` | `TtSchurDecomp` | `schurDecomp`, `TtSchurDecomp`, `ttSchurDecomp`, `SchurDecomposition`, `schurDecomposition` |
 | `SetCombination` | `TtSetCombination` | `setCombination`, `TtSetCombination`, `ttSetCombination` |
@@ -2032,6 +2037,7 @@ This document is automatically generated from the schema-derived `DslVocabulary`
 | `TensorMean` | `TtTensorMean` | `tensorMean`, `TtTensorMean`, `ttTensorMean`, `TensorMeanReduction`, `tensorMeanReduction` |
 | `TensorMin` | `TtTensorMin` | `tensorMin`, `TtTensorMin`, `ttTensorMin`, `TensorMinReduction`, `tensorMinReduction` |
 | `TensorMul` | `TtTensorMul` | `tensorMul`, `TtTensorMul`, `ttTensorMul`, `TensorElementWiseMultiplication`, `tensorElementWiseMultiplication` |
+| `TensorNeg` | `TtTensorNeg` | `tensorNeg`, `TtTensorNeg`, `ttTensorNeg`, `ElementWiseNegation`, `elementWiseNegation` |
 | `TensorOuter` | `TtTensorOuter` | `tensorOuter`, `TtTensorOuter`, `ttTensorOuter`, `OuterKroneckerProduct`, `outerKroneckerProduct` |
 | `TensorPermute` | `TtTensorPermute` | `tensorPermute`, `TtTensorPermute`, `ttTensorPermute`, `TensorAxisPermuteTranspose`, `tensorAxisPermuteTranspose` |
 | `TensorPow` | `TtTensorPow` | `tensorPow`, `TtTensorPow`, `ttTensorPow`, `TensorElementWisePower`, `tensorElementWisePower` |

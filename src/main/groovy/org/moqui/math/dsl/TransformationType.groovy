@@ -72,6 +72,10 @@ enum TransformationType implements DslEnumValue {
     RMSNorm('TtRMSNorm', '', 'Root Mean Square Layer Normalization', 'TtUnaryNonLin'),
     BatchNorm('TtBatchNorm', '', 'Batch Normalization', 'TtUnaryNonLin'),
     GroupNorm('TtGroupNorm', '', 'Group Normalization', 'TtUnaryNonLin'),
+    Dropout('TtDropout', '', 'Dropout Regularization', 'TtUnaryNonLin'),
+    PositionalEncoding('TtPositionalEncoding', '', 'Positional Encoding', 'TtUnaryNonLin'),
+    RotaryEmbedding('TtRotaryEmbedding', '', 'Rotary Position Embedding', 'TtUnaryNonLin'),
+    TensorNeg('TtTensorNeg', '', 'Element-wise Negation', 'TtUnaryLin'),
     TensorInv('TtTensorInv', '', 'Tensor Inverse', 'TtUnaryNonLin'),
     GaussianBlur('TtGaussianBlur', '', 'Gaussian Blur Filter', 'TtUnaryLin'),
     Sobel('TtSobel', '', 'Sobel Spatial Gradient', 'TtUnaryLin'),
@@ -86,6 +90,7 @@ enum TransformationType implements DslEnumValue {
     AdaptiveAvgPool2d('TtAdaptiveAvgPool2d', '', '2D Adaptive Average Pooling', 'TtUnaryLin'),
     AttentionMask('TtAttentionMask', '', 'Attention Additive Mask', 'TtBinaryLin'),
     ScaledDotProductAttention('TtScaledDotProductAttention', '', 'Scaled Dot-Product Attention', 'TtNaryNonLin'),
+    MultiHeadAttention('TtMultiHeadAttention', '', 'Multi-Head Attention', 'TtNaryNonLin'),
     Embedding('TtEmbedding', '', 'Embedding Lookup Table', 'TtUnaryLin'),
     MatrixProduct('TtMatrixProduct', '', 'Matrix Product', 'TtBinaryLin'),
     MatrixApply('TtMatrixApply', '', 'Matrix Application to a Vector / Matrix', 'TtBinaryLin'),
@@ -257,6 +262,9 @@ enum TransformationType implements DslEnumValue {
         if ('RootMeanSquareLayerNormalization'.equalsIgnoreCase(name)) return RMSNorm
         if ('BatchNormalization'.equalsIgnoreCase(name)) return BatchNorm
         if ('GroupNormalization'.equalsIgnoreCase(name)) return GroupNorm
+        if ('DropoutRegularization'.equalsIgnoreCase(name)) return Dropout
+        if ('RotaryPositionEmbedding'.equalsIgnoreCase(name)) return RotaryEmbedding
+        if ('ElementWiseNegation'.equalsIgnoreCase(name)) return TensorNeg
         if ('TensorInverse'.equalsIgnoreCase(name)) return TensorInv
         if ('GaussianBlurFilter'.equalsIgnoreCase(name)) return GaussianBlur
         if ('SobelSpatialGradient'.equalsIgnoreCase(name)) return Sobel

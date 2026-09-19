@@ -92,4 +92,17 @@ class DslSymbolResolutionTest {
         assertTrue(ex.message.contains("Invalid symbol 'NonExistentPurposeXYZ' for purpose field"), "Actual message: " + ex.message)
         assertTrue(ex.message.contains("candidates:"), "Actual message: " + ex.message)
     }
+
+    @Test
+    void solvingMethodResolvesOnMathModel() {
+        ModelDefinition model = MoquiSchemaInspector.embedded()
+        MathMeta meta = MathDsl.math(model) {
+            MathModelDef('SimplexDef', type: Lp) {
+                MathModel('SimplexModel', solvingMethod: Simplex)
+            }
+        }
+        ModelValue modelRecord = meta.entity('MathModel').findByName('SimplexModel')
+        assertNotNull(modelRecord)
+        assertEquals('MmsmSimplex', modelRecord.get('solvingMethodEnumId'))
+    }
 }

@@ -773,10 +773,12 @@ class MatrixBuilder {
         componentArray(obj)
     }
     String contentLocation
+    String contentKey
     String contentTypeEnumId
     DslEnumValue contentType
 
     MatrixBuilder contentLocation(String loc) { this.contentLocation = loc; this }
+    MatrixBuilder contentKey(String key) { this.contentKey = key; this }
     MatrixBuilder contentType(DslEnumValue type) { this.contentType = type; this }
     MatrixBuilder contentType(String typeId) { this.contentTypeEnumId = typeId; this }
     MatrixBuilder content(String loc, DslEnumValue type = null) {
@@ -786,6 +788,8 @@ class MatrixBuilder {
     }
     MatrixBuilder content(Map<String, Object> args) {
         if (args?.containsKey('location')) this.contentLocation = args.location?.toString()
+        if (args?.containsKey('contentKey')) this.contentKey = args.contentKey?.toString()
+        if (args?.containsKey('key')) this.contentKey = args.key?.toString()
         if (args?.containsKey('type')) {
             Object t = args.type
             if (t instanceof DslEnumValue) this.contentType = (DslEnumValue) t
@@ -806,6 +810,8 @@ class MatrixBuilder {
         if (args.containsKey('componentArray')) componentArray(args.componentArray)
         if (args.containsKey('data')) data(args.data)
         if (args.containsKey('contentLocation')) contentLocation(args.contentLocation as String)
+        if (args.containsKey('contentKey')) contentKey(args.contentKey as String)
+        if (args.containsKey('key')) contentKey(args.key as String)
         if (args.containsKey('content')) {
             if (args.content instanceof Map) content(args.content as Map<String, Object>)
             else content(args.content as String)
@@ -860,6 +866,7 @@ class MatrixBuilder {
             contentValues.put('matrixContentId', contentId)
             contentValues.put('matrixId', matrixId)
             contentValues.put('contentLocation', contentLocation)
+            if (contentKey) contentValues.put('contentKey', contentKey)
             if (contentType) contentValues.put('contentTypeEnumId', contentType.id)
             else if (contentTypeEnumId) contentValues.put('contentTypeEnumId', contentTypeEnumId)
             else if (contentLocation.endsWith('.npy')) contentValues.put('contentTypeEnumId', 'MCntNpy')
@@ -899,10 +906,12 @@ class VectorBuilder {
     }
     VectorBuilder data(Object obj) { componentArray(obj) }
     String contentLocation
+    String contentKey
     String contentTypeEnumId
     DslEnumValue contentType
 
     VectorBuilder contentLocation(String loc) { this.contentLocation = loc; this }
+    VectorBuilder contentKey(String key) { this.contentKey = key; this }
     VectorBuilder contentType(DslEnumValue type) { this.contentType = type; this }
     VectorBuilder contentType(String typeId) { this.contentTypeEnumId = typeId; this }
     VectorBuilder content(String loc, DslEnumValue type = null) {
@@ -912,6 +921,8 @@ class VectorBuilder {
     }
     VectorBuilder content(Map<String, Object> args) {
         if (args?.containsKey('location')) this.contentLocation = args.location?.toString()
+        if (args?.containsKey('contentKey')) this.contentKey = args.contentKey?.toString()
+        if (args?.containsKey('key')) this.contentKey = args.key?.toString()
         if (args?.containsKey('type')) {
             Object t = args.type
             if (t instanceof DslEnumValue) this.contentType = (DslEnumValue) t
@@ -931,6 +942,8 @@ class VectorBuilder {
         if (args.containsKey('componentArray')) componentArray(args.componentArray)
         if (args.containsKey('data')) data(args.data)
         if (args.containsKey('contentLocation')) contentLocation(args.contentLocation as String)
+        if (args.containsKey('contentKey')) contentKey(args.contentKey as String)
+        if (args.containsKey('key')) contentKey(args.key as String)
         if (args.containsKey('content')) {
             if (args.content instanceof Map) content(args.content as Map<String, Object>)
             else content(args.content as String)
@@ -970,6 +983,7 @@ class VectorBuilder {
             contentValues.put('vectorContentId', contentId)
             contentValues.put('vectorId', vectorId)
             contentValues.put('contentLocation', contentLocation)
+            if (contentKey) contentValues.put('contentKey', contentKey)
             if (contentType) contentValues.put('contentTypeEnumId', contentType.id)
             else if (contentTypeEnumId) contentValues.put('contentTypeEnumId', contentTypeEnumId)
             else if (contentLocation.endsWith('.npy')) contentValues.put('contentTypeEnumId', 'VCntNpy')
@@ -990,6 +1004,7 @@ class TensorBuilder {
     DslEnumValue device
     String componentArray
     String contentLocation
+    String contentKey
     String contentTypeEnumId
     DslEnumValue contentType
     String name
@@ -1016,6 +1031,7 @@ class TensorBuilder {
     }
     TensorBuilder data(Object obj) { componentArray(obj) }
     TensorBuilder contentLocation(String loc) { this.contentLocation = loc; this }
+    TensorBuilder contentKey(String key) { this.contentKey = key; this }
     TensorBuilder contentType(DslEnumValue type) { this.contentType = type; this }
     TensorBuilder contentType(String typeId) { this.contentTypeEnumId = typeId; this }
     TensorBuilder content(String loc, DslEnumValue type = null) {
@@ -1025,6 +1041,8 @@ class TensorBuilder {
     }
     TensorBuilder content(Map<String, Object> args) {
         if (args?.containsKey('location')) this.contentLocation = args.location?.toString()
+        if (args?.containsKey('contentKey')) this.contentKey = args.contentKey?.toString()
+        if (args?.containsKey('key')) this.contentKey = args.key?.toString()
         if (args?.containsKey('type')) {
             Object t = args.type
             if (t instanceof DslEnumValue) this.contentType = (DslEnumValue) t
@@ -1052,6 +1070,8 @@ class TensorBuilder {
         if (args.containsKey('componentArray')) componentArray(args.componentArray)
         if (args.containsKey('data')) data(args.data)
         if (args.containsKey('contentLocation')) contentLocation(args.contentLocation as String)
+        if (args.containsKey('contentKey')) contentKey(args.contentKey as String)
+        if (args.containsKey('key')) contentKey(args.key as String)
         if (args.containsKey('content')) {
             if (args.content instanceof Map) content(args.content as Map<String, Object>)
             else content(args.content as String)
@@ -1102,6 +1122,7 @@ class TensorBuilder {
             contentValues.put('tensorContentId', contentId)
             contentValues.put('tensorId', tensorId)
             contentValues.put('contentLocation', contentLocation)
+            if (contentKey) contentValues.put('contentKey', contentKey)
             if (contentType) contentValues.put('contentTypeEnumId', contentType.id)
             else if (contentTypeEnumId) contentValues.put('contentTypeEnumId', contentTypeEnumId)
             else if (contentLocation.endsWith('.npy')) contentValues.put('contentTypeEnumId', 'TCntNpy')

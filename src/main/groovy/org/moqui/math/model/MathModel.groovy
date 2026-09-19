@@ -34,6 +34,9 @@ class MathModel implements Serializable {
     /** sourceEnumId */
     String sourceEnumId
 
+    /** solvingMethodEnumId */
+    String solvingMethodEnumId
+
     /** modelAlias */
     String modelAlias
 
@@ -65,6 +68,7 @@ class MathModel implements Serializable {
             if (args.containsKey('graphId')) this.graphId = args.get('graphId')?.toString()
             if (args.containsKey('meshId')) this.meshId = args.get('meshId')?.toString()
             if (args.containsKey('sourceEnumId')) this.sourceEnumId = args.get('sourceEnumId')?.toString()
+            if (args.containsKey('solvingMethodEnumId')) this.solvingMethodEnumId = args.get('solvingMethodEnumId')?.toString()
             if (args.containsKey('modelAlias')) this.modelAlias = args.get('modelAlias')?.toString()
             if (args.containsKey('description')) this.description = args.get('description')?.toString()
             if (args.containsKey('statusId')) this.statusId = args.get('statusId')?.toString()
@@ -94,6 +98,11 @@ class MathModel implements Serializable {
 
     MathModel sourceEnumId(String value) {
         this.sourceEnumId = value
+        return this;
+    }
+
+    MathModel solvingMethodEnumId(String value) {
+        this.solvingMethodEnumId = value
         return this;
     }
 
@@ -149,6 +158,7 @@ class MathModel implements Serializable {
         if (this.graphId != null) map.put('graphId', this.graphId);
         if (this.meshId != null) map.put('meshId', this.meshId);
         if (this.sourceEnumId != null) map.put('sourceEnumId', this.sourceEnumId);
+        if (this.solvingMethodEnumId != null) map.put('solvingMethodEnumId', this.solvingMethodEnumId);
         if (this.modelAlias != null) map.put('modelAlias', this.modelAlias);
         if (this.description != null) map.put('description', this.description);
         if (this.statusId != null) map.put('statusId', this.statusId);

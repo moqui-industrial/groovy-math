@@ -16,6 +16,7 @@ package org.moqui.math.entity
 
 import groovy.transform.CompileStatic
 import groovy.transform.TypeCheckingMode
+import org.moqui.math.dsl.DslShapeInference
 
 @CompileStatic
 final class ModelValue extends LinkedHashMap<String, Object> {
@@ -116,16 +117,8 @@ final class ModelValue extends LinkedHashMap<String, Object> {
     ModelValue validate() {
         definition.fields.values().each { FieldDefinition field ->
             if (field.required && field.defaultExpression == null && get(field.name) == null) {
-                if ((definition.fullName == 'moqui.math.Tensor' || definition.name == 'Tensor') &&
-                    (field.name == 'shape' || field.name == 'rank')) {
-                    return
-                }
-                if ((definition.fullName == 'moqui.math.Matrix' || definition.name == 'Matrix') &&
-                    (field.name == 'rows' || field.name == 'cols' || field.name == 'domainSpaceEnumId' || field.name == 'codomainSpaceEnumId')) {
-                    return
-                }
-                if ((definition.fullName == 'moqui.math.Vector' || definition.name == 'Vector') &&
-                    (field.name == 'dimension' || field.name == 'spaceEnumId')) {
+                if (DslShapeInference.isDerivableField(definition.fullName, field.name) ||
+                    DslShapeInference.isDerivableField(definition.name, field.name)) {
                     return
                 }
                 throw new IllegalStateException("Missing required field ${definition.fullName}.${field.name}")

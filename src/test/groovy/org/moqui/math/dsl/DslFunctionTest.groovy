@@ -172,4 +172,16 @@ class DslFunctionTest {
         assertEquals(eigenvalues(M), eig(M))
         assertEquals(dot([1, 2], [3, 4]), inner([1, 2], [3, 4]), EPS)
     }
+
+    @Test
+    void unknownFunctionIsRejectedWithSuggestion() {
+        String script = '''
+            A = matrx([[1, 2], [3, 4]])
+        '''
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+            MathDsl.evaluate(script)
+        }
+        assertTrue(ex.message.contains("Unknown function or entity 'matrx'"))
+        assertTrue(ex.message.toLowerCase().contains("matrix"))
+    }
 }

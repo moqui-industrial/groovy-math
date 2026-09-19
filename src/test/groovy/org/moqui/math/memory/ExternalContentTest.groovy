@@ -129,4 +129,18 @@ class ExternalContentTest {
             assertEquals(8.0f, seg.getAtIndex(ValueLayout.JAVA_FLOAT, 7L), 1e-5f)
         }
     }
+
+    @Test
+    void tensorContentCarriesContentKey() {
+        MathMeta meta = MathDsl.fluent {
+            tensor('TensArchive') {
+                content(location: 'models/archive.npz', contentKey: 'weights/layer1')
+            }
+        }
+        ModelValue valContent = meta.entity('TensorContent').findByName('TensArchive_Content')
+        assertNotNull(valContent)
+        org.moqui.math.model.TensorContent content = new org.moqui.math.model.TensorContent(valContent)
+        assertEquals('models/archive.npz', content.contentLocation)
+        assertEquals('weights/layer1', content.contentKey)
+    }
 }

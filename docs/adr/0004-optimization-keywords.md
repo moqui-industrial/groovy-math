@@ -1,7 +1,7 @@
 # ADR 0004 — Algebraic Optimization Keywords and Parameter Bindings
 
-- **Status**: Proposed
-- **Date**: 2026-09-18
+- **Status**: Accepted
+- **Date**: 2026-09-19
 - **Context**: Mathematical programming formulations (LP, QP, MILP) in standard mathematical modelling practice use algebraic expressions (`maximize c^T x`, `subject to a_i^T x <= b_i`, `x in [l, u]`) rather than manually encoding matrices and vectors. The keywords `variable`, `maximize`, `minimize`, `subjectTo`, `.le()`, `.ge()`, `.eq()`, `initial`, and `domain` do not derive directly from the Moqui-Math relational schema, but compile cleanly into metamodel entities (`Vector`, `VectorComponent`, `Transformation`, `MathModelData`, `Parameter`).
 
 ## 1. Syntax Specification
@@ -48,9 +48,10 @@ subjectTo('MachineB', Standard + Premium * 2).le(80)
    - `uom:` specifies `parameterUomId` from `moqui.basic.Uom`.
    - Dimension checking verifies compatibility against `ParameterDef.uomTypeEnumId` via `UomDimensionType` / `UomDimTypeGroupMember` and `uomConvert`.
 
-## 3. Metodo Risolutivo e Piani Puri (Proposta Upstream)
+## 3. Metodo Risolutivo e Piani Puri
 
-Nello schema attuale di Moqui-Math, `solvingMethodEnumId` è un campo di `MathModelDefPipeline`. Per consentire a modelli lineari/quadratici compatti di essere definiti come piani puri o modelli isolati di sole 8 righe senza l'involucro `MathModelDef`, si propone upstream:
-- Aggiunta facoltativa di `solvingMethodEnumId` direttamente sull'entità `MathModel`.
-- Supporto a hint di metodo risolutivo nei piani puri (`MathDsl.fluent(solvingMethod: Simplex) { ... }`).
+Nello schema di Moqui-Math, `solvingMethodEnumId` è supportato sia su `MathModelDefPipeline` sia direttamente su `MathModel` (`solvingMethod` relationship con title `MathModelSolvingMethod`):
+- Consente a modelli lineari/quadratici compatti di essere definiti come piani puri o modelli isolati senza l'involucro `MathModelDef` (es. `MathModel('ProductionPlan', solvingMethod: Simplex) { ... }`).
+- **Precedenza a runtime**: Il metodo risolutivo dichiarato sul passo di pipeline (`MathModelDefPipeline.solvingMethodEnumId`), se presente, ha precedenza su quello dichiarato sul modello (`MathModel.solvingMethodEnumId`).
+
 
